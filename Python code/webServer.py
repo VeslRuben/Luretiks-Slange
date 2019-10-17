@@ -1,27 +1,55 @@
 import socket
+import time
+import select
+import numpy as np
+
 
 class Server:
-    host = socket.gethostname()
-    port = 6969
 
-    server_socet = socket.socket()
-    server_socet.bind((host,port))
+    def __init__(self):
+        self.host = socket.gethostname()
+        self.port = 6969
 
-    server_socet.listen(2)
-    conn, addr = server_socet.accept()
-    print(addr)
+        self.server_socet = socket.socket()
+        self.server_socet.bind((self.host, self.port))
+        self.server_socet.listen(2)
 
-    while True:
-            # receive data stream. it won't accept data packet greater than 1024 bytes
-            data = conn.recv(1024).decode()
-            if not data:
-                # if data is not received break
+        self.conn, self.addr = self.server_socet.accept()
+        print(self.addr)
+        self.conn.settimeout(0.001)
+
+    def reconnect(self):
+        self.conn, self.addr = self.server_socet.accept()
+        print(self.addr)
+        self.conn.settimeout(0.001)
+
+    def send(self, data: str):
+        self.conn.send(data.encode("utf-8"))
+
+    def test(self):
+        message = ""
+        while True:
+            data = self.receive()
+            if data.strip() != "":
+                message += data
+            if message.__contains__("fin"):
                 break
-            print("from connected user: " + str(data))
-            data = "yolo"
-            conn.send(data.encode("utf-8"))  # send data to the client
-    conn.close()  # close the connection
+        print(message)
+
+    def receive(self):
+        message = ""
+        try:
+            # receive data stream. it won't accept data packet greater than 1024 bytes
+            data = self.conn.recv(1024).decode()
+            message += data
+        except Exception as e:
+            pass
+        return message
+
+    def close(self):
+        self.conn.close()
 
 
 if __name__ == '__main__':
-    Server
+    s = Server()
+    s.test()
