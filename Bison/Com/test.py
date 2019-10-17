@@ -12,7 +12,7 @@ while True:
     y = 0
     while True:
         try:
-            data, addr = sock.recvfrom(10024)  # buffer size is 1024 bytes
+            data, addr = sock.recvfrom(10024)  # buffer size is 10024 bytes
             print("her er a: ", data)
             break
         except socket.timeout as e:
@@ -20,7 +20,7 @@ while True:
 
     while True:
         try:
-            data, addr = sock.recvfrom(10024)  # buffer size is 1024 bytes
+            data, addr = sock.recvfrom(10024)  # buffer size is 10024 bytes
             x = int(data[0])
             y = int(data[2])
             print("her er tall: ", data)
@@ -30,7 +30,7 @@ while True:
     data2 = b""
     while True:
         try:
-            data, addr = sock.recvfrom(10024)  # buffer size is 1024 bytes
+            data, addr = sock.recvfrom(10024)  # buffer size is 10024 bytes
             data2 += data
             if len(data2) == x * y:
                 break
