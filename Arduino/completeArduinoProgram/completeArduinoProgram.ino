@@ -1,10 +1,10 @@
-#include <ESP32Servo.h>
+#include <Servo.h>
 #include <WiFi.h>
 #include <math.h>
 
 
 //////////////////////////////////////////////
-// WIFI VARIABLES 
+// WIFI VARIABLES
 /////////////////////////////////////////////
 // Information for connecting to WiFi
 const char* ssid = "MSI";
@@ -21,7 +21,7 @@ int jallaball[100][200];
 boolean notSent = false;
 
 // Buffer for packetsize
-byte packetBuffer[100];
+byte packetBuffer[128];
 
 // Establish the UDP-Client
 WiFiUDP udpClient;
@@ -36,7 +36,7 @@ const int numberOfServos = 5;
 Servo myServo[numberOfServos];
 
 // Amplitude for the servos
-int A = 40; 
+int A = 40;
 
 // Different phase shifts for the different movement
 float forwardPhi = (120.0 / 180.0) * M_PI;
@@ -50,6 +50,10 @@ int T = 1000;
 
 //Variable for speed of servos
 int servSpeed = 0;
+
+// DO NOT USE PINS 12-17, THESE MAKE PARSEPACKET CRASH THE WHOLE FUCKING SHIT
+// SERVO LIBRARIES ARE FUCKING MORONIC
+int servPins[5] = {2, 4, 21, 22, 23};
 
 /////////////////////////////////////////
 // SETUP
@@ -74,12 +78,12 @@ void setup()
   Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
 
-  // Making 2D array to send
-  for (int i = 0; i < 100; i++) {
-    for (int j = 0; j < 200; j++) {
-      jallaball[i][j] = 1;
+    // Making 2D array to send
+    for (int i = 0; i < 100; i++) {
+      for (int j = 0; j < 200; j++) {
+        jallaball[i][j] = 1;
+      }
     }
-  }
 
   // Begin listening on port 9696
   udpClient.begin(9696);
@@ -87,31 +91,31 @@ void setup()
   ////////////////////////////
   // MOVEMENT RELATED
   ///////////////////////////
-  
+
   // Establishing the servos in an array
-  for(int i = 10; i < 10 + numberOfServos; i++) {
-    myServo[i].attach(i);
+  for (int i = 0; i < 0 + numberOfServos; i++) {
+    myServo[i].attach(servPins[i]);
     myServo[i].write(90);
   }
 }
 
 void loop()
 {
- sendPacketOnce();
- checkPackets();
+  sendPacketOnce();
+  checkPackets();
 }
 
 
 
 ////////////////////////////////
-// WIFI FUNCTIONS 
+// WIFI FUNCTIONS
 ////////////////////////////////
 
 void checkPackets() {
   if (udpClient.parsePacket()) {
     Serial.println("Packet received");
-    udpClient.read(packetBuffer, 100);
-    Serial.println(packetBuffer[0]);
+    udpClient.read(packetBuffer, 128);
+    Serial.println(char(packetBuffer[0]));
   }
 }
 
@@ -147,48 +151,48 @@ void sendPacketOnce() {
 // MOVEMENT FUNCTIONS
 ///////////////////////////////////////////
 void goForward() {
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(90 + updateAngle(T, i * forwardPhi, A));
   }
 }
 
 void goBackward() {
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(90 + updateAngle(T, -i * forwardPhi, A));
   }
 }
 
 void turningGait(int turnAngle) {
-  for(int i = 0; i < 3; i++) {
-    myServo[(i*2)+1].write(90 + turnAngle);
+  for (int i = 0; i < 3; i++) {
+    myServo[(i * 2) + 1].write(90 + turnAngle);
   }
   for (int i = 0; i < 3; i++) {
-    myServo[i*2].write(90 + updateAngle(T, i * forwardPhi, A));
+    myServo[i * 2].write(90 + updateAngle(T, i * forwardPhi, A));
   }
 }
 
 void lateralShift() {
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(90 + updateAngle(T, i * lateralPhi, A));
-    myServo[(i*2)+1].write(90 + updateAngle(T, i*lateralPhi, A));
+    myServo[(i * 2) + 1].write(90 + updateAngle(T, i * lateralPhi, A));
   }
 }
 
 void doARoll() {
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(90 + updateAngle(T, 0, A));
-    myServo[(i*2)+1].write(90 + updateAngle(T, 90, A));
+    myServo[(i * 2) + 1].write(90 + updateAngle(T, 90, A));
   }
 }
 
 void rotatingGait() {
-  for(int i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(90 + updateAngle(T, i * rotatePhiV, A));
-    myServo[(i*2)+1].write(90 + updateAngle(T, i*rotatePhiH, A));
+    myServo[(i * 2) + 1].write(90 + updateAngle(T, i * rotatePhiH, A));
   }
 }
 
 int updateAngle(float T, float phase, float A) {
-  float y = A * sin(((2*M_PI) / T) * millis() + phase);
+  float y = A * sin(((2 * M_PI) / T) * millis() + phase);
   return y;
 }
