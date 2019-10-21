@@ -1,10 +1,6 @@
-import numpy as np
-import cv2
-from Bison.Com.webServer import Server
+from Bison.Com.udpCom import UdpConnection
+from Bison.Com.videoStream import VideoStream
 
-server = Server()
+servoController = UdpConnection("192.168.137.113")
+frontCamera = VideoStream("http://192.168.137.171")
 
-while True:
-    inn = input("-> ")
-
-    server.send(inn)
