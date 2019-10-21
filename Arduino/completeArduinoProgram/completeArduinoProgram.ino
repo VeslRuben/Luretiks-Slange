@@ -53,7 +53,7 @@ int servSpeed = 0;
 
 // DO NOT USE PINS 12-17, THESE MAKE PARSEPACKET CRASH THE WHOLE FUCKING SHIT
 // SERVO LIBRARIES ARE FUCKING MORONIC
-int servPins[5] = {2, 4, 21, 22, 23};
+int servPins[5] = {4, 21, 22, 23, 25};
 
 /////////////////////////////////////////
 // SETUP
