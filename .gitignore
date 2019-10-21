@@ -35,6 +35,9 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+#logg files
+Loggs/
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -102,3 +105,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+/.idea/Luretriks-Slange.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/other.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/vcs.xml
