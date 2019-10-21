@@ -1,5 +1,6 @@
 import math
 import random
+from shapely.geometry import LineString
 
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
@@ -44,8 +45,7 @@ class RRT:
 
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
-            if self.check_collision(new_node, self.obstacle_list):
-                self.checkObstacle(new_node, self.lineList)
+            if self.checkObstacle(new_node, self.lineList):
                 self.node_list.append(new_node)
 
             if animation and i % 5 == 0:
@@ -99,8 +99,8 @@ class RRT:
         for (lx, ly, la, ll) in self.lineList:
             self.plot_obstacle(lx, ly, la, ll)
 
-        for (ox, oy, size) in self.obstacle_list:
-            self.plot_circle(ox, oy, size)
+        #for (ox, oy, size) in self.obstacle_list:
+        #    self.plot_circle(ox, oy, size)
 
         plt.plot(self.start.x, self.start.y, "xr")
         plt.plot(self.end.x, self.end.y, "xr")
@@ -144,11 +144,12 @@ class RRT:
     def checkObstacle(node, lineList):
         dx_list = [x for x in node.path_x] # This includes the whole path
         dy_list = [y for y in node.path_y] # This includes points for the whole path
+        node_line = LineString([(x, y) for (x,y) in zip(dx_list, dy_list)])
         for(lx, ly, la, ll) in lineList:
-
-            break
-
-
+            obst = LineString([(lx, ly), (lx+(ll*math.cos(np.deg2rad(la))), ly+(ll*math.sin(np.deg2rad(la))))])
+            if obst.intersects(node_line):
+                return False
+        return True
 
     @staticmethod
     def plot_circle(x, y, size, color="-b"):
