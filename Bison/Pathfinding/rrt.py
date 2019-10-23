@@ -1,27 +1,17 @@
-"""
-Path planning Sample Code with Randomized Rapidly-Exploring Random Trees (RRT)
-author: AtsushiSakai(@Atsushi_twi)
-"""
-
 import math
 import random
+from shapely.geometry import LineString
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-show_animation = True
+show_animation = False
+show_final_animation = True
 
 
 class RRT:
-    """
-    Class for RRT planning
-    """
 
     class Node:
-        """
-        RRT Node
-        """
-
         def __init__(self, x, y):
             self.x = x
             self.y = y
@@ -29,15 +19,8 @@ class RRT:
             self.path_y = []
             self.parent = None
 
-    def __init__(self, start, goal, obstacle_list, rand_area,
-                 expand_dis=3.0, path_resolution=0.5, goal_sample_rate=5, max_iter=500):
-        """
-        Setting Parameter
-        start:Start Position [x,y]
-        goal:Goal Position [x,y]
-        obstacleList:obstacle Positions [[x,y,size],...]
-        randArea:Random Sampling Area [min,max]
-        """
+    def __init__(self, start, goal, rand_area, lineList, expand_dis=0.5,
+                 path_resolution=0.1, goal_sample_rate=5, max_iter=7000):
         self.start = self.Node(start[0], start[1])
         self.end = self.Node(goal[0], goal[1])
         self.min_rand = rand_area[0]
@@ -46,15 +29,14 @@ class RRT:
         self.path_resolution = path_resolution
         self.goal_sample_rate = goal_sample_rate
         self.max_iter = max_iter
-        self.obstacle_list = obstacle_list
         self.node_list = []
+        self.lineList = lineList
 
     def planning(self, animation=True):
         """
         rrt path planning
-        animation: flag for animation on or off
+        :param animation: flag for animation on or off
         """
-
         self.node_list = [self.start]
         for i in range(self.max_iter):
             rnd_node = self.get_random_node()
@@ -63,7 +45,7 @@ class RRT:
 
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
-            if self.check_collision(new_node, self.obstacle_list):
+            if self.checkObstaclev2(new_node, self.lineList):
                 self.node_list.append(new_node)
 
             if animation and i % 5 == 0:
@@ -71,16 +53,15 @@ class RRT:
 
             if self.calc_dist_to_goal(self.node_list[-1].x, self.node_list[-1].y) <= self.expand_dis:
                 final_node = self.steer(self.node_list[-1], self.end, self.expand_dis)
-                if self.check_collision(final_node, self.obstacle_list):
+                if self.checkObstaclev2(final_node, self.lineList):
                     return self.generate_final_course(len(self.node_list) - 1)
 
             if animation and i % 5:
                 self.draw_graph(rnd_node)
 
-        return None  # cannot find path
+        return None
 
     def steer(self, from_node, to_node, extend_length=float("inf")):
-
         new_node = self.Node(from_node.x, from_node.y)
         d, theta = self.calc_distance_and_angle(new_node, to_node)
 
@@ -115,14 +96,18 @@ class RRT:
             if node.parent:
                 plt.plot(node.path_x, node.path_y, "-g")
 
-        for (ox, oy, size) in self.obstacle_list:
-            self.plot_circle(ox, oy, size)
+        for (data) in self.lineList:
+            x1 = data[0][0]
+            y1 = data[0][1]
+            x2 = data[0][2]
+            y2 = data[0][3]
+            self.plotObstaclev2(x1, y1, x2, y2)
 
         plt.plot(self.start.x, self.start.y, "xr")
         plt.plot(self.end.x, self.end.y, "xr")
         plt.axis("equal")
-        plt.axis([-2, 15, -2, 15])
-        plt.grid(True)
+        plt.axis([0, 1920, 0, 1080])
+        plt.grid(False)
         plt.pause(0.01)
 
     def generate_final_course(self, goal_ind):
@@ -135,48 +120,64 @@ class RRT:
 
         return path
 
-    def calc_dist_to_goal(self, x, y):
+    def calc_dist_to_goal(self, x ,y):
         dx = x - self.end.x
         dy = y - self.end.y
         return math.sqrt(dx ** 2 + dy ** 2)
 
     def get_random_node(self):
-        if random.randint(0, 100) > self.goal_sample_rate:
+        if random.randint(0,100) > self.goal_sample_rate:
             rnd = self.Node(random.uniform(self.min_rand, self.max_rand),
                             random.uniform(self.min_rand, self.max_rand))
-        else:  # goal point sampling
+        else:
             rnd = self.Node(self.end.x, self.end.y)
         return rnd
 
-
+    @staticmethod
+    def plotObstaclev2(x1, y1, x2, y2):
+        plt.plot([x1, x2], [y1, y2], color='k', linestyle='-', linewidth=2)
 
     @staticmethod
-    def plot_circle(x, y, size, color="-b"):  # pragma: no cover
-        deg = list(range(0, 360, 5))
-        deg.append(0)
-        xl = [x + size * math.cos(np.deg2rad(d)) for d in deg]
-        yl = [y + size * math.sin(np.deg2rad(d)) for d in deg]
-        plt.plot(xl, yl, color)
+    def checkObstaclev2(node, lineList):
+        dx_list = [x for x in node.path_x]
+        dy_list = [y for y in node.path_y]
+        node_line = LineString([(x, y) for (x,y) in zip(dx_list, dy_list)])
+        for data in lineList:
+            x1 = data[0][0]
+            y1 = data[0][1]
+            x2 = data[0][2]
+            y2 = data[0][3]
+            obst = LineString([(x1, y1), (x2, y2)])
+            if obst.intersects(node_line):
+                return False
+        return True
+
+    @staticmethod
+    def plot_obstacle(x, y, angle, length):
+        xangle = math.cos(np.deg2rad(angle))
+        yangle = math.sin(np.deg2rad(angle))
+        x2 = x+(length*xangle)
+        y2 = y+(length*yangle)
+        plt.plot([x, x2], [y, y2], color='k', linestyle='-', linewidth=2)
+
+    @staticmethod
+    def checkObstacle(node, lineList):
+        dx_list = [x for x in node.path_x] # This includes the whole path
+        dy_list = [y for y in node.path_y] # This includes points for the whole path
+        node_line = LineString([(x, y) for (x,y) in zip(dx_list, dy_list)])
+        for(lx, ly, la, ll) in lineList:
+            obst = LineString([(lx, ly), (lx+(ll*math.cos(np.deg2rad(la))), ly+(ll*math.sin(np.deg2rad(la))))])
+            if obst.intersects(node_line):
+                return False
+        return True
 
     @staticmethod
     def get_nearest_node_index(node_list, rnd_node):
-        dlist = [(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
-                 ** 2 for node in node_list]
+        dlist=[(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
+               ** 2 for node in node_list]
         minind = dlist.index(min(dlist))
 
         return minind
-
-    @staticmethod
-    def check_collision(node, obstacleList):
-        for (ox, oy, size) in obstacleList:
-            dx_list = [ox - x for x in node.path_x]
-            dy_list = [oy - y for y in node.path_y]
-            d_list = [dx * dx + dy * dy for (dx, dy) in zip(dx_list, dy_list)]
-
-            if min(d_list) <= size ** 2:
-                return False  # collision
-
-        return True  # safe
 
     @staticmethod
     def calc_distance_and_angle(from_node, to_node):
@@ -186,40 +187,47 @@ class RRT:
         theta = math.atan2(dy, dx)
         return d, theta
 
+def main(gx=1.1, gy=10.0, exp_dist=0.5):
+    print("Start" + __file__)
 
-def main(gx=6.0, gy=10.0):
-    print("start " + __file__)
 
-    # ====Search Path with RRT====
-    obstacleList = [
-        (5, 5, 1),
-        (3, 6, 2),
-        (3, 8, 2),
-        (3, 10, 2),
-        (7, 5, 2),
-        (9, 5, 2),
-        (8, 10, 1)
-    ]  # [x, y, radius]
-    # Set Initial parameters
-    rrt = RRT(start=[0, 0],
-              goal=[gx, gy],
-              rand_area=[-2, 15],
-              obstacle_list=obstacleList)
+    # First four points are the maze walls
+    lineList = [
+        (-1, -1, 0, 12),
+        (11, -1, 90, 12),
+        (11, 11, 180, 12),
+        (-1, 11, 270, 12),
+        (3, -1, 90, 4),
+        (-1, 1, 0, 2),
+        (5, 8, 270, 7),
+        (-1, 5, 0, 6),
+        (5, 1, 0, 3),
+        (8, 4, 0, 3),
+        (5, 8, 0, 4),
+        (3, 11, 270, 3)
+    ]
+
+
+    rrt = RRT(start=[0, 0], goal=[gx, gy],
+              rand_area=[-2, 15], lineList=lineList)
     path = rrt.planning(animation=show_animation)
+
+
 
     if path is None:
         print("Cannot find path")
+        rrt.draw_graph()
     else:
-        print("found path!!")
+        print("Found a path!")
 
-        # Draw final path
-        if show_animation:
+        if show_final_animation:
             rrt.draw_graph()
-            plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
+            plt.plot([x for (x,y) in path], [y for (x, y) in path], '-r')
+            for (lx, ly, la, ll) in lineList:
+                rrt.plot_obstacle(lx, ly, la, ll)
             plt.grid(True)
-            plt.pause(0.01)  # Need for Mac
+            plt.pause(0.01)
             plt.show()
-
 
 if __name__ == '__main__':
     main()

@@ -13,11 +13,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../RRT/")
 
 try:
-    from rrt import RRT
+    from Bison.Pathfinding.rrt import RRT
 except ImportError:
     raise
 
-show_animation = True
+show_animation = False
+show_final_animation = True
 
 
 class RRTStar(RRT):
@@ -30,15 +31,15 @@ class RRTStar(RRT):
             super().__init__(x, y)
             self.cost = 0.0
 
-    def __init__(self, start, goal, obstacle_list, rand_area,
-                 expand_dis=3.0,
+    def __init__(self, start, goal, lineList, rand_area,
+                 expand_dis=6.0,
                  path_resolution=1.0,
                  goal_sample_rate=20,
-                 max_iter=300,
+                 max_iter=6000,
                  connect_circle_dist=50.0
                  ):
-        super().__init__(start, goal, obstacle_list,
-                         rand_area, expand_dis, path_resolution, goal_sample_rate, max_iter)
+        super().__init__(start, goal,
+                         rand_area, lineList, expand_dis, path_resolution, goal_sample_rate, max_iter)
         """
         Setting Parameter
         start:Start Position [x,y]
@@ -48,8 +49,9 @@ class RRTStar(RRT):
         """
         self.connect_circle_dist = connect_circle_dist
         self.goal_node = self.Node(goal[0], goal[1])
+        self.showFinalAnimation = True
 
-    def planning(self, animation=True, search_until_max_iter=True):
+    def planning(self, animation=True, search_until_max_iter=False):
         """
         rrt star path planning
         animation: flag for animation on or off
@@ -58,12 +60,12 @@ class RRTStar(RRT):
 
         self.node_list = [self.start]
         for i in range(self.max_iter):
-            print("Iter:", i, ", number of nodes:", len(self.node_list))
+            #print("Iter:", i, ", number of nodes:", len(self.node_list))
             rnd = self.get_random_node()
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd)
             new_node = self.steer(self.node_list[nearest_ind], rnd, self.expand_dis)
 
-            if self.check_collision(new_node, self.obstacle_list):
+            if self.checkObstaclev2(new_node, self.lineList):
                 near_inds = self.find_near_nodes(new_node)
                 new_node = self.choose_parent(new_node, near_inds)
                 if new_node:
@@ -95,7 +97,7 @@ class RRTStar(RRT):
         for i in near_inds:
             near_node = self.node_list[i]
             t_node = self.steer(near_node, new_node)
-            if t_node and self.check_collision(t_node, self.obstacle_list):
+            if t_node and self.checkObstaclev2(t_node, self.lineList):
                 costs.append(self.calc_new_cost(near_node, new_node))
             else:
                 costs.append(float("inf"))  # the cost of collision node
@@ -119,7 +121,7 @@ class RRTStar(RRT):
         safe_goal_inds = []
         for goal_ind in goal_inds:
             t_node = self.steer(self.node_list[goal_ind], self.goal_node)
-            if self.check_collision(t_node, self.obstacle_list):
+            if self.checkObstaclev2(t_node, self.lineList):
                 safe_goal_inds.append(goal_ind)
 
         if not safe_goal_inds:
@@ -148,7 +150,7 @@ class RRTStar(RRT):
                 continue
             edge_node.cost = self.calc_new_cost(new_node, near_node)
 
-            no_collision = self.check_collision(edge_node, self.obstacle_list)
+            no_collision = self.checkObstaclev2(edge_node, self.lineList)
             improved_cost = near_node.cost > edge_node.cost
 
             if no_collision and improved_cost:
@@ -168,41 +170,45 @@ class RRTStar(RRT):
                 self.propagate_cost_to_leaves(node)
 
 
-def main():
-    print("Start " + __file__)
+    def run(self):
+        print("Start " + __file__)
 
-    # ====Search Path with RRT====
-    obstacle_list = [
-        (5, 5, 1),
-        (3, 6, 2),
-        (3, 8, 2),
-        (3, 10, 2),
-        (7, 5, 2),
-        (9, 5, 2),
-        (8, 10, 1),
-        (6, 12, 1),
-    ]  # [x,y,size(radius)]
-
-    # Set Initial parameters
-    rrt_star = RRTStar(start=[0, 0],
-                       goal=[6, 10],
-                       rand_area=[-2, 15],
-                       obstacle_list=obstacle_list)
-    path = rrt_star.planning(animation=show_animation)
-
-    if path is None:
-        print("Cannot find path")
-    else:
-        print("found path!!")
-
-        # Draw final path
-        if show_animation:
-            rrt_star.draw_graph()
-            plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
-            plt.grid(True)
-            plt.pause(0.01)  # Need for Mac
-            plt.show()
+        # First four points are the maze walls
+        lineList = [
+            (-1, -1, 0, 12),
+            (11, -1, 90, 12),
+            (11, 11, 180, 12),
+            (-1, 11, 270, 12),
+            (3, -1, 90, 4),
+            (-1, 1, 0, 2),
+            (5, 8, 270, 7),
+            (-1, 5, 0, 6),
+            (5, 1, 0, 3),
+            (8, 4, 0, 3),
+            (7, 8, 0, 2),
+            (3, 11, 270, 3),
+            (8, 11, 270, 3)
+        ]
 
 
-if __name__ == '__main__':
-    main()
+        path = self.planning(animation=show_animation)
+
+        if path is None:
+            print("Cannot find path")
+            self.draw_graph()
+        else:
+            print("found path!!")
+
+            # Draw final path
+            if self.showFinalAnimation:
+                self.draw_graph()
+                plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
+                for (data) in self.lineList:
+                    x1 = data[0][0]
+                    y1 = data[0][1]
+                    x2 = data[0][2]
+                    y2 = data[0][3]
+                    self.plotObstaclev2(x1, y1, x2, y2)
+                plt.grid(True)
+                plt.pause(0.01)  # Need for Mac
+                plt.show()
