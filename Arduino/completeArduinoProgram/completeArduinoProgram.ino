@@ -56,7 +56,8 @@ int servSpeed = 0;
 
 // DO NOT USE PINS 12-17, THESE MAKE PARSEPACKET CRASH THE WHOLE FUCKING SHIT
 // SERVO LIBRARIES ARE FUCKING MORONIC
-int servPins[5] = {25, 23, 21, 4, 22};
+
+int servPins[5] = {4, 23, 22, 21, 25};
 
 // Booleans for movement
 boolean goingForward = false;
