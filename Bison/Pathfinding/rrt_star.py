@@ -31,15 +31,15 @@ class RRTStar(RRT):
             super().__init__(x, y)
             self.cost = 0.0
 
-    def __init__(self, start, goal, lineList, rand_area,
-                 expand_dis=6.0,
-                 path_resolution=1.0,
+    def __init__(self, start, goal, lineList, rand_area_x, rand_area_y,
+                 expand_dis=3.0,
+                 path_resolution=0.5,
                  goal_sample_rate=20,
-                 max_iter=6000,
+                 max_iter=10000,
                  connect_circle_dist=50.0
                  ):
         super().__init__(start, goal,
-                         rand_area, lineList, expand_dis, path_resolution, goal_sample_rate, max_iter)
+                         rand_area_x, rand_area_y, lineList, expand_dis, path_resolution, goal_sample_rate, max_iter)
         """
         Setting Parameter
         start:Start Position [x,y]
@@ -137,6 +137,7 @@ class RRTStar(RRT):
     def find_near_nodes(self, new_node):
         nnode = len(self.node_list) + 1
         r = self.connect_circle_dist * math.sqrt((math.log(nnode) / nnode))
+        #print(r)
         dist_list = [(node.x - new_node.x) ** 2 +
                      (node.y - new_node.y) ** 2 for node in self.node_list]
         near_inds = [dist_list.index(i) for i in dist_list if i <= r ** 2]

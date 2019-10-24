@@ -19,12 +19,14 @@ class RRT:
             self.path_y = []
             self.parent = None
 
-    def __init__(self, start, goal, rand_area, lineList, expand_dis=0.5,
+    def __init__(self, start, goal, rand_area_x, rand_area_y, lineList, expand_dis=0.5,
                  path_resolution=0.1, goal_sample_rate=5, max_iter=7000):
         self.start = self.Node(start[0], start[1])
         self.end = self.Node(goal[0], goal[1])
-        self.min_rand = rand_area[0]
-        self.max_rand = rand_area[1]
+        self.min_rand_x = rand_area_x[0]
+        self.max_rand_x = rand_area_x[1]
+        self.min_rand_y = rand_area_y[0]
+        self.max_rand_y = rand_area_y[1]
         self.expand_dis = expand_dis
         self.path_resolution = path_resolution
         self.goal_sample_rate = goal_sample_rate
@@ -72,9 +74,11 @@ class RRT:
             extend_length = d
 
         n_expand = math.floor(extend_length / self.path_resolution)
+        #print(n_expand)
 
         for _ in range(n_expand):
             new_node.x += self.path_resolution * math.cos(theta)
+            #print(self.path_resolution * math.cos(theta))
             new_node.y += self.path_resolution * math.sin(theta)
             new_node.path_x.append(new_node.x)
             new_node.path_y.append(new_node.y)
@@ -127,15 +131,15 @@ class RRT:
 
     def get_random_node(self):
         if random.randint(0,100) > self.goal_sample_rate:
-            rnd = self.Node(random.uniform(self.min_rand, self.max_rand),
-                            random.uniform(self.min_rand, self.max_rand))
+            rnd = self.Node(random.uniform(self.min_rand_x, self.max_rand_x),
+                            random.uniform(self.min_rand_y, self.max_rand_y))
         else:
             rnd = self.Node(self.end.x, self.end.y)
         return rnd
 
     @staticmethod
     def plotObstaclev2(x1, y1, x2, y2):
-        plt.plot([x1, x2], [y1, y2], color='k', linestyle='-', linewidth=2)
+        plt.plot([x1, x2], [y1, y2], color='k', linestyle='-', linewidth=1)
 
     @staticmethod
     def checkObstaclev2(node, lineList):

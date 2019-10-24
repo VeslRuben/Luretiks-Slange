@@ -33,6 +33,8 @@ class mazeRecognizer:
         edges = cv2.Canny(grayfilt, 120, 180, apertureSize=3)
         edges = cv2.dilate(edges, None, iterations=7)
         edges = cv2.erode(edges, None, iterations=5)
+        kernel = np.ones((30, 30), np.uint8)
+        edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
         return edges
 
@@ -49,7 +51,7 @@ class mazeRecognizer:
 
         edges2 = self.filtering(pic2)
 
-        lines2 = cv2.HoughLinesP(edges2, 1, np.pi / 300, 110)
+        lines2 = cv2.HoughLinesP(edges2, 1, np.pi / 300, 110, maxLineGap=5, minLineLength=50)
 
         for data in lines2:
             x1 = data[0][0]
