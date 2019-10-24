@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import cv2
 
@@ -40,11 +42,11 @@ class mazeRecognizer:
 
     def runshit(self):
         pic = cv2.imread(
-            'C:\\Users\\h_wal\\OneDrive\\Documents\\Automatiseringsteknikk 3\\Mekatronikk\\Luretriks-Slange\\Pictures\\jallabilde1.jpg',
+            os.getcwd() + "\\" + "..\\Pictures/jallabilde1.jpg",
             -1)
 
         pic2 = cv2.imread(
-            'C:\\Users\\h_wal\\OneDrive\\Documents\\Automatiseringsteknikk 3\\Mekatronikk\\Luretriks-Slange\\Pictures\\jall2.jpg',
+            os.getcwd() + "\\" + "..\\Pictures/jall2.jpg",
             -1)
 
         edges1 = self.filtering(pic)

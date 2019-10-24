@@ -1,5 +1,7 @@
 from Bison.ImageProcessing.maze_recogn import mazeRecognizer
 from Bison.Pathfinding.rrt_star import RRTStar
+import os
+
 
 
 maze = mazeRecognizer()
