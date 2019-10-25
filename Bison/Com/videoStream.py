@@ -53,8 +53,8 @@ class VideoStream:
             Logger.logg("Unable to get image form camera", Logger.warning)
             return None
 
+
 if __name__ == "__main__":
-    Logger.testLog()
     c = VideoStream("http://192.168.137.171")
     c.reSize(10)
     c.getPicture()
