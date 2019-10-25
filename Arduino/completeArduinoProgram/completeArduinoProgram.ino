@@ -137,6 +137,8 @@ void loop()
       goingBackward = false;
     } else if (command == 'r') {
       Serial.println("Adjusting straight");
+      goingForward = false;
+      goingBackward = false;
       goStraight();
     } else {
       Serial.println("Unknown command");
