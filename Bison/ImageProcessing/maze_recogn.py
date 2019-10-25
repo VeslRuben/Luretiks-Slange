@@ -19,23 +19,13 @@ class mazeRecognizer:
         pass
 
     def filtering(self, picture):
-        #hsv = cv2.cvtColor(picture, cv2.COLOR_BGR2HSV)
-
-        #lower_blue = np.array([110, 50, 50])
-        #upper_blue = np.array([140, 255, 255])
-        #mask = cv2.inRange(hsv, lower_blue, upper_blue)
-
-        #picture[mask != 0] = [153, 149, 160]
-
-        #cv2.imshow("Test", cv2.resize(picture, (1280, 720)))
-
         grayfilt = cv2.cvtColor(picture, cv2.COLOR_BGR2GRAY)
-        grayfilt = cv2.GaussianBlur(grayfilt, (5, 5), 0)
+        grayfilt = cv2.GaussianBlur(grayfilt, (7, 7), 0)
 
-        edges = cv2.Canny(grayfilt, 120, 180, apertureSize=3)
-        edges = cv2.dilate(edges, None, iterations=7)
-        edges = cv2.erode(edges, None, iterations=5)
-        kernel = np.ones((30, 30), np.uint8)
+        edges = cv2.Canny(grayfilt, 120, 150, apertureSize=3)
+        edges = cv2.dilate(edges, None, iterations=8)
+        edges = cv2.erode(edges, None, iterations=7)
+        kernel = np.ones((21, 21), np.uint8)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
         return edges
@@ -46,14 +36,14 @@ class mazeRecognizer:
             -1)
 
         pic2 = cv2.imread(
-            os.getcwd() + "\\" + "..\\Pictures/jall2.jpg",
+            os.getcwd() + "\\" + "..\\Pictures/test2jallball.jpg",
             -1)
 
         edges1 = self.filtering(pic)
 
         edges2 = self.filtering(pic2)
 
-        lines2 = cv2.HoughLinesP(edges2, 1, np.pi / 300, 110, maxLineGap=5, minLineLength=50)
+        lines2 = cv2.HoughLinesP(edges2, 1, np.pi / 1000, 85, maxLineGap=10, minLineLength=40)
 
         for data in lines2:
             x1 = data[0][0]

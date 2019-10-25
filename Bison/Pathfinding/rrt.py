@@ -19,7 +19,7 @@ class RRT:
             self.path_y = []
             self.parent = None
 
-    def __init__(self, start, goal, rand_area_x, rand_area_y, lineList, expand_dis=0.5,
+    def __init__(self, start, goal, rand_area_x, rand_area_y, lineList, edge_dist, expand_dis=0.5,
                  path_resolution=0.1, goal_sample_rate=5, max_iter=7000):
         self.start = self.Node(start[0], start[1])
         self.end = self.Node(goal[0], goal[1])
@@ -33,6 +33,7 @@ class RRT:
         self.max_iter = max_iter
         self.node_list = []
         self.lineList = lineList
+        self.edge_dist = edge_dist
 
     def planning(self, animation=True):
         """
@@ -47,7 +48,7 @@ class RRT:
 
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
-            if self.checkObstaclev2(new_node, self.lineList):
+            if self.checkObstaclev2(new_node, self.lineList, self.edge_dist):
                 self.node_list.append(new_node)
 
             if animation and i % 5 == 0:
@@ -55,7 +56,7 @@ class RRT:
 
             if self.calc_dist_to_goal(self.node_list[-1].x, self.node_list[-1].y) <= self.expand_dis:
                 final_node = self.steer(self.node_list[-1], self.end, self.expand_dis)
-                if self.checkObstaclev2(final_node, self.lineList):
+                if self.checkObstaclev2(final_node, self.lineList, self.edge_dist):
                     return self.generate_final_course(len(self.node_list) - 1)
 
             if animation and i % 5:
@@ -142,7 +143,7 @@ class RRT:
         plt.plot([x1, x2], [y1, y2], color='k', linestyle='-', linewidth=1)
 
     @staticmethod
-    def checkObstaclev2(node, lineList):
+    def checkObstaclev2(node, lineList, edgeDistance):
         dx_list = [x for x in node.path_x]
         dy_list = [y for y in node.path_y]
         node_line = LineString([(x, y) for (x,y) in zip(dx_list, dy_list)])
@@ -153,6 +154,8 @@ class RRT:
             y2 = data[0][3]
             obst = LineString([(x1, y1), (x2, y2)])
             if obst.intersects(node_line):
+                return False
+            if obst.distance(node_line) < edgeDistance:
                 return False
         return True
 

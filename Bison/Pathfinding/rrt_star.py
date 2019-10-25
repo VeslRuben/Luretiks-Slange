@@ -31,7 +31,7 @@ class RRTStar(RRT):
             super().__init__(x, y)
             self.cost = 0.0
 
-    def __init__(self, start, goal, lineList, rand_area_x, rand_area_y,
+    def __init__(self, start, goal, lineList, edge_dist, rand_area_x, rand_area_y,
                  expand_dis=3.0,
                  path_resolution=0.5,
                  goal_sample_rate=20,
@@ -39,7 +39,7 @@ class RRTStar(RRT):
                  connect_circle_dist=50.0
                  ):
         super().__init__(start, goal,
-                         rand_area_x, rand_area_y, lineList, expand_dis, path_resolution, goal_sample_rate, max_iter)
+                         rand_area_x, rand_area_y, lineList, edge_dist, expand_dis, path_resolution, goal_sample_rate, max_iter)
         """
         Setting Parameter
         start:Start Position [x,y]
@@ -65,7 +65,7 @@ class RRTStar(RRT):
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd)
             new_node = self.steer(self.node_list[nearest_ind], rnd, self.expand_dis)
 
-            if self.checkObstaclev2(new_node, self.lineList):
+            if self.checkObstaclev2(new_node, self.lineList, self.edge_dist):
                 near_inds = self.find_near_nodes(new_node)
                 new_node = self.choose_parent(new_node, near_inds)
                 if new_node:
@@ -78,6 +78,7 @@ class RRTStar(RRT):
             if (not search_until_max_iter) and new_node:  # check reaching the goal
                 last_index = self.search_best_goal_node()
                 if last_index:
+                    print("Iterations: ", i)
                     return self.generate_final_course(last_index)
 
         print("reached max iteration")
@@ -97,7 +98,7 @@ class RRTStar(RRT):
         for i in near_inds:
             near_node = self.node_list[i]
             t_node = self.steer(near_node, new_node)
-            if t_node and self.checkObstaclev2(t_node, self.lineList):
+            if t_node and self.checkObstaclev2(t_node, self.lineList, self.edge_dist):
                 costs.append(self.calc_new_cost(near_node, new_node))
             else:
                 costs.append(float("inf"))  # the cost of collision node
@@ -121,7 +122,7 @@ class RRTStar(RRT):
         safe_goal_inds = []
         for goal_ind in goal_inds:
             t_node = self.steer(self.node_list[goal_ind], self.goal_node)
-            if self.checkObstaclev2(t_node, self.lineList):
+            if self.checkObstaclev2(t_node, self.lineList, self.edge_dist):
                 safe_goal_inds.append(goal_ind)
 
         if not safe_goal_inds:
@@ -151,7 +152,7 @@ class RRTStar(RRT):
                 continue
             edge_node.cost = self.calc_new_cost(new_node, near_node)
 
-            no_collision = self.checkObstaclev2(edge_node, self.lineList)
+            no_collision = self.checkObstaclev2(edge_node, self.lineList, self.edge_dist)
             improved_cost = near_node.cost > edge_node.cost
 
             if no_collision and improved_cost:
