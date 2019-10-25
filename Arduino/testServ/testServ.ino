@@ -5,11 +5,9 @@ Servo myServo;
 
 void setup() {
   // put your setup code here, to run once:
-  myServo.attach(21);
+  myServo.attach(25);
 
-  myServo.write(20);
-  delay(2000);
-  myServo.write(160);
+  myServo.write(99);
 }
 
 void loop() {

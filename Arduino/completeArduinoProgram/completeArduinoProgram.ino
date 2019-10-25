@@ -56,8 +56,10 @@ int servSpeed = 0;
 
 // DO NOT USE PINS 12-17, THESE MAKE PARSEPACKET CRASH THE WHOLE FUCKING SHIT
 // SERVO LIBRARIES ARE FUCKING MORONIC
-
 int servPins[5] = {4, 23, 22, 21, 25};
+
+// Zero-point array for servos
+int servZero[5] = {90, 93, 97, 87, 99};
 
 // Booleans for movement
 boolean goingForward = false;
@@ -106,7 +108,7 @@ void setup()
   // Establishing the servos in an array
   for (int i = 0; i < 0 + numberOfServos; i++) {
     myServo[i].attach(servPins[i]);
-    myServo[i].write(90);
+    myServo[i].write(servZero[i]);
   }
 }
 
@@ -213,13 +215,13 @@ void sendPacketOnce() {
 ///////////////////////////////////////////
 void goForward() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(90 + updateAngle(T, i * forwardPhi, A));
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * forwardPhi, A));
   }
 }
 
 void goBackward() {
-  for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(90 + updateAngle(T, -i * forwardPhi, A));
+  for (int i = 2; i >= 0; i--) {
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, -i * forwardPhi, A));
   }
 }
 
@@ -250,34 +252,34 @@ void goRight() {
 
 void lateralShift() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(90 + updateAngle(T, i * lateralPhi, A));
+    myServo[i * 2].write(servZero[i*2] + updateAngle(T, i * lateralPhi, A));
     if (i < 2) {
-      myServo[(i * 2) + 1].write(90 + updateAngle(T, i * lateralPhi, A));
+      myServo[(i * 2) + 1].write(servZero[(i*2)+1] + updateAngle(T, i * lateralPhi, A));
     }
   }
 }
 
 void doARoll() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(90 + updateAngle(T, 0, A));
+    myServo[i * 2].write(servZero[i*2] + updateAngle(T, 0, A));
     if (i < 2) {
-      myServo[(i * 2) + 1].write(90 + updateAngle(T, 90, A));
+      myServo[(i * 2) + 1].write(servZero[(i*2)+1] + updateAngle(T, 90, A));
     }
   }
 }
 
 void rotatingGait() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(90 + updateAngle(T, i * rotatePhiV, A));
+    myServo[i * 2].write(servZero[i*2] + updateAngle(T, i * rotatePhiV, A));
     if (i < 2) {
-      myServo[(i * 2) + 1].write(90 + updateAngle(T, i * rotatePhiH, A));
+      myServo[(i * 2) + 1].write(servZero[(i*2)+1] + updateAngle(T, i * rotatePhiH, A));
     }
   }
 }
 
 void goStraight() {
   for (int i = 0; i < 5; i++) {
-    myServo[i].write(90);
+    myServo[i].write(servZero[i]);
   }
 }
 
