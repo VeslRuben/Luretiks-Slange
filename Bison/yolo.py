@@ -1,17 +1,20 @@
 import os
 import time
 
-import scipy.misc
-from Bison.Com.videoStream import VideoStream
-from PIL import Image
+from Bison.logger import Logger
+
+print (os.listdir('.') )# current level
 
 
-v = VideoStream("http://192.168.137.171")
+path = os.getcwd().split("\\")
+if path[len(path)-1] == "Bison":
+    print(path)
+else:
+    for x in range(2,10):
+        t = "../" * x
+        dirs = os.listdir(t)
+        print(dirs)
 
-for x in range(10):
-    v.reSize(x)
-    time.sleep(0.5)
-    a = v.getPicture()
-    im = Image.fromarray(a)
-    im.save(f"C:\\Users\\Ruben\\Pictures\\Camera Roll\\{x}.jpeg")
-    time.sleep(0.5)
+Logger.startLoggig()
+
+

@@ -3,7 +3,7 @@ from io import BytesIO
 import numpy as np
 from PIL import Image
 import requests
-#from Bison.logger import Logger
+from Bison.logger import Logger
 
 
 class VideoStream:
@@ -55,6 +55,7 @@ class VideoStream:
 
 
 if __name__ == "__main__":
+    Logger.startLoggig()
     #Logger.testLog()
     c = VideoStream("http://192.168.137.171")
     c.reSize(10)

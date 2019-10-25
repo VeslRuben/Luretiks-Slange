@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import os
 
 class Logger:
     # Logging types
@@ -9,10 +9,23 @@ class Logger:
     warning = 3
     error = 4
 
+
+
     @staticmethod
     def startLoggig():
+        path = os.getcwd().split("\\")
+        if path[len(path) - 1] == "Bison":
+            path = "\\"
+        else:
+            for x in range(2, 10):
+                t = "../" * x
+                dirs = os.listdir(t)
+                if dirs.count("Loggs"):
+                    path = t
+                    break
+
         dt = datetime.now()
-        Logger.logFile = open("../Loggs/" + str(dt.day) + str(dt.month) + str(dt.year) + "_" +
+        Logger.logFile = open(path+ "Loggs\\" + str(dt.day) + str(dt.month) + str(dt.year) + "_" +
                               str(dt.hour) + str(dt.minute) + ".txt", "w+")
 
     @staticmethod
