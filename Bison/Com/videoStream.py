@@ -36,7 +36,7 @@ class VideoStream:
             size = 0
         obj = {"var": "framesize", "val": size}
         requests.get(self.url + "/control", params=obj, timeout=3)
-        #Logger.logg("framesize set to: " + str(size), Logger.info)
+        Logger.logg("framesize set to: " + str(size), Logger.info)
         time.sleep(0.3)
 
     def getPicture(self) -> np.array:
@@ -50,13 +50,11 @@ class VideoStream:
             imgArray = np.array(img)
             return imgArray
         except requests.exceptions.ConnectTimeout:
-            #Logger.logg("Unable to get image form camera", Logger.warning)
+            Logger.logg("Unable to get image form camera", Logger.warning)
             return None
 
 
 if __name__ == "__main__":
-    Logger.startLoggig()
-    #Logger.testLog()
     c = VideoStream("http://192.168.137.171")
     c.reSize(10)
     c.getPicture()
