@@ -17,17 +17,17 @@ class VideoStream:
 
     def reSize(self, size: int):
         """
-        Sets the size of the images taken
+        Sets the size of the images taken \n
         :param size: Size of the image represented by an integer value.
-        10 = 1600 x 1200
-        9 = 1280 x 1024
-        8 = 1024 x 768
-        7 = 800 x 600
-        6 = 640 x480
-        5 = 400 x 296
-        4 = 320 x 240
-        3 = 240 x 176
-        0 = 160 x 120
+            10 = 1600 x 1200,
+            9 = 1280 x 1024,
+            8 = 1024 x 768,
+            7 = 800 x 600,
+            6 = 640 x480,
+            5 = 400 x 296,
+            4 = 320 x 240,
+            3 = 240 x 176,
+            0 = 160 x 120,
         :return: None
         """
         if size > 10:
@@ -41,7 +41,7 @@ class VideoStream:
 
     def getPicture(self) -> np.array:
         """
-        Gets on picture form the cameras stream.
+        Gets on picture form the cameras stream. \n
         :return: Image as an numpy array
         """
         try:

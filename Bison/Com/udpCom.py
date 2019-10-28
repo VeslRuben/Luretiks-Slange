@@ -22,7 +22,7 @@ class UdpConnection:
 
     def send(self, data: str) -> None:
         """
-        Sends a udp diagram
+        Sends a udp diagram \n
         :param data: data to send
         :return: None
         """
@@ -30,7 +30,7 @@ class UdpConnection:
 
     def receive(self):
         """
-        Recevs data and decods it bast on the header
+        Recevs data and decods it bast on the header \n
         :return: The body of the data
         """
         data = None
@@ -38,7 +38,7 @@ class UdpConnection:
             header, addr = self.sock.recvfrom(10024)  # buffer size is 10024 bytes
             # Reads the header of the message
 
-            if header.decode() == "alive":
+            if header.decode() == "a":
                 self.timeOutTimer = time.time()  # Resets the time out timer
                 if self.connectionTimedOut:
                     Logger.logg(f"{self.url} has reconnected", Logger.info)
