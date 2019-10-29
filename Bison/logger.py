@@ -11,7 +11,7 @@ class Logger:
 
     path = os.getcwd().split("\\")
     if path[len(path) - 1] == "Bison":
-        path = "\\"
+        path = "..\\"
     else:
         for x in range(2, 10):
             t = "../" * x
@@ -22,12 +22,6 @@ class Logger:
     dt = datetime.now()
     logFile = open(path + "Loggs\\" + str(dt.day) + str(dt.month) + str(dt.year) + "_" +
                           str(dt.hour) + str(dt.minute) + ".txt", "w+")
-
-
-    @staticmethod
-    def testLog():
-        dt = datetime.now()
-        Logger.logFile = open("log.txt", "w+")
 
     @staticmethod
     def stopLogging():

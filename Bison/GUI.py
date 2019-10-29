@@ -1,13 +1,14 @@
-import time
-
 import wx
 import numpy as np
-import threading
+from Bison.Broker import Broker as b
+from Bison.logger import Logger
 
 UpdateImageEventR = wx.NewEventType()
 EVT_UPDATE_IMAGE_R = wx.PyEventBinder(UpdateImageEventR, 1)
 UpdateImageEventL = wx.NewEventType()
 EVT_UPDATE_IMAGE_L = wx.PyEventBinder(UpdateImageEventL, 1)
+UpdateTextEvent = wx.NewEventType()
+EVT_UPDATE_TEXT = wx.PyEventBinder(UpdateTextEvent, 1)
 
 
 class CostumEvent(wx.PyCommandEvent):
@@ -47,12 +48,19 @@ class StartFrame(wx.Frame):
         # ensure the parent's __init__ is called
         super(StartFrame, self).__init__(*args, **kw)
         self.Maximize(True)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+
+        # variabels for threding #################
+
+        ##########################################
 
         # Maual controll
         self.controldManualy = False
 
         # Update events #######################
         self.Bind(EVT_UPDATE_IMAGE_R, self.OnNewImageR)
+        self.Bind(EVT_UPDATE_IMAGE_L, self.OnNewImageL)
+        self.Bind(EVT_UPDATE_TEXT, self.OnNewText)
 
         #######################################
 
@@ -95,7 +103,7 @@ class StartFrame(wx.Frame):
         topGrid.Add(bntHBox, 1, wx.EXPAND | wx.LEFT, 50)
 
         # Text feeld ####################################
-        self.logTexFeald = wx.TextCtrl(panel, value="", size=(800, 390))
+        self.logTexFeald = wx.TextCtrl(panel, value="", size=(800, 390), style=wx.TE_MULTILINE)
 
         topGrid.Add(self.logTexFeald, 1, wx.ALIGN_RIGHT | wx.RIGHT | wx.TOP, 10)
         #################################################
@@ -110,10 +118,10 @@ class StartFrame(wx.Frame):
         h = 600
         array = np.random.randint(0, 255, (3, w, h)).astype('uint8')
         image = wx.ImageFromBuffer(w, h, array)
-        self.imgL = ImagePanel(image, panel, size=(w, h))
-        self.imgR = ImagePanel(image, panel, size=(w, h))
-        videoVBox.Add(self.imgL, 1, wx.RIGHT, 10)
-        videoVBox.Add(self.imgR, 1)
+        self.imgL = ImagePanel(image, panel, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT, size=(w, h))
+        self.imgR = ImagePanel(image, panel, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT, size=(w, h))
+        videoVBox.Add(self.imgL, 1, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.RIGHT, 10)
+        videoVBox.Add(self.imgR, 1, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT)
         outerGrid.Add(videoVBox, 1, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.BOTTOM, 5)
         ################################################
 
@@ -124,16 +132,6 @@ class StartFrame(wx.Frame):
 
         panel.SetSizer(outerGrid)
 
-    def OnNewImage(self, event=None):
-        """
-        create a new image by changing underlying numpy array
-        """
-        w = h = 400
-        array = np.random.randint(0, 255, (3, w, h)).astype('uint8')
-        self.imgL.image = image = wx.ImageFromBuffer(w, h, array)
-        self.imgL.Update()
-        self.imgL.Refresh()
-
     def OnNewImageR(self, event=None):
         array = event.GetMyVal()
         h = array.shape[0]
@@ -141,70 +139,105 @@ class StartFrame(wx.Frame):
         self.imgR.image = image = wx.ImageFromBuffer(w, h, array)
         self.imgR.Update()
         self.imgR.Refresh()
+        Logger.logg("GUI right image updated", Logger.info)
+
+    def OnNewImageL(self, event=None):
+        array = event.GetMyVal()
+        h = array.shape[0]
+        w = array.shape[1]
+        self.imgL.image = image = wx.ImageFromBuffer(w, h, array)
+        self.imgL.Update()
+        self.imgL.Refresh()
+        Logger.logg("GUI left image updated", Logger.info)
+
+    def OnNewText(self, event=None):
+        text = event.GetMyVal()
+        self.logTexFeald.AppendText(text + "\n")
+        self.logTexFeald.Refresh()
+        Logger.logg("GUI text box updated", Logger.info)
 
     def OnStartBtn(self, event=None):
-        pass
+        with b.lock:
+            b.startFlag = True
+        Logger.logg("GUI start btn preset", Logger.info)
 
     def OnStopBtn(self, event=None):
-        pass
+        with b.lock:
+            b.stopFlag = True
 
     def OnYolo(self, event=None):
-        pass
+        with b.lock:
+            b.yoloFlag = True
 
     def OnManualBtn(self, event=None):
         self.controldManualy = not self.controldManualy
-        print(self.controldManualy)
+        with b.lock:
+            b.manulaControllFlag = not b.manulaControllFlag
+        self.logTexFeald.AppendText(f"Snake manual mode: {self.controldManualy}\n")
+        Logger.logg(f"GUI manula control: {self.controldManualy}", Logger.info)
 
     def OnPrepareMaze(self, event=None):
-        pass
+        with b.lock:
+            b.prepMaze = True
+        Logger.logg("GUI prepare maze btn preset", Logger.info)
 
     def OnFindPath(self, event=None):
-        pass
+        with b.lock:
+            b.findPathFlag = True
+        Logger.logg("GUI find path btn preset", Logger.info)
+
+    def OnClose(self, event=None):
+        """
+        quits the gui and sets a flagg for other threds \n
+        :param event: the event
+        :return: None
+        """
+        with b.quitLock:
+            b.quitFlag = True
+        Logger.logg("GUI shunting down", Logger.info)
+        self.Destroy()
 
     def OnKeyDown(self, event=None):
         keycode = event.GetKeyCode()
         if self.controldManualy:
-            if keycode == wx.WXK_SPACE:
-                print("stop")
-            elif keycode == 87:
-                print("forward")
-            elif keycode == 83:
-                print("back")
-            elif keycode == 65:
-                print("left")
-            elif keycode == 68:
-                print("right")
-            elif keycode == 69:
-                print("rotae right")
-            elif keycode == 81:
-                print("rotate left")
-            elif keycode == 82:
-                print("reset")
-
-
-def fireEvent(sf):
-    while True:
-        inp = input("-> ")
-        yoloEvent = CostumEvent(UpdateImageEventR, sf.GetId())
-        yoloEvent.SetMyVal(inp)
-        sf.GetEventHandler().ProcessEvent(yoloEvent)
+            with b.moveLock:
+                if keycode == wx.WXK_SPACE:
+                    b.moveCmd = "s"
+                elif keycode == 87:
+                    b.moveCmd = "f"
+                elif keycode == 83:
+                    b.moveCmd = "b"
+                elif keycode == 65:
+                    b.moveCmd = "l"
+                elif keycode == 68:
+                    b.moveCmd = "r"
+                elif keycode == 69:
+                    print("rotae right")
+                elif keycode == 81:
+                    print("rotate left")
+                elif keycode == 82:
+                    b.moveCmd = "r"
 
 
 class GUI:
 
     def __init__(self):
         self.app = wx.App()
-        self.startFrame = StartFrame(None, title='Snake Controll', size=wx.Size(1920, 1080))
+        self.startFrame = StartFrame(None, title='Snake Control', size=wx.Size(1920, 1080))
+        Logger.logg("GUI init", Logger.info)
 
     def getEventInfo(self):
         events = {"UpdateImageEventR": UpdateImageEventR,
-                  "UpdateImageEventL": UpdateImageEventL}
+                  "UpdateImageEventL": UpdateImageEventL,
+                  "UpdateTextEvent": UpdateTextEvent}
         info = {"id": self.startFrame.GetId,
                 "eventHandler": self.startFrame.GetEventHandler().ProcessEvent,
                 "events": events}
+        Logger.logg("GUI event data returned successful", Logger.info)
         return info
 
     def run(self):
+        Logger.logg("GUI running", Logger.info)
         self.startFrame.Show()
         self.app.MainLoop()
 
@@ -212,8 +245,7 @@ class GUI:
 def main():
     gui = GUI()
     k = gui.getEventInfo()
-    t = threading.Thread(target=fireEvent, args=(k,))
-    # t.start()
+
     gui.run()
 
 

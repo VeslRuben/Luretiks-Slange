@@ -6,7 +6,7 @@ author: Atsushi Sakai(@Atsushi_twi)
 import math
 import os
 import sys
-
+from Bison.logger import Logger
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -42,7 +42,8 @@ class RRTStar(RRT):
                  connect_circle_dist=50.0
                  ):
         super().__init__(start, goal,
-                         rand_area_x, rand_area_y, lineList, edge_dist, expand_dis, path_resolution, goal_sample_rate, max_iter)
+                         rand_area_x, rand_area_y, lineList, edge_dist, expand_dis, path_resolution, goal_sample_rate,
+                         max_iter)
         """
         Setting Parameter
         start:Start Position [x,y]
@@ -63,7 +64,7 @@ class RRTStar(RRT):
 
         self.node_list = [self.start]
         for i in range(self.max_iter):
-            #print("Iter:", i, ", number of nodes:", len(self.node_list))
+            # print("Iter:", i, ", number of nodes:", len(self.node_list))
             rnd = self.get_random_node()
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd)
             new_node = self.steer(self.node_list[nearest_ind], rnd, self.expand_dis)
@@ -82,6 +83,7 @@ class RRTStar(RRT):
                 last_index = self.search_best_goal_node()
                 if last_index:
                     print("Iterations: ", i)
+                    Logger.logg(f"RRT* found path, iterations: {i}", Logger.info)
                     return self.generate_final_course(last_index)
 
         print("reached max iteration")
@@ -141,7 +143,7 @@ class RRTStar(RRT):
     def find_near_nodes(self, new_node):
         nnode = len(self.node_list) + 1
         r = self.connect_circle_dist * math.sqrt((math.log(nnode) / nnode))
-        #print(r)
+        # print(r)
         dist_list = [(node.x - new_node.x) ** 2 +
                      (node.y - new_node.y) ** 2 for node in self.node_list]
         near_inds = [dist_list.index(i) for i in dist_list if i <= r ** 2]
@@ -174,14 +176,14 @@ class RRTStar(RRT):
                 node.cost = self.calc_new_cost(parent_node, node)
                 self.propagate_cost_to_leaves(node)
 
-    def run(self, eventData=None):
-        print("Start " + __file__)
-
+    def run(self):
+        Logger.logg("Running RRT*", Logger.info)
         path = self.planning(animation=show_animation)
 
         fig = None
 
         if path is None:
+            Logger.logg("RRT* Cannot find path", Logger.info)
             print("Cannot find path")
             fig = plt.figure()
             fig.add_subplot(111)
@@ -204,15 +206,7 @@ class RRTStar(RRT):
                 plt.grid(True)
                 plt.pause(0.01)  # Need for Mac
                 plt.show()
-        if eventData:
-            print("Fleksnes")
-            data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-            data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
 
-            event = eventData["events"]["UpdateImageEventR"]
-            eventhandler = eventData["eventHandler"]
-            id = eventData["id"]
-
-            figureUpdateEvent = CostumEvent(event, id())
-            figureUpdateEvent.SetMyVal(data)
-            eventhandler(figureUpdateEvent)
+        data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+        data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        return data

@@ -2,9 +2,10 @@ import time
 from Bison.Com.videoStream import VideoStream
 from Bison.Com.udpCom import UdpConnection
 import numpy as np
+from Bison.logger import Logger
 
 
-class snake:
+class Snake:
 
     def __init__(self, cameraIp: str, controllerIp: str):
         self.camera = VideoStream("http://192.168.137.171")
@@ -34,13 +35,16 @@ class snake:
         :return: returns a picrure as a numpy array
         """
         picture = self.camera.getPicture()
+        Logger.logg("Picture taken by snake", Logger.cmd)
         return picture
 
     def moveForward(self):
         self.controller.send("f")
+        Logger.logg("Sent: f", Logger.cmd)
 
     def moveBacwards(self):
         self.controller.send("b")
+        Logger.logg("Sent: b", Logger.cmd)
 
     def turn(self, degreas: int):
         """
@@ -53,12 +57,23 @@ class snake:
         self.controller.send("t")
         time.sleep(0.1)
         self.controller.send(str(degreas))
+        Logger.logg(f"Sent turn: {degreas}", Logger.cmd)
 
     def moveLeft(self):
         self.controller.send("l")
+        Logger.logg("Sent: l", Logger.cmd)
 
     def moveRight(self):
         self.controller.send("r")
+        Logger.logg("Sent: r", Logger.cmd)
+
+    def stop(self):
+        self.controller.send("s")
+        Logger.logg("Sent: s", Logger.cmd)
+
+    def reset(self):
+        self.controller.send("r")
+        Logger.logg("Sent: r", Logger.cmd)
 
     def isControllerAlive(self) -> bool:
         """

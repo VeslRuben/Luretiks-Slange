@@ -23,22 +23,21 @@ class FindTarget:
         blueLower = (100, 170, 40)
         blueUper = (140, 255, 240)
 
-
         frame = bilde
 
         # Filtering of the pictures
-        #1 We blur the picture with Gaussian blur
+        # 1 We blur the picture with Gaussian blur
         blurred = cv2.GaussianBlur(frame, (11, 11), 0)
-        #2 We change the colors to HSV
+        # 2 We change the colors to HSV
         color = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-        #3 Removes everyting that is not inside the Color range that is chosen
+        # 3 Removes everyting that is not inside the Color range that is chosen
         mask = cv2.inRange(color, blueLower, blueUper)
-        #4 Dilates the picture
+        # 4 Dilates the picture
         mask = cv2.dilate(mask, None, iterations=3)
-        #5 Errodes the picture
+        # 5 Errodes the picture
         mask = cv2.erode(mask, None, iterations=3)
 
-        #6 Finds countors inne the fillterd picture
+        # 6 Finds countors inne the fillterd picture
         cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         cnts = imutils.grab_contours(cnts)
@@ -52,15 +51,15 @@ class FindTarget:
                 cv2.circle(frame, (int(x), int(y)), int(radius),
                            (0, 255, 255), 2)
                 cv2.circle(frame, center, 2, (0, 0, 255), -1)
-        if x != None and y !=None:
-            d = dist.euclidean((x,y), (0, 0))
+        if x is not None and y is not None:
+            d = dist.euclidean((x, y), (0, 0))
 
-        if len(cnts) > 0 and d != None and center != None and radius != None:
+        if len(cnts) > 0 and d is not None and center is not None and radius is not None:
             return d, frame, radius, center
         return None
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     c = FindTarget()
     v = VideoStream("http://192.168.137.72")
@@ -69,6 +68,6 @@ if __name__ == "__main__":
         bilde = v.getPicture()
         var = c.getTarget(bilde)
 
-        if var != None :
-            distance, bilde, radius,  center  = var
+        if var is not None:
+            distance, bilde, radius, center = var
             break

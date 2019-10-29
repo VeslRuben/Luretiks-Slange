@@ -1,8 +1,6 @@
 import os
-
 import numpy as np
 import cv2
-
 import time
 
 realtime = False
@@ -12,6 +10,7 @@ cap = cv2.VideoCapture(1)
 time.sleep(0.01)
 
 plotted = False
+
 
 class mazeRecognizer:
 
@@ -51,11 +50,11 @@ class mazeRecognizer:
             x2 = data[0][2]
             y2 = data[0][3]
 
-            cv2.line(pic2, (x1, y1), (x2, y2), (0,255,0), 2)
+            cv2.line(pic2, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
         cv2.imwrite('linjebilde2.jpg', pic2)
 
-        while(stillPic):
+        while stillPic:
             cv2.imshow("Picture", cv2.resize(pic, (1280, 720)))
             cv2.imshow("Picture2", cv2.resize(pic2, (1280, 720)))
             cv2.imshow("Filtered", cv2.resize(edges1, (1280, 720)))
@@ -64,7 +63,7 @@ class mazeRecognizer:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-        while (realtime):
+        while realtime:
             _, frame = cap.read()
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -91,5 +90,4 @@ class mazeRecognizer:
         cap.release()
         cv2.destroyAllWindows()
 
-        return lines2
-
+        return lines2, cv2.resize(pic2, (800, 600))

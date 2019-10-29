@@ -9,6 +9,7 @@ class FindSnake:
         pass
 
     def LocateSnake(self):
+        pass
 
 
 
