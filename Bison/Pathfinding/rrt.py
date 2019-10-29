@@ -160,25 +160,6 @@ class RRT:
         return True
 
     @staticmethod
-    def plot_obstacle(x, y, angle, length):
-        xangle = math.cos(np.deg2rad(angle))
-        yangle = math.sin(np.deg2rad(angle))
-        x2 = x+(length*xangle)
-        y2 = y+(length*yangle)
-        plt.plot([x, x2], [y, y2], color='k', linestyle='-', linewidth=2)
-
-    @staticmethod
-    def checkObstacle(node, lineList):
-        dx_list = [x for x in node.path_x] # This includes the whole path
-        dy_list = [y for y in node.path_y] # This includes points for the whole path
-        node_line = LineString([(x, y) for (x,y) in zip(dx_list, dy_list)])
-        for(lx, ly, la, ll) in lineList:
-            obst = LineString([(lx, ly), (lx+(ll*math.cos(np.deg2rad(la))), ly+(ll*math.sin(np.deg2rad(la))))])
-            if obst.intersects(node_line):
-                return False
-        return True
-
-    @staticmethod
     def get_nearest_node_index(node_list, rnd_node):
         dlist=[(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
                ** 2 for node in node_list]
@@ -230,8 +211,8 @@ def main(gx=1.1, gy=10.0, exp_dist=0.5):
         if show_final_animation:
             rrt.draw_graph()
             plt.plot([x for (x,y) in path], [y for (x, y) in path], '-r')
-            for (lx, ly, la, ll) in lineList:
-                rrt.plot_obstacle(lx, ly, la, ll)
+            for (x1, y1, x2, y2) in lineList:
+                rrt.plotObstaclev2(x1, y1, x2, y2)
             plt.grid(True)
             plt.pause(0.01)
             plt.show()

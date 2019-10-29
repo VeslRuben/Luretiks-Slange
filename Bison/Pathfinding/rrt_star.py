@@ -8,6 +8,9 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+import numpy as np
+
+from Bison.GUI import CostumEvent
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../RRT/")
@@ -171,32 +174,17 @@ class RRTStar(RRT):
                 node.cost = self.calc_new_cost(parent_node, node)
                 self.propagate_cost_to_leaves(node)
 
-
-    def run(self):
+    def run(self, eventData=None):
         print("Start " + __file__)
-
-        # First four points are the maze walls
-        lineList = [
-            (-1, -1, 0, 12),
-            (11, -1, 90, 12),
-            (11, 11, 180, 12),
-            (-1, 11, 270, 12),
-            (3, -1, 90, 4),
-            (-1, 1, 0, 2),
-            (5, 8, 270, 7),
-            (-1, 5, 0, 6),
-            (5, 1, 0, 3),
-            (8, 4, 0, 3),
-            (7, 8, 0, 2),
-            (3, 11, 270, 3),
-            (8, 11, 270, 3)
-        ]
-
 
         path = self.planning(animation=show_animation)
 
+        fig = None
+
         if path is None:
             print("Cannot find path")
+            fig = plt.figure()
+            fig.add_subplot(111)
             self.draw_graph()
         else:
             print("found path!!")
@@ -204,6 +192,8 @@ class RRTStar(RRT):
             # Draw final path
             if self.showFinalAnimation:
                 self.draw_graph()
+                fig = plt.figure()
+                fig.add_subplot(111)
                 plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
                 for (data) in self.lineList:
                     x1 = data[0][0]
@@ -214,3 +204,15 @@ class RRTStar(RRT):
                 plt.grid(True)
                 plt.pause(0.01)  # Need for Mac
                 plt.show()
+        if eventData:
+            print("Fleksnes")
+            data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
+            data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+            event = eventData["events"]["UpdateImageEventR"]
+            eventhandler = eventData["eventHandler"]
+            id = eventData["id"]
+
+            figureUpdateEvent = CostumEvent(event, id())
+            figureUpdateEvent.SetMyVal(data)
+            eventhandler(figureUpdateEvent)
