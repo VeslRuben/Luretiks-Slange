@@ -87,7 +87,7 @@ class Controller(threading.Thread):
         Put yolo test code her!!!!!!!!!
         :return: yolo
         """
-        frame = self.cam.takePicture()
+        frame = self.cam.takePictureRgb()
         self.notifyGui("UpdateImageEventL", frame)
 
     def run(self) -> None:

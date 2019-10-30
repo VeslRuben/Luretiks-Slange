@@ -77,7 +77,7 @@ class mazeRecognizer:
                 break
 
         while realtime:
-            frame = self.cam.takePicture()
+            frame = self.cam.takePictureRgb()
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray = cv2.GaussianBlur(gray, (7, 7), 0)

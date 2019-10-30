@@ -26,7 +26,11 @@ class Camera:
         """
         Camera.cam.release()
 
-    def takePicture(self):
+    def takePictureRgb(self):
         _, frame = Camera.cam.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return frame
+
+    def takePicture(self):
+        _, frame = Camera.cam.read()
         return frame
