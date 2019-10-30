@@ -51,7 +51,7 @@ class UdpConnection:
 
         if time.time() - self.timeOutTimer > self.timeOut:
             self.connectionTimedOut = True
-            Logger.logg(f"connetion to {self.url} has timed out")
+            Logger.logg(f"connetion to {self.url} has timed out", Logger.warning)
 
         return data
 
@@ -63,6 +63,6 @@ class UdpConnection:
 if __name__ == '__main__':
     s = UdpConnection("192.168.137.159")
 
-    while(True):
+    while True:
         f = input(': ')
         s.send(f)

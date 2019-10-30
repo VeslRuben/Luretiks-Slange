@@ -48,6 +48,7 @@ class VideoStream:
             response = requests.get(self.url + "/capture", timeout=3)
             img = Image.open(BytesIO(response.content))
             imgArray = np.array(img)
+            imgArray = np.rot90(imgArray,3)
             return imgArray
         except requests.exceptions.ConnectTimeout:
             Logger.logg("Unable to get image form camera", Logger.warning)
@@ -55,6 +56,6 @@ class VideoStream:
 
 
 if __name__ == "__main__":
-    c = VideoStream("http://192.168.137.171")
+    c = VideoStream("http://192.168.137.72")
     c.reSize(10)
     c.getPicture()
