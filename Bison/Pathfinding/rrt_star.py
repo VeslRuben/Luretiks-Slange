@@ -204,8 +204,8 @@ class RRTStar(RRT):
                 plt.grid(True)
                 plt.pause(0.01)  # Need for Mac
                 plt.show()
+
         if eventData:
-            print("Fleksnes")
             data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
             data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
 

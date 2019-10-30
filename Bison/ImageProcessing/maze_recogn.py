@@ -31,15 +31,9 @@ class mazeRecognizer:
         return edges
 
     def runshit(self):
-        pic = cv2.imread(
-            os.getcwd() + "\\" + "..\\Pictures/jallabilde1.jpg",
-            -1)
-
         pic2 = cv2.imread(
             os.getcwd() + "\\" + "..\\Pictures/test2jallball.jpg",
             -1)
-
-        edges1 = self.filtering(pic)
 
         edges2 = self.filtering(pic2)
 
@@ -56,9 +50,7 @@ class mazeRecognizer:
         cv2.imwrite('linjebilde2.jpg', pic2)
 
         while(stillPic):
-            cv2.imshow("Picture", cv2.resize(pic, (1280, 720)))
             cv2.imshow("Picture2", cv2.resize(pic2, (1280, 720)))
-            cv2.imshow("Filtered", cv2.resize(edges1, (1280, 720)))
             cv2.imshow("Filtered2", cv2.resize(edges2, (1280, 720)))
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -73,14 +65,6 @@ class mazeRecognizer:
             edges = cv2.Canny(gray, 100, 180, apertureSize=3)
             edges = cv2.dilate(edges, None, iterations=1)
             edges = cv2.erode(edges, None, iterations=1)
-
-            # print(coord_list[0])
-
-            # if not plotted:
-            #    for x, y in coord_list:
-            ##        plt.plot(x,y)
-            #   plt.show()
-            #   plotted = True
 
             cv2.imshow("Frame", frame)
             cv2.imshow("Gray", np.hstack([gray, edges]))

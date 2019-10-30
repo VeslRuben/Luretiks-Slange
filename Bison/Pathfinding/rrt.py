@@ -178,44 +178,5 @@ class RRT:
 def main(gx=1.1, gy=10.0, exp_dist=0.5):
     print("Start" + __file__)
 
-
-    # First four points are the maze walls
-    lineList = [
-        (-1, -1, 0, 12),
-        (11, -1, 90, 12),
-        (11, 11, 180, 12),
-        (-1, 11, 270, 12),
-        (3, -1, 90, 4),
-        (-1, 1, 0, 2),
-        (5, 8, 270, 7),
-        (-1, 5, 0, 6),
-        (5, 1, 0, 3),
-        (8, 4, 0, 3),
-        (5, 8, 0, 4),
-        (3, 11, 270, 3)
-    ]
-
-
-    rrt = RRT(start=[0, 0], goal=[gx, gy],
-              rand_area=[-2, 15], lineList=lineList)
-    path = rrt.planning(animation=show_animation)
-
-
-
-    if path is None:
-        print("Cannot find path")
-        rrt.draw_graph()
-    else:
-        print("Found a path!")
-
-        if show_final_animation:
-            rrt.draw_graph()
-            plt.plot([x for (x,y) in path], [y for (x, y) in path], '-r')
-            for (x1, y1, x2, y2) in lineList:
-                rrt.plotObstaclev2(x1, y1, x2, y2)
-            plt.grid(True)
-            plt.pause(0.01)
-            plt.show()
-
 if __name__ == '__main__':
     main()
