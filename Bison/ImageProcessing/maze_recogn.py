@@ -41,7 +41,7 @@ class mazeRecognizer:
 
         return edges
 
-    def runshit(self):
+    def findMaze(self):
         """
         At the moment; reads a picture from the project, \n
         sends it to the filtering-function, runs HoughLinesP \n

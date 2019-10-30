@@ -49,7 +49,7 @@ class Controller(threading.Thread):
 
     def prepMaze(self):
         self.notifyGui("UpdateTextEvent", "Preparing Maze")
-        self.lines, self.lineImageArray = self.maze.runshit()
+        self.lines, self.lineImageArray = self.maze.findMaze()
 
         self.notifyGui("UpdateImageEventR", self.lineImageArray)
         self.notifyGui("UpdateTextEvent", "Maze Ready")
