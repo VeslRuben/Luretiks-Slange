@@ -28,4 +28,5 @@ class Camera:
 
     def takePicture(self):
         _, frame = Camera.cam.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return frame

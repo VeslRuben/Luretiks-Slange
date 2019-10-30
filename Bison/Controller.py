@@ -11,13 +11,15 @@ from Bison.ImageProcessing.camera import Camera
 class Cotroller(threading.Thread):
 
     def setup(self):
-        Camera.initCma(1)
+        Camera.initCma(0)
 
     def __init__(self, eventData):
         super().__init__()
         self.setup()
 
         self.runing = True
+
+        self.cam = Camera()
 
         self.snake = Snake("http://192.168.137.171", "192.168.137.159")
 
@@ -83,9 +85,10 @@ class Cotroller(threading.Thread):
     def yolo(self):
         """
         Put yolo test code her!!!!!!!!!
-        :return:
+        :return: yolo
         """
-        pass
+        frame = self.cam.takePicture()
+        self.notifyGui("UpdateImageEventL", frame)
 
     def run(self) -> None:
         Logger.logg("Controller thred started sucsefuly", Logger.info)

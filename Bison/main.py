@@ -10,5 +10,7 @@ try:
     controller.start()
 
     gui.run()
+
+    controller.join()
 finally:
     Logger.stopLogging()
