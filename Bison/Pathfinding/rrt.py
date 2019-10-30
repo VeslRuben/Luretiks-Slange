@@ -20,6 +20,19 @@ class RRT:
 
     def __init__(self, start, goal, rand_area_x, rand_area_y, lineList, edge_dist, expand_dis=0.5,
                  path_resolution=0.1, goal_sample_rate=5, max_iter=7000):
+        """
+
+        :param start: Start point coordinates
+        :param goal: Goal point coordinates
+        :param rand_area_x: Area in x-plane which the nodes can be randomly be placed
+        :param rand_area_y: Area in y-plane which the nodes can be randomly place
+        :param lineList: list of lines for obstacle-lines
+        :param edge_dist: distance for rrt to keep from the obstacles
+        :param expand_dis: expand distance
+        :param path_resolution: path resolution, steps it takes
+        :param goal_sample_rate: chance for it to try to just go to goal
+        :param max_iter: max iterations
+        """
         self.start = self.Node(start[0], start[1])
         self.end = self.Node(goal[0], goal[1])
         self.min_rand_x = rand_area_x[0]
@@ -64,6 +77,14 @@ class RRT:
         return None
 
     def steer(self, from_node, to_node, extend_length=float("inf")):
+        """
+        Steers a node to a new node.
+
+        :param from_node: the node to go from
+        :param to_node: the node to go to
+        :param extend_length: the expand distance
+        :return: new node with run coordinates
+        """
         new_node = self.Node(from_node.x, from_node.y)
         d, theta = self.calc_distance_and_angle(new_node, to_node)
 
@@ -93,6 +114,13 @@ class RRT:
         return new_node
 
     def draw_graph(self, rnd=None):
+        """
+        Plots everything, if there is a node sent in, \n
+        it will plot this nodes placement.
+
+        :param rnd: the node to plot
+        :return: Nothing
+        """
         plt.clf()
         if rnd is not None:
             plt.plot(rnd.x, rnd.y, "^k")
@@ -115,6 +143,12 @@ class RRT:
         plt.pause(0.01)
 
     def generate_final_course(self, goal_ind):
+        """
+        Generates the final course if the goal is found.
+
+        :param goal_ind: Index for goal node
+        :return: the final path from start to goal
+        """
         path = [[self.end.x, self.end.y]]
         node = self.node_list[goal_ind]
         while node.parent is not None:
@@ -125,11 +159,21 @@ class RRT:
         return path
 
     def calc_dist_to_goal(self, x ,y):
+        """
+
+        :param x: coordinate
+        :param y: coordinate
+        :return: the distance from coordinates to goal
+        """
         dx = x - self.end.x
         dy = y - self.end.y
         return math.sqrt(dx ** 2 + dy ** 2)
 
     def get_random_node(self):
+        """
+
+        :return: new randomly placed node
+        """
         if random.randint(0,100) > self.goal_sample_rate:
             rnd = self.Node(random.uniform(self.min_rand_x, self.max_rand_x),
                             random.uniform(self.min_rand_y, self.max_rand_y))
@@ -139,10 +183,30 @@ class RRT:
 
     @staticmethod
     def plotObstaclev2(x1, y1, x2, y2):
+        """
+        Plots the lines for the obstacles.
+
+        :param x1: x1 coordinate for obstacle
+        :param y1: y1 coordinate for obstacle
+        :param x2: x2 coordinate for obstacle
+        :param y2: y2 coordinate for obstacle
+        :return:
+        """
         plt.plot([x1, x2], [y1, y2], color='k', linestyle='-', linewidth=1)
 
     @staticmethod
     def checkObstaclev2(node, lineList, edgeDistance):
+        """
+        Checks if the nodes path collides with obstacle. \n
+        Also checks how close to the obstacle the line \n
+        will go. If to close, it will return false as if \n
+        there is a collision.
+
+        :param node: Node to check collision for
+        :param lineList: List of lines for obstacles
+        :param edgeDistance: Distance to keep from the obstacles
+        :return: True if no collision, false if collision
+        """
         dx_list = [x for x in node.path_x]
         dy_list = [y for y in node.path_y]
         node_line = LineString([(x, y) for (x,y) in zip(dx_list, dy_list)])
@@ -160,6 +224,13 @@ class RRT:
 
     @staticmethod
     def get_nearest_node_index(node_list, rnd_node):
+        """
+        Gets the index for the nearest node.
+
+        :param node_list: list of all nodes
+        :param rnd_node: node to check against
+        :return: the index of the nearest node
+        """
         dlist=[(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
                ** 2 for node in node_list]
         minind = dlist.index(min(dlist))
@@ -168,6 +239,13 @@ class RRT:
 
     @staticmethod
     def calc_distance_and_angle(from_node, to_node):
+        """
+        Calculates distance and angle between two nodes.
+
+        :param from_node: the node from which to check
+        :param to_node: the node to which to check
+        :return: the distance and angle
+        """
         dx = to_node.x - from_node.x
         dy = to_node.y - from_node.y
         d = math.sqrt(dx ** 2 + dy ** 2)

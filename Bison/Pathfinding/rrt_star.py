@@ -41,16 +41,24 @@ class RRTStar(RRT):
                  max_iter=10000,
                  connect_circle_dist=50.0
                  ):
+        """
+
+        :param start: Coordinates for start point
+        :param goal: Coordinates for goal point
+        :param lineList: list of lines for obstacles (x1y1,x2y2 coordinates)
+        :param edge_dist: distance to keep from the obstacles
+        :param rand_area_x: area in the x-plane for which the nodes can be placed
+        :param rand_area_y: area in the y-plane for which the nodes can be placed
+        :param expand_dis: expand distance
+        :param path_resolution: path resolution, stepsize
+        :param goal_sample_rate: chance for it to try to just go to goal
+        :param max_iter: max iterations
+        :param connect_circle_dist: size around for which it will search for nodes
+        """
         super().__init__(start, goal,
                          rand_area_x, rand_area_y, lineList, edge_dist, expand_dis, path_resolution, goal_sample_rate,
                          max_iter)
-        """
-        Setting Parameter
-        start:Start Position [x,y]
-        goal:Goal Position [x,y]
-        obstacleList:obstacle Positions [[x,y,size],...]
-        randArea:Random Sampling Area [min,max]
-        """
+
         self.connect_circle_dist = connect_circle_dist
         self.goal_node = self.Node(goal[0], goal[1])
         self.showFinalAnimation = True
@@ -141,6 +149,12 @@ class RRTStar(RRT):
         return None
 
     def find_near_nodes(self, new_node):
+        """
+        Searches for nearby nodes
+
+        :param new_node: node for which to search around
+        :return: the index of the closest nodes
+        """
         nnode = len(self.node_list) + 1
         r = self.connect_circle_dist * math.sqrt((math.log(nnode) / nnode))
         # print(r)
@@ -150,6 +164,13 @@ class RRTStar(RRT):
         return near_inds
 
     def rewire(self, new_node, near_inds):
+        """
+        Tries to rewire the path to be more cost efficient
+
+        :param new_node: node for which to try to rewire
+        :param near_inds: indexes of nearby nodes
+        :return: nothing
+        """
         for i in near_inds:
             near_node = self.node_list[i]
             edge_node = self.steer(new_node, near_node)
@@ -166,6 +187,13 @@ class RRTStar(RRT):
                 self.propagate_cost_to_leaves(new_node)
 
     def calc_new_cost(self, from_node, to_node):
+        """
+        Calculates new cost of the path (the distance)
+
+        :param from_node: from node
+        :param to_node: to node
+        :return: new node cost for the from-node
+        """
         d, _ = self.calc_distance_and_angle(from_node, to_node)
         return from_node.cost + d
 
@@ -177,6 +205,11 @@ class RRTStar(RRT):
                 self.propagate_cost_to_leaves(node)
 
     def run(self):
+        """
+        Runs the RRT_Star-class.
+
+        :return: picture of the figure as a NP-array with the path
+        """
         Logger.logg("Running RRT*", Logger.info)
         path = self.planning(animation=show_animation)
 

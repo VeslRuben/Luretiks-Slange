@@ -13,11 +13,23 @@ plotted = False
 
 
 class mazeRecognizer:
-
+    """
+    Reads a picture, filters it, gets the lines in the picture from the \n
+    HoughLinesP-function, then returns a list of the lines (in coordinates, \n
+    (x1y1, x2y2) and a picture with the line drawn on it.
+    """
     def __init__(self):
         pass
 
     def filtering(self, picture):
+        """
+        Filters a given picture. Changes to grayscale, \n
+        then blurs, edge detects, dilates/erodes, uses \n
+        morphological closing then returns the picture.
+
+        :param picture: Picture to filter \n
+        :return: The picture filtered \n
+        """
         grayfilt = cv2.cvtColor(picture, cv2.COLOR_BGR2GRAY)
         grayfilt = cv2.GaussianBlur(grayfilt, (7, 7), 0)
 
@@ -30,6 +42,15 @@ class mazeRecognizer:
         return edges
 
     def runshit(self):
+        """
+        At the moment; reads a picture from the project, \n
+        sends it to the filtering-function, runs HoughLinesP \n
+        on the picture, then draws these lines on the picture. \n
+
+        Then returns the list of coordinates (x1y1, x2y2) for the \n
+        lines, as well as the picture with the lines drawn.
+        :return: List of lines (in x1y1, x2y2 coordinates) and picture
+        """
         pic2 = cv2.imread(
             os.getcwd() + "\\" + "..\\Pictures/test2jallball.jpg",
             -1)
