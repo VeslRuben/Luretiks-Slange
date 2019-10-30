@@ -2,12 +2,12 @@ import os
 import numpy as np
 import cv2
 import time
+from Bison.ImageProcessing.camera import Camera
 
 realtime = False
 stillPic = False
 
-cap = cv2.VideoCapture(1)
-time.sleep(0.01)
+
 
 plotted = False
 
@@ -15,7 +15,7 @@ plotted = False
 class mazeRecognizer:
 
     def __init__(self):
-        pass
+        self.cam = Camera()
 
     def filtering(self, picture):
         grayfilt = cv2.cvtColor(picture, cv2.COLOR_BGR2GRAY)
@@ -64,7 +64,7 @@ class mazeRecognizer:
                 break
 
         while realtime:
-            _, frame = cap.read()
+            frame = self.cam.takePicture()
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray = cv2.GaussianBlur(gray, (7, 7), 0)
@@ -87,7 +87,6 @@ class mazeRecognizer:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-        cap.release()
         cv2.destroyAllWindows()
 
         return lines2, cv2.resize(pic2, (800, 600))

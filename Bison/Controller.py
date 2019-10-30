@@ -5,12 +5,18 @@ from Bison.Pathfinding.rrt_star import RRTStar
 from Bison.GUI import CostumEvent
 from Bison.logger import Logger
 from Bison.Movement.Snake import Snake
+from Bison.ImageProcessing.camera import Camera
 
 
 class Cotroller(threading.Thread):
 
+    def setup(self):
+        Camera.initCma(1)
+
     def __init__(self, eventData):
         super().__init__()
+        self.setup()
+
         self.runing = True
 
         self.snake = Snake("http://192.168.137.171", "192.168.137.159")
@@ -148,4 +154,5 @@ class Cotroller(threading.Thread):
                 if b.quitFlag:
                     self.runing = False
 
+        Camera.realesCam()
         Logger.logg("Controller thred shuting down", Logger.info)
