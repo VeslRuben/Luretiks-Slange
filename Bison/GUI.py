@@ -1,3 +1,4 @@
+import cv2
 import wx
 import numpy as np
 from Bison.Broker import Broker as b
@@ -134,6 +135,7 @@ class StartFrame(wx.Frame):
 
     def OnNewImageR(self, event=None):
         array = event.GetMyVal()
+        array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
         self.imgR.image = image = wx.ImageFromBuffer(w, h, array)
@@ -143,6 +145,7 @@ class StartFrame(wx.Frame):
 
     def OnNewImageL(self, event=None):
         array = event.GetMyVal()
+        array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
         self.imgL.image = image = wx.ImageFromBuffer(w, h, array)

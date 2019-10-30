@@ -85,5 +85,6 @@ class Snake:
 
 if __name__ == "__main__":
     s = Snake("http://192.168.137.171", "192.168.137.12")
+    time.sleep(1)
     s.moveForward()
 
