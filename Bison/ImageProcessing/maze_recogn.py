@@ -6,6 +6,7 @@ from Bison.ImageProcessing.camera import Camera
 
 realtime = False
 stillPic = False
+testing = False
 
 
 
@@ -31,12 +32,12 @@ class mazeRecognizer:
         :return: The picture filtered \n
         """
         grayfilt = cv2.cvtColor(picture, cv2.COLOR_BGR2GRAY)
-        grayfilt = cv2.GaussianBlur(grayfilt, (7, 7), 0)
+        grayfilt = cv2.GaussianBlur(grayfilt, (9, 9), 0)
 
-        edges = cv2.Canny(grayfilt, 120, 150, apertureSize=3)
-        edges = cv2.dilate(edges, None, iterations=8)
-        edges = cv2.erode(edges, None, iterations=7)
-        kernel = np.ones((21, 21), np.uint8)
+        edges = cv2.Canny(grayfilt, 50, 120, apertureSize=3)
+        edges = cv2.dilate(edges, None, iterations=3)
+        edges = cv2.erode(edges, None, iterations=2)
+        kernel = np.ones((7, 7), np.uint8)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
         return edges
@@ -51,13 +52,16 @@ class mazeRecognizer:
         lines, as well as the picture with the lines drawn.
         :return: List of lines (in x1y1, x2y2 coordinates) and picture
         """
-        pic2 = cv2.imread(
-            os.getcwd() + "\\" + "..\\Pictures/test2jallball.jpg",
-            -1)
+        if testing:
+            pic2 = cv2.imread(
+                os.getcwd() + "\\" + "..\\Pictures/test2jallball.jpg",
+                -1)
+        else:
+            pic2 = self.cam.takePicture()
 
         edges2 = self.filtering(pic2)
 
-        lines2 = cv2.HoughLinesP(edges2, 1, np.pi / 1000, 85, maxLineGap=10, minLineLength=40)
+        lines2 = cv2.HoughLinesP(edges2, 1, np.pi / 1000, 50, maxLineGap=90, minLineLength=80)
 
         for data in lines2:
             x1 = data[0][0]
@@ -94,4 +98,14 @@ class mazeRecognizer:
 
         cv2.destroyAllWindows()
 
-        return lines2, cv2.resize(pic2, (800, 600))
+        return lines2, pic2
+
+if __name__ == "__main__":
+    m = mazeRecognizer()
+    Camera.initCam(1)
+    _, pic = m.findMaze()
+    cv2.imshow("Test", pic)
+
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+    Camera.releaseCam()

@@ -1,4 +1,6 @@
 import threading
+from shapely.geometry import Point, LineString
+import time
 from Bison.Broker import Broker as b
 from Bison.ImageProcessing.maze_recogn import mazeRecognizer
 from Bison.Pathfinding.rrt_star import RRTStar
@@ -6,12 +8,13 @@ from Bison.GUI import CustomEvent
 from Bison.logger import Logger
 from Bison.Movement.Snake import Snake
 from Bison.ImageProcessing.camera import Camera
+from Bison.ImageProcessing.findSnake import FindSnake
 
 
 class Controller(threading.Thread):
 
     def setup(self):
-        Camera.initCam(0)
+        Camera.initCam(1)
 
     def __init__(self, eventData):
         super().__init__()
@@ -21,7 +24,7 @@ class Controller(threading.Thread):
 
         self.cam = Camera()
 
-        self.snake = Snake("http://192.168.137.171", "192.168.137.159")
+        self.snake = Snake("http://192.168.137.171", "192.168.137.12")
 
         self.guiEvents = eventData["events"]
         self.guiId = eventData["id"]
@@ -34,12 +37,10 @@ class Controller(threading.Thread):
         ###################################
 
         # RRT* Variabels ##################
-        self.rrtStar = RRTStar(start=[825, 250], goal=[1450, 600], rand_area_x=[600, 1500], rand_area_y=[100, 1000],
-                               lineList=self.lines,
-                               expand_dis=100.0, path_resolution=10.0, max_iter=500, goal_sample_rate=20,
-                               connect_circle_dist=450,
-                               edge_dist=30)
+        self.rrtStar = None
         self.rrtPathImage = None
+        self.findSnake = FindSnake()
+        self.finalPath = None
         ###################################
 
     def notifyGui(self, event, arg):
@@ -56,8 +57,14 @@ class Controller(threading.Thread):
 
     def findPath(self):
         self.notifyGui("UpdateTextEvent", "Findig path...")
+        x,y = self.findSnake.LocateSnake(self.cam.takePicture())
+        self.rrtStar = RRTStar(start=[x, y], goal=[1250, 600], rand_area_x=[250, 1500], rand_area_y=[0, 1100],
+                               lineList=self.lines,
+                               expand_dis=100.0, path_resolution=10.0, max_iter=500, goal_sample_rate=20,
+                               connect_circle_dist=450,
+                               edge_dist=30)
         self.rrtStar.lineList = self.lines
-        self.rrtPathImage = self.rrtStar.run()
+        self.rrtPathImage, self.finalPath = self.rrtStar.run()
 
         self.notifyGui("UpdateImageEventR", self.rrtPathImage)
 
@@ -87,8 +94,20 @@ class Controller(threading.Thread):
         Put yolo test code her!!!!!!!!!
         :return: yolo
         """
-        frame = self.cam.takePictureRgb()
-        self.notifyGui("UpdateImageEventL", frame)
+        start = self.finalPath[0]
+        nextNode = self.finalPath[1]
+        self.snake.moveForward()
+        x,y = self.findSnake.LocateSnake(self.cam.takePicture())
+        snakePos = Point(x, y)
+        movingLine = LineString([(start[0], start[1]), (nextNode[0], nextNode[1])])
+        distance = snakePos.distance(movingLine)
+        if distance < 0:
+            self.snake.moveLeft()
+        elif distance > 0:
+            self.snake.moveRight()
+        time.sleep(0.3)
+
+
 
     def run(self) -> None:
         Logger.logg("Controller thread started successfully", Logger.info)
@@ -123,7 +142,7 @@ class Controller(threading.Thread):
             if b.yoloFlag:
                 b.lock.release()
                 self.yolo()
-                b.yoloFlag = False
+                b.yoloFlag = True
             else:
                 b.lock.release()
 

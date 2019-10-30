@@ -8,8 +8,8 @@ from Bison.logger import Logger
 class Snake:
 
     def __init__(self, cameraIp: str, controllerIp: str):
-        self.camera = VideoStream("http://192.168.137.171")
-        self.controller = UdpConnection("192.168.137.159")
+        self.camera = VideoStream(cameraIp)
+        self.controller = UdpConnection(controllerIp)
 
     def setFrameSize(self, size: int):
         """
@@ -60,12 +60,12 @@ class Snake:
         Logger.logg(f"Sent turn: {degreas}", Logger.cmd)
 
     def moveLeft(self):
-        self.controller.send("l")
-        Logger.logg("Sent: l", Logger.cmd)
+        self.controller.send("v")
+        Logger.logg("Sent: v", Logger.cmd)
 
     def moveRight(self):
-        self.controller.send("r")
-        Logger.logg("Sent: r", Logger.cmd)
+        self.controller.send("h")
+        Logger.logg("Sent: h", Logger.cmd)
 
     def stop(self):
         self.controller.send("s")
@@ -82,3 +82,8 @@ class Snake:
         """
         self.controller.receive()
         return self.controller.isAlive()
+
+if __name__ == "__main__":
+    s = Snake("http://192.168.137.171", "192.168.137.12")
+    s.moveForward()
+

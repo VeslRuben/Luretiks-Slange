@@ -47,8 +47,9 @@ class FindSnake:
 
 if __name__ == "__main__":
     cam = Camera()
-    cam.initCma(1)
+    Camera.initCam(1)
     frame = cam.takePicture()
     c = FindSnake()
     x,y = c.LocateSnake(frame)
+    print(x, y)
 
