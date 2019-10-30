@@ -10,7 +10,7 @@ from Bison.logger import Logger
 import matplotlib.pyplot as plt
 import numpy as np
 
-from Bison.GUI import CostumEvent
+from Bison.GUI import CustomEvent
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../RRT/")

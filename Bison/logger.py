@@ -53,10 +53,10 @@ class Logger:
 
 
 if __name__ == "__main__":
-    Logger.logg("krash", Logger.error)
-    Logger.logg("farlig", Logger.warning)
-    Logger.logg("komando", Logger.cmd)
-    Logger.logg("informasjon", Logger.info)
-    Logger.logg("bille", Logger.debug)
+    Logger.logg("Crash", Logger.error)
+    Logger.logg("Farlig", Logger.warning)
+    Logger.logg("Kommando", Logger.cmd)
+    Logger.logg("Informasjon", Logger.info)
+    Logger.logg("Bille", Logger.debug)
 
     Logger.stopLogging()

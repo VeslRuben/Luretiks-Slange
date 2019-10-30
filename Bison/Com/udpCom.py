@@ -30,7 +30,7 @@ class UdpConnection:
 
     def receive(self):
         """
-        Recevs data and decods it bast on the header \n
+        Recevs data and decodes it based on the header \n
         :return: The body of the data
         """
         data = None
@@ -51,7 +51,7 @@ class UdpConnection:
 
         if time.time() - self.timeOutTimer > self.timeOut:
             self.connectionTimedOut = True
-            Logger.logg(f"connetion to {self.url} has timed out", Logger.warning)
+            Logger.logg(f"connection to {self.url} has timed out", Logger.warning)
 
         return data
 

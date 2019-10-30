@@ -11,7 +11,7 @@ UpdateTextEvent = wx.NewEventType()
 EVT_UPDATE_TEXT = wx.PyEventBinder(UpdateTextEvent, 1)
 
 
-class CostumEvent(wx.PyCommandEvent):
+class CustomEvent(wx.PyCommandEvent):
     def __init__(self, evtType, id):
         wx.PyCommandEvent.__init__(self, evtType, id)
         self.myVal = None
@@ -55,7 +55,7 @@ class StartFrame(wx.Frame):
         ##########################################
 
         # Maual controll
-        self.controldManualy = False
+        self.controlledManually = False
 
         # Update events #######################
         self.Bind(EVT_UPDATE_IMAGE_R, self.OnNewImageR)
@@ -86,26 +86,26 @@ class StartFrame(wx.Frame):
         bntVBoxLeft.AddMany([(self.startBtn, 1), (self.stopBtn, 1), (self.yoloBtn, 1)])
 
         bntVBoxRight = wx.BoxSizer(wx.VERTICAL)
-        self.maualControll = wx.Button(panel, label="Manual Override", size=(130, 40))
-        self.maualControll.Bind(wx.EVT_BUTTON, self.OnManualBtn)
-        self.maualControll.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
-        self.maualControll.SetBackgroundColour("gray")
+        self.manualControl = wx.Button(panel, label="Manual Override", size=(130, 40))
+        self.manualControl.Bind(wx.EVT_BUTTON, self.OnManualBtn)
+        self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.manualControl.SetBackgroundColour("gray")
         self.prepareMaze = wx.Button(panel, label="Prepare Maze", size=(130, 40))
         self.prepareMaze.Bind(wx.EVT_BUTTON, self.OnPrepareMaze)
         self.prepareMaze.SetBackgroundColour("gray")
         self.findPath = wx.Button(panel, label="Find Path", size=(130, 40))
         self.findPath.Bind(wx.EVT_BUTTON, self.OnFindPath)
         self.findPath.SetBackgroundColour("gray")
-        bntVBoxRight.AddMany([(self.maualControll, 1), (self.prepareMaze, 1), (self.findPath, 1)])
+        bntVBoxRight.AddMany([(self.manualControl, 1), (self.prepareMaze, 1), (self.findPath, 1)])
 
         bntHBox.AddMany([(bntVBoxLeft, 1, wx.TOP, 50), (bntVBoxRight, 1, wx.TOP, 50)])
         #################################################
         topGrid.Add(bntHBox, 1, wx.EXPAND | wx.LEFT, 50)
 
         # Text feeld ####################################
-        self.logTexFeald = wx.TextCtrl(panel, value="", size=(800, 390), style=wx.TE_MULTILINE)
+        self.logTextField = wx.TextCtrl(panel, value="", size=(800, 390), style=wx.TE_MULTILINE)
 
-        topGrid.Add(self.logTexFeald, 1, wx.ALIGN_RIGHT | wx.RIGHT | wx.TOP, 10)
+        topGrid.Add(self.logTextField, 1, wx.ALIGN_RIGHT | wx.RIGHT | wx.TOP, 10)
         #################################################
         topGrid.AddGrowableRow(0)
         topGrid.AddGrowableCol(1)
@@ -128,7 +128,7 @@ class StartFrame(wx.Frame):
         outerGrid.AddGrowableRow(0)
         outerGrid.AddGrowableCol(0)
 
-        self.maualControll.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
 
         panel.SetSizer(outerGrid)
 
@@ -152,8 +152,8 @@ class StartFrame(wx.Frame):
 
     def OnNewText(self, event=None):
         text = event.GetMyVal()
-        self.logTexFeald.AppendText(text + "\n")
-        self.logTexFeald.Refresh()
+        self.logTextField.AppendText(text + "\n")
+        self.logTextField.Refresh()
         Logger.logg("GUI text box updated", Logger.info)
 
     def OnStartBtn(self, event=None):
@@ -170,11 +170,11 @@ class StartFrame(wx.Frame):
             b.yoloFlag = True
 
     def OnManualBtn(self, event=None):
-        self.controldManualy = not self.controldManualy
+        self.controlledManually = not self.controlledManually
         with b.lock:
-            b.manulaControllFlag = not b.manulaControllFlag
-        self.logTexFeald.AppendText(f"Snake manual mode: {self.controldManualy}\n")
-        Logger.logg(f"GUI manula control: {self.controldManualy}", Logger.info)
+            b.manualControlFlag = not b.manualControlFlag
+        self.logTextField.AppendText(f"Snake manual mode: {self.controlledManually}\n")
+        Logger.logg(f"GUI manual control: {self.controlledManually}", Logger.info)
 
     def OnPrepareMaze(self, event=None):
         with b.lock:
@@ -194,12 +194,12 @@ class StartFrame(wx.Frame):
         """
         with b.quitLock:
             b.quitFlag = True
-        Logger.logg("GUI shunting down", Logger.info)
+        Logger.logg("GUI shutting down", Logger.info)
         self.Destroy()
 
     def OnKeyDown(self, event=None):
         keycode = event.GetKeyCode()
-        if self.controldManualy:
+        if self.controlledManually:
             with b.moveLock:
                 if keycode == wx.WXK_SPACE:
                     b.moveCmd = "s"
@@ -212,7 +212,7 @@ class StartFrame(wx.Frame):
                 elif keycode == 68:
                     b.moveCmd = "r"
                 elif keycode == 69:
-                    print("rotae right")
+                    print("rotate right")
                 elif keycode == 81:
                     print("rotate left")
                 elif keycode == 82:

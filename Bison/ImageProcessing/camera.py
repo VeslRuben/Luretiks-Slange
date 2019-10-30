@@ -9,7 +9,7 @@ class Camera:
     cam = None
 
     @staticmethod
-    def initCma(camNr: int = 0):
+    def initCam(camNr: int = 0):
         """
         Initialise the camera class with a camera. \n
         must be called ony ones before geting an instance of the class \n
@@ -19,7 +19,7 @@ class Camera:
         Camera.cam = cv2.VideoCapture(camNr)
 
     @staticmethod
-    def realesCam():
+    def releaseCam():
         """
         Realsese the camera. called on program quit
         :return:

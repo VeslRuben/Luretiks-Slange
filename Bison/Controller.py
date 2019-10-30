@@ -2,22 +2,22 @@ import threading
 from Bison.Broker import Broker as b
 from Bison.ImageProcessing.maze_recogn import mazeRecognizer
 from Bison.Pathfinding.rrt_star import RRTStar
-from Bison.GUI import CostumEvent
+from Bison.GUI import CustomEvent
 from Bison.logger import Logger
 from Bison.Movement.Snake import Snake
 from Bison.ImageProcessing.camera import Camera
 
 
-class Cotroller(threading.Thread):
+class Controller(threading.Thread):
 
     def setup(self):
-        Camera.initCma(0)
+        Camera.initCam(0)
 
     def __init__(self, eventData):
         super().__init__()
         self.setup()
 
-        self.runing = True
+        self.running = True
 
         self.cam = Camera()
 
@@ -43,7 +43,7 @@ class Cotroller(threading.Thread):
         ###################################
 
     def notifyGui(self, event, arg):
-        updateEvent = CostumEvent(self.guiEvents[event], self.guiId())
+        updateEvent = CustomEvent(self.guiEvents[event], self.guiId())
         updateEvent.SetMyVal(arg)
         self.guiEventhandler(updateEvent)
 
@@ -61,7 +61,7 @@ class Cotroller(threading.Thread):
 
         self.notifyGui("UpdateImageEventR", self.rrtPathImage)
 
-    def moveSnakeManualy(self):
+    def moveSnakeManually(self):
         with b.moveLock:
             if b.moveCmd != "":
                 print(b.moveCmd)
@@ -91,9 +91,9 @@ class Cotroller(threading.Thread):
         self.notifyGui("UpdateImageEventL", frame)
 
     def run(self) -> None:
-        Logger.logg("Controller thred started sucsefuly", Logger.info)
+        Logger.logg("Controller thread started successfully", Logger.info)
 
-        while self.runing:
+        while self.running:
 
             b.lock.acquire()
             if b.stopFlag:
@@ -144,9 +144,9 @@ class Cotroller(threading.Thread):
                 b.lock.release()
 
             b.lock.acquire()
-            if b.manulaControllFlag:
+            if b.manualControlFlag:
                 b.lock.release()
-                self.moveSnakeManualy()
+                self.moveSnakeManually()
             elif b.autoFlag:
                 b.lock.release()
                 self.autoMode()  # auto move code hear
@@ -155,7 +155,7 @@ class Cotroller(threading.Thread):
 
             with b.quitLock:
                 if b.quitFlag:
-                    self.runing = False
+                    self.running = False
 
-        Camera.realesCam()
-        Logger.logg("Controller thred shuting down", Logger.info)
+        Camera.releaseCam()
+        Logger.logg("Controller thread shutting down", Logger.info)

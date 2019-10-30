@@ -13,9 +13,9 @@ class Broker:
     startFlag = False
     stopFlag = False
     yoloFlag = False
-    manulaControllFlag = False
+    manualControlFlag = False
     autoFlag = False
 
-    # maula movnet of snake###
+    # manual movement of snake###
     moveCmd = ""
     ##########################

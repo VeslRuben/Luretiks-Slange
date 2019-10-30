@@ -1,12 +1,12 @@
-from Bison.GUI import GUI, CostumEvent
-from Bison.Controller import Cotroller
+from Bison.GUI import GUI, CustomEvent
+from Bison.Controller import Controller
 from Bison.logger import Logger
 
 try:
     gui = GUI()
-    evenData = gui.getEventInfo()
+    eventData = gui.getEventInfo()
 
-    controller = Cotroller(evenData)
+    controller = Controller(eventData)
     controller.start()
 
     gui.run()
