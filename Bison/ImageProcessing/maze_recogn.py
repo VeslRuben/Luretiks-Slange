@@ -98,7 +98,7 @@ class mazeRecognizer:
 
         cv2.destroyAllWindows()
 
-        return lines2, pic2
+        return lines2, cv2.cvtColor(pic2, cv2.COLOR_BGR2RGB)
 
 if __name__ == "__main__":
     m = mazeRecognizer()

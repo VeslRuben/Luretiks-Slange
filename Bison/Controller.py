@@ -12,6 +12,7 @@ from Bison.Movement.Snake import Snake
 from Bison.ImageProcessing.camera import Camera
 from Bison.ImageProcessing.findSnake import FindSnake
 import math
+import cv2
 
 
 class Controller(threading.Thread):
@@ -24,10 +25,12 @@ class Controller(threading.Thread):
         self.setup()
 
         self.running = True
+        self.i = 0
+        self.moving = False
 
         self.cam = Camera()
 
-        self.snake = Snake("http://192.168.137.171", "192.168.137.12")
+        self.snake = Snake("http://192.168.137.171", "192.168.137.60")
 
         self.guiEvents = eventData["events"]
         self.guiId = eventData["id"]
@@ -67,14 +70,17 @@ class Controller(threading.Thread):
         except TypeError:
             self.notifyGui("UpdateTextEvent", "fukt")
             return
-        self.rrtStar = RRTStar(start=[x, y], goal=[1350, 100], rand_area_x=[250, 1500], rand_area_y=[0, 1100],
+        self.rrtStar = RRTStar(start=[x, y], goal=[1200, 400], rand_area_x=[250, 1500], rand_area_y=[0, 1100],
                                lineList=self.lines,
                                expand_dis=100.0, path_resolution=10.0, max_iter=500, goal_sample_rate=20,
                                connect_circle_dist=450,
                                edge_dist=30)
         self.rrtStar.lineList = self.lines
         self.rrtPathImage, self.finalPath = self.rrtStar.run()
-        self.finalPath = self.finalPath[::-1]
+        if self.finalPath is not None:
+            self.finalPath = self.finalPath[::-1]
+        else:
+            self.notifyGui("UpdateTextEvent", "Fani ikke path")
 
         self.notifyGui("UpdateImageEventL", temp)
         self.notifyGui("UpdateImageEventR", self.rrtPathImage)
@@ -100,51 +106,60 @@ class Controller(threading.Thread):
     def autoMode(self):
         pass
 
+    def ccw(self, A, B, C):
+        return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+
+    # Return true if line segments AB and CD intersect
+    def intersect(self, A, B, C, D):
+        return self.ccw(A, C, D) != self.ccw(B, C, D) and self.ccw(A, B, C) != self.ccw(A, B, D)
+
     def yolo(self):
         """
         Put yolo test code her!!!!!!!!!
         :return: yolo
         """
-        start = self.finalPath[0]
-        nextNode = self.finalPath[1]
+        if not self.moving:
+            self.snake.moveForward()
+            self.moving = True
+        start = self.finalPath[self.i]
+        nextNode = self.finalPath[self.i + 1]
+        lV = [nextNode[0] - start[0], nextNode[1] - start[1]]
 
-        startPoint = Point(start[0], start[1])
-        nodePos = Point(nextNode[0], nextNode[1])
+        snakeCords, maskPic = self.findSnake.LocateSnake(self.cam.takePicture())
+        self.notifyGui("UpdateImageEventL", maskPic)
+        if snakeCords is not None:
+            s0 = snakeCords[0]
+            s1 = snakeCords[1]
+            sV = [s1[0] - s0[0], s1[1] - s0[1]]
+            lVxsV = lV[0] * sV[1] - lV[1] * sV[0]
+            theta = math.acos((lV[0] * sV[0] + lV[1] * sV[1]) / (
+                    math.sqrt(lV[0] ** 2 + lV[1] ** 2) * math.sqrt(sV[0] ** 2 + sV[1] ** 2)))
+            theta = (theta * (lVxsV / abs(lVxsV))) * 180 / math.pi  # (lVxsV / abs(lVxsV)) is 1 or -1
+            print("Final theta ", theta)
 
-        movingLine = LineString([(start[0], start[1]), (nextNode[0], nextNode[1])])
+            finithVektor = [lV[1], -lV[0]]
+            skalar = 10
+            finithLine = [[nextNode[0] + (finithVektor[0] * skalar), nextNode[1] + (finithVektor[1] * skalar)],
+                          [nextNode[0] + (-finithVektor[0] * skalar), nextNode[1] + (-finithVektor[1] * skalar)]]
+            snakLine = [s1, [s1[0] + (-sV[0]) * skalar, s1[1] + (-sV[1]) * skalar]]
+            print(f"finith line {finithLine}")
+            print(f"Snake line {snakLine}")
+            print(f"sv {sV}")
 
-        thetaLine = (math.asinh(
-            (nextNode[1] - start[1]) / math.sqrt((nextNode[0] - start[0]) ** 2 + (nextNode[1] - start[1]) ** 2))) * (
-                                180 / math.pi)
-        print("tetha line: ", thetaLine)
+            self.snake.turn(int(theta * 0.5))
+            if self.intersect(finithLine[0], finithLine[1], snakLine[0], snakLine[1]):
+                self.i += 1
+                print(f"line: {self.i}")
 
-        # self.snake.moveForward()
-        temp = self.findSnake.LocateSnake(self.cam.takePicture())
-        if temp is not None:
-            cords, yolo = temp
-            p0 = cords[0]
-            p1 = cords[1]
-            self.notifyGui("UpdateImageEventL", yolo)
-            snakePos = Point(p0[0], p0[1])
-            print("pos", p0)
-            distanceToLine = movingLine.distance(snakePos)
-            try:
-                thetaSnake = (math.asinh((y - start[1]) / math.sqrt((x - start[0]) ** 2 + (y - start[1]) ** 2))) * (
-                            180 / math.pi)
-            except ZeroDivisionError:
-                thetaSnake = thetaLine
-
-            print("snake tehta ", thetaSnake)
-
-            # sving kode her
-
-            distToNode = snakePos.distance(nodePos)
-            if distToNode < 10:
-                self.snake.stop()
-                print("stop")
-                with b.lock:
-                    b.yoloFlag = False
-        time.sleep(0.3)
+        print(f" len lines: {len(self.finalPath)}")
+        if self.i >= len(self.finalPath) - 1:
+            self.snake.stop()
+            print("stop")
+            with b.lock:
+                b.yoloFlag = False
+                self.i = 0
+                self.moving = False
+        time.sleep(1)
 
     def run(self) -> None:
         Logger.logg("Controller thread started successfully", Logger.info)

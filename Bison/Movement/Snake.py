@@ -53,10 +53,15 @@ class Snake:
         :param degreas: turnrate in deagras
         :return: None
         """
+        send = None
         degreas = 90 + degreas
-        self.controller.send("t")
-        time.sleep(0.1)
-        self.controller.send(str(degreas))
+        if degreas < 10:
+            send = "t00" + str(degreas)
+        elif degreas < 100:
+            send = "t0" + str(degreas)
+        else:
+            send = "t" + str(degreas)
+        self.controller.send(send)
         Logger.logg(f"Sent turn: {degreas}", Logger.cmd)
 
     def moveLeft(self):
@@ -83,8 +88,16 @@ class Snake:
         self.controller.receive()
         return self.controller.isAlive()
 
-if __name__ == "__main__":
-    s = Snake("http://192.168.137.171", "192.168.137.12")
-    time.sleep(1)
-    s.moveForward()
 
+if __name__ == "__main__":
+    s = Snake("http://192.168.137.171", "192.168.137.60")
+    while True:
+        i = input("-> ")
+        if i == "f":
+            s.moveForward()
+        elif i == "s":
+            s.stop()
+        elif i == "r":
+            s.reset()
+        else:
+            s.turn(int(i))

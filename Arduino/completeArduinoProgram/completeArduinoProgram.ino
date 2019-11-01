@@ -140,6 +140,13 @@ void loop()
       goingForward = false;
       goingBackward = false;
       goStraight();
+    } else if (command == 't') {
+      int numb1 = (int)packetBuffer[1] - 48;
+      int numb2 = (int)packetBuffer[2] - 48;
+      int numb3 = (int)packetBuffer[3] -48;
+      int sum = numb1 * 100 + numb2 * 10 + numb3;
+      Serial.println(sum);
+      turn(sum);
     } else {
       Serial.println("Unknown command");
       sendErrorToServer();
@@ -163,7 +170,7 @@ char checkPackets() {
     Serial.println("Packet received");
     udpClient.read(packetBuffer, 128);
     Serial.println(char(packetBuffer[0]));
-    return char(packetBuffer[0]);
+    return packetBuffer[0];
   } else {
     return 'z';
   }
@@ -227,6 +234,17 @@ void goBackward() {
   }
 }
 
+void turn(int deg) {
+  if (deg < 45){
+    deg = 45;
+  } else if (deg > 135) {
+    deg = 135;
+  }
+  for (int i = 0; i < 2; i++) {
+    myServo[(i * 2) + 1].write(deg + servZero[(i * 2) + 1] - 90);
+  }
+}
+
 void goLeft() {
   int movement = myServo[1].read() - 3;
   if (movement < 45) {
@@ -254,27 +272,27 @@ void goRight() {
 
 void lateralShift() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(servZero[i*2] + updateAngle(T, i * lateralPhi, A));
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * lateralPhi, A));
     if (i < 2) {
-      myServo[(i * 2) + 1].write(servZero[(i*2)+1] + updateAngle(T, i * lateralPhi, A));
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, i * lateralPhi, A));
     }
   }
 }
 
 void doARoll() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(servZero[i*2] + updateAngle(T, 0, A));
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, 0, A));
     if (i < 2) {
-      myServo[(i * 2) + 1].write(servZero[(i*2)+1] + updateAngle(T, 90, A));
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, 90, A));
     }
   }
 }
 
 void rotatingGait() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(servZero[i*2] + updateAngle(T, i * rotatePhiV, A));
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * rotatePhiV, A));
     if (i < 2) {
-      myServo[(i * 2) + 1].write(servZero[(i*2)+1] + updateAngle(T, i * rotatePhiH, A));
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, i * rotatePhiH, A));
     }
   }
 }

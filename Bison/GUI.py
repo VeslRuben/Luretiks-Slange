@@ -170,7 +170,7 @@ class StartFrame(wx.Frame):
 
     def OnYolo(self, event=None):
         with b.lock:
-            b.yoloFlag = True
+            b.yoloFlag = not b.yoloFlag
 
     def OnManualBtn(self, event=None):
         self.controlledManually = not self.controlledManually
