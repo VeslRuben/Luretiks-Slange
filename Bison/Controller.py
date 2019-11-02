@@ -73,7 +73,7 @@ class Controller(threading.Thread):
             return
         self.rrtStar = RRTStar(start=[x, y], goal=[1300, 200], rand_area_x=[250, 1500], rand_area_y=[0, 1100],
                                lineList=self.lines,
-                               expand_dis=100.0, path_resolution=10.0, max_iter=500, goal_sample_rate=20,
+                               expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=20,
                                connect_circle_dist=450,
                                edge_dist=30)
         self.rrtStar.lineList = self.lines
@@ -116,7 +116,6 @@ class Controller(threading.Thread):
     def intersect(self, A, B, C, D):
         return self.ccw(A, C, D) != self.ccw(B, C, D) and self.ccw(A, B, C) != self.ccw(A, B, D)
 
-
     def yolo(self):
         """
         Put yolo test code her!!!!!!!!!
@@ -131,7 +130,7 @@ class Controller(threading.Thread):
 
         # Take piture ####################################################################
         pic = self.cam.takePicture()
-        #snakeCords, maskPic = self.findSnake.LocateSnake(pic)
+        # snakeCords, maskPic = self.findSnake.LocateSnake(pic)
         cordList = []
         snakeCords, maskPic = self.findSnake.LocateSnakeAverage(1, 3, False)
 
@@ -157,17 +156,31 @@ class Controller(threading.Thread):
             theta = math.acos((lV[0] * sV[0] + lV[1] * sV[1]) / (
                     math.sqrt(lV[0] ** 2 + lV[1] ** 2) * math.sqrt(sV[0] ** 2 + sV[1] ** 2)))
             theta = (theta * (lVxsV / abs(lVxsV))) * 180 / math.pi  # (lVxsV / abs(lVxsV)) is 1 or -1
-            print("Final theta ", theta)
-            self.notifyGui("UpdateTextEvent", f"Theta {theta}")
 
             finithVektor = [lV[1], -lV[0]]
             skalar = 10
             finithLine = [[nextNode[0] + (finithVektor[0] * skalar), nextNode[1] + (finithVektor[1] * skalar)],
                           [nextNode[0] + (-finithVektor[0] * skalar), nextNode[1] + (-finithVektor[1] * skalar)]]
-            snakLine = [s1, [s1[0] + (-sV[0]) * skalar, s1[1] + (-sV[1]) * skalar]]
+            snakLine = [s1, [s1[0] + (-sV[0]) * 2, s1[1] + (-sV[1]) * 2]]
 
-            self.curantAngle = self.curantAngle + int(theta * 0.3)
+            # Using Angle betwen wktors to regulate######
+            #self.curantAngle = self.curantAngle + int(theta * 0.3)
+            #self.snake.turn(self.curantAngle)
+
+            # self.notifyGui("UpdateTextEvent", f"Theta {theta}")
+
+            # usiing distans to line to regulate#########
+            lVN = [lV[1], -lV[0]]
+            starSnakeVektor = [s1[0] - start[0], s1[1] - start[1]]
+            distSnakToLine = abs(lVN[0] * starSnakeVektor[0] + lVN[1] * starSnakeVektor[1]) / math.sqrt(
+                lVN[0] ** 2 + lVN[1] ** 2)
+            distSnakToLine = distSnakToLine * (lVxsV / abs(lVxsV))  # (lVxsV / abs(lVxsV)) is 1 or -1
+            self.curantAngle = self.curantAngle + int(distSnakToLine * 0.5)
             self.snake.turn(self.curantAngle)
+
+            self.notifyGui("UpdateTextEvent", f"angel of snake {self.curantAngle}")
+            self.notifyGui("UpdateTextEvent", f"dist {distSnakToLine}")
+
 
             if self.intersect(finithLine[0], finithLine[1], snakLine[0], snakLine[1]):
                 self.i += 1
