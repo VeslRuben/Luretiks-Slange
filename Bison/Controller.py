@@ -23,15 +23,15 @@ class Controller(threading.Thread):
         super().__init__()
         self.setup()
 
+        # Snake variables ###########################
         self.running = True
         self.i = 0
         self.moving = False
-
+        self.curantAngle = 0
         self.traveledPath = []
-
         self.cam = Camera()
-
         self.snake = Snake("http://192.168.137.171", "192.168.137.160")
+        #############################################
 
         self.guiEvents = eventData["events"]
         self.guiId = eventData["id"]
@@ -83,6 +83,8 @@ class Controller(threading.Thread):
         else:
             self.notifyGui("UpdateTextEvent", "Fani ikke path")
 
+        self.traveledPath = []
+
         self.notifyGui("UpdateImageEventL", temp)
         self.notifyGui("UpdateImageEventR", self.rrtPathImage)
 
@@ -131,7 +133,7 @@ class Controller(threading.Thread):
         pic = self.cam.takePicture()
         #snakeCords, maskPic = self.findSnake.LocateSnake(pic)
         cordList = []
-        snakeCords, maskPic = self.findSnake.LocateSnakeAverage(3, 5, True)
+        snakeCords, maskPic = self.findSnake.LocateSnakeAverage(1, 3, False)
 
         #################################################################################
 
@@ -164,7 +166,9 @@ class Controller(threading.Thread):
                           [nextNode[0] + (-finithVektor[0] * skalar), nextNode[1] + (-finithVektor[1] * skalar)]]
             snakLine = [s1, [s1[0] + (-sV[0]) * skalar, s1[1] + (-sV[1]) * skalar]]
 
-            self.snake.turn(int(theta * 0.7))
+            self.curantAngle = self.curantAngle + int(theta * 0.3)
+            self.snake.turn(self.curantAngle)
+
             if self.intersect(finithLine[0], finithLine[1], snakLine[0], snakLine[1]):
                 self.i += 1
 
@@ -175,7 +179,7 @@ class Controller(threading.Thread):
                 b.yoloFlag = False
                 self.i = 0
                 self.moving = False
-        #time.sleep(1)
+        time.sleep(0.1)
 
     def run(self) -> None:
         Logger.logg("Controller thread started successfully", Logger.info)
@@ -185,6 +189,7 @@ class Controller(threading.Thread):
             b.lock.acquire()
             if b.stopFlag:
                 self.snake.stop()
+                self.moving = False
                 b.autoFlag = False
                 b.startFlag = False
                 b.yoloFlag = False

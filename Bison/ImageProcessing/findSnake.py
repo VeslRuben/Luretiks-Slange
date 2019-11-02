@@ -107,11 +107,11 @@ class FindSnake:
                 for readFram in readFrames:
                     readSum = readSum + readFram
 
-            readMask = cv2.erode(readSum, None, iterations=1)
-            readMask = cv2.dilate(readMask, None, iterations=6)
+            readMask = cv2.erode(readSum, None, iterations=2)
+            readMask = cv2.dilate(readMask, None, iterations=3)
 
-            greanMask = cv2.erode(greenSum, None, iterations=3)
-            greanMask = cv2.dilate(greanMask, None, iterations=3)
+            greanMask = cv2.erode(greenSum, None, iterations=4)
+            greanMask = cv2.dilate(greanMask, None, iterations=4)
 
             mask = greanMask + readMask
 

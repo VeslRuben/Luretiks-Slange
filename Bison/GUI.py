@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import wx
 import numpy as np
@@ -198,6 +200,7 @@ class StartFrame(wx.Frame):
         with b.quitLock:
             b.quitFlag = True
         Logger.logg("GUI shutting down", Logger.info)
+        time.sleep(0.5)
         self.Destroy()
 
     def OnKeyDown(self, event=None):
