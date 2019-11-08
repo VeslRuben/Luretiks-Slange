@@ -54,8 +54,7 @@ class mazeRecognizer:
         """
         if testing:
             pic2 = cv2.imread(
-                os.getcwd() + "\\" + "..\\Pictures/test2jallball.jpg",
-                -1)
+                os.getcwd() + "\\" + "..\\Pictures/test2jallball.jpg", -1)
         else:
             pic2 = self.cam.takePicture()
 
