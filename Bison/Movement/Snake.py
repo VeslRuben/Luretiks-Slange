@@ -10,6 +10,16 @@ class Snake:
     def __init__(self, cameraIp: str, controllerIp: str):
         self.camera = VideoStream(cameraIp)
         self.controller = UdpConnection(controllerIp)
+        self.timeOutTime = 0.5
+
+    def timeOut(self):
+        timeOutTime = time.time() + self.timeOutTime
+        while True:
+            data = self.controller.receive()
+            if data == "a":
+                return True
+            if time.time() > timeOutTime:
+                return False
 
     def setFrameSize(self, size: int):
         """
@@ -38,13 +48,31 @@ class Snake:
         Logger.logg("Picture taken by snake", Logger.cmd)
         return picture
 
+    def setSpeed(self, speed: int):
+        if speed < 10:
+            send = "t00" + str(speed)
+        elif speed < 100:
+            send = "t0" + str(speed)
+        else:
+            send = "t" + str(speed)
+        return self.timeOut()
+
+    def setAmplitude(self, amplitude: int):
+        if amplitude < 10:
+            send = "t0" + str(amplitude)
+        else:
+            send = "t" + str(amplitude)
+        return self.timeOut()
+
     def moveForward(self):
         self.controller.send("f")
         Logger.logg("Sent: f", Logger.cmd)
+        return self.timeOut()
 
     def moveBacwards(self):
         self.controller.send("b")
         Logger.logg("Sent: b", Logger.cmd)
+        return self.timeOut()
 
     def turn(self, degreas: int):
         """
@@ -63,41 +91,46 @@ class Snake:
             send = "t" + str(degreas)
         self.controller.send(send)
         Logger.logg(f"Sent turn: {degreas}", Logger.cmd)
+        return self.timeOut()
 
     def moveLeft(self):
         self.controller.send("v")
         Logger.logg("Sent: v", Logger.cmd)
+        return self.timeOut()
 
     def moveRight(self):
         self.controller.send("h")
         Logger.logg("Sent: h", Logger.cmd)
+        return self.timeOut()
 
     def stop(self):
         self.controller.send("s")
         Logger.logg("Sent: s", Logger.cmd)
+        return self.timeOut()
 
     def reset(self):
         self.controller.send("r")
         Logger.logg("Sent: r", Logger.cmd)
+        return self.timeOut()
 
-    def isControllerAlive(self) -> bool:
+    def isComandDone(self) -> bool:
         """
         cheks if the controller is connnected \n
         :return: true if controller is connected
         """
-        self.controller.receive()
-        return self.controller.isAlive()
+        data = self.controller.receive()
+        if data == "d":
+            return True
+        else:
+            return False
 
 
 if __name__ == "__main__":
-    s = Snake("http://192.168.137.171", "192.168.137.60")
+    s = Snake("http://192.168.137.72", "192.168.137.76")
+    print(s.reset())
+
     while True:
-        i = input("-> ")
-        if i == "f":
-            s.moveForward()
-        elif i == "s":
-            s.stop()
-        elif i == "r":
-            s.reset()
-        else:
-            s.turn(int(i))
+        done = s.isComandDone()
+        print(done)
+        if done:
+            break
