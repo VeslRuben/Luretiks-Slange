@@ -14,7 +14,7 @@ class UdpConnection:
         self.timeOut = 3
 
         self.url = url
-        udp_ip = socket.gethostname()
+        udp_ip = "192.168.137.1"
         udp_port = 6969
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
         self.sock.bind((udp_ip, udp_port))
@@ -35,34 +35,20 @@ class UdpConnection:
         """
         data = None
         try:
-            header, addr = self.sock.recvfrom(10024)  # buffer size is 10024 bytes
-            # Reads the header of the message
-
-            if header.decode() == "a":
-                self.timeOutTimer = time.time()  # Resets the time out timer
-                if self.connectionTimedOut:
-                    Logger.logg(f"{self.url} has reconnected", Logger.info)
-                self.connectionTimedOut = False
-            elif header.decode() == "test":
-                pass
+            data, addr = self.sock.recvfrom(10024)  # buffer size is 10024 bytes
+            data = data.decode()
 
         except socket.timeout:
             pass
 
-        if time.time() - self.timeOutTimer > self.timeOut:
-            self.connectionTimedOut = True
-            Logger.logg(f"connection to {self.url} has timed out", Logger.warning)
-
         return data
 
-    def isAlive(self) -> bool:
-        """Return true if the connection is alive, else false"""
-        return self.connectionTimedOut
-
-
 if __name__ == '__main__':
-    s = UdpConnection("192.168.137.60")
+    s = UdpConnection("192.168.137.76")
 
     while True:
         f = input(': ')
+        time.sleep(0.1)
+        print(s.receive())
         s.send(f)
+

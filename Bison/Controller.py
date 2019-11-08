@@ -22,15 +22,14 @@ class Controller(threading.Thread):
     def __init__(self, eventData):
         super().__init__()
         self.setup()
+        self.running = True
 
         # Snake variables ###########################
-        self.running = True
         self.i = 0
-        self.moving = False
         self.curantAngle = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.171", "192.168.137.160")
+        self.snake = Snake("http://192.168.137.72", "192.168.137.160")
         #############################################
 
         self.guiEvents = eventData["events"]
@@ -121,9 +120,8 @@ class Controller(threading.Thread):
         Put yolo test code her!!!!!!!!!
         :return: yolo
         """
-        if not self.moving:
-            self.snake.moveForward()
-            self.moving = True
+
+
         start = self.finalPath[self.i]
         nextNode = self.finalPath[self.i + 1]
         lV = [nextNode[0] - start[0], nextNode[1] - start[1]]
@@ -181,7 +179,6 @@ class Controller(threading.Thread):
             self.notifyGui("UpdateTextEvent", f"angel of snake {self.curantAngle}")
             self.notifyGui("UpdateTextEvent", f"dist {distSnakToLine}")
 
-
             if self.intersect(finithLine[0], finithLine[1], snakLine[0], snakLine[1]):
                 self.i += 1
 
@@ -191,7 +188,6 @@ class Controller(threading.Thread):
             with b.lock:
                 b.yoloFlag = False
                 self.i = 0
-                self.moving = False
         time.sleep(0.1)
 
     def run(self) -> None:
@@ -202,7 +198,6 @@ class Controller(threading.Thread):
             b.lock.acquire()
             if b.stopFlag:
                 self.snake.stop()
-                self.moving = False
                 b.autoFlag = False
                 b.startFlag = False
                 b.yoloFlag = False
