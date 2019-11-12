@@ -44,14 +44,18 @@ class Controller(threading.Thread):
 
         # Snake variables ###########################
         self.snakeController = SnakeController()
-
+        self. overideMoving = True
         self.moving = False
+        self.readyToMove = False
         self.firstLoop = True
         self.i = 0
         self.curantAngle = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.72", "192.168.137.160")
+        self.snake = Snake("http://192.168.137.72", "192.168.137.207")
+        time.sleep(1)
+        print(self.snake.setAmplitude(30))
+        print(self.snake.setSpeed(15))
         #############################################
 
     def notifyGui(self, event, arg):
@@ -113,35 +117,84 @@ class Controller(threading.Thread):
     def autoMode(self):
         pass
 
-    def ccw(self, A, B, C):
-        return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
-
-    # Return true if line segments AB and CD intersect
-    def intersect(self, A, B, C, D):
-        return self.ccw(A, C, D) != self.ccw(B, C, D) and self.ccw(A, B, C) != self.ccw(A, B, D)
-
     def yolo(self):
         """
         Put yolo test code her!!!!!!!!!
         :return: yolo
         """
-        self.moving = self.snake.isComandDone()
+        # Update GUI #############################
+        pic = self.cam.takePicture()
+        collorPic = drawLines(pic, self.finalPath, (255, 0, 0))
+        self.notifyGui("UpdateImageEventR", collorPic)
+        ##########################################
+
+        # returns if the snake is not redy to reacev a comand ####
+        cmdDone = self.snake.isComandDone()
+        if cmdDone or self.overideMoving:
+            self.moving = False
+            self.overideMoving = False
+
         if self.moving:
-            return
+            print("moving!")
+            pass
+        ##########################################################
+        elif self.readyToMove:
+            print("ready to move!")
+            self.moving = self.snake.moveForward()
+            self.readyToMove = False
+            #return
+        else:
+            print("not mowing!")
+            lineStart = self.finalPath[self.i]
+            lineEnd = self.finalPath[self.i + 1]
 
-        lineStart = self.finalPath[self.i]
-        lineEnd = self.finalPath[self.i + 1]
+            # Runs ony when the snake starts ###############################
+            if self.firstLoop:
+                snakeCordinats, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
+                if snakeCordinats:
+                    self.firstLoop = False
+                    snakePointF = snakeCordinats[1]
+                    snakePointB = snakeCordinats[0]
 
-        if self.firstLoop:
-            snakeCordinats = self.findSnake.LocateSnakeAverage(1, 1)
-            if snakeCordinats:
-                self.firstLoop = False
-                snakePointF = snakeCordinats[1]
-                snakePointB = snakeCordinats[0]
+                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB, snakePointF)
+                    snakeAngle = self.snakeController.calculateTlheta(lV, sV, lVxsV)
+                    self.moving = self.snake.turn(snakeAngle)
 
-                lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB, snakePointF)
-                snakeAngle = self.snakeController.calculateTlheta(lV, sV, lVxsV)
-                self.moving = self.snake.turn(snakeAngle)
+                    # Update GUI #############################
+                    self.notifyGui("UpdateImageEventL", maskPic)
+                    ##########################################
+            #################################################################
+            else:
+                snakeCordinats, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
+                if snakeCordinats:
+                    snakePointF = snakeCordinats[1]
+                    snakePointB = snakeCordinats[0]
+                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB, snakePointF)
+
+                    # Update GUI #############################
+                    if len(self.traveledPath) > 1:
+                        maskPic = drawLines(maskPic, self.traveledPath, (0, 255, 0))
+                    self.notifyGui("UpdateImageEventL", maskPic)
+                    ##########################################
+
+                    # cheks if the snake has reatcht a new node ##############################################
+                    snakeLine, fintithLine = self.snakeController.calculateLines(lV, sV, lineEnd, snakePointF)
+                    if self.snakeController.intersect(fintithLine[0], fintithLine[1], snakeLine[0], snakeLine[1]):
+                        self.i += 1
+
+                    if self.i >= len(self.finalPath) - 1:
+                        self.snake.stop()
+                        print("stop")
+                        Logger.logg("Snake reatcht gole", Logger.info)
+                        self.firstLoop = False
+                        with b.lock:
+                            b.yoloFlag = False
+                            self.i = 0
+                    ##########################################################################################
+                    turnAngle = self.snakeController.calculatTurnAngel(lV, lVxsV, snakePointF, lineStart, 0.5)
+                    self.moving = self.snake.turn(turnAngle)
+                    self.readyToMove = True
+                    self.traveledPath.append(snakePointF)
 
     def run(self) -> None:
         Logger.logg("Controller thread started successfully", Logger.info)
@@ -151,6 +204,7 @@ class Controller(threading.Thread):
             b.lock.acquire()
             if b.stopFlag:
                 self.snake.stop()
+                self.overideMoving = True
                 b.autoFlag = False
                 b.startFlag = False
                 b.yoloFlag = False

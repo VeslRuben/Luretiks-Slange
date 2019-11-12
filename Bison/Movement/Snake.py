@@ -17,8 +17,10 @@ class Snake:
         while True:
             data = self.controller.receive()
             if data == "a":
+                Logger.logg(f"Acc resived from snake", Logger.info)
                 return True
             if time.time() > timeOutTime:
+                Logger.logg(f"no acc recevd from snake", Logger.warning)
                 return False
 
     def setFrameSize(self, size: int):
@@ -49,19 +51,24 @@ class Snake:
         return picture
 
     def setSpeed(self, speed: int):
+        send = ""
         if speed < 10:
-            send = "t00" + str(speed)
+            send = "p00" + str(speed)
         elif speed < 100:
-            send = "t0" + str(speed)
+            send = "p0" + str(speed)
         else:
-            send = "t" + str(speed)
+            send = "p" + str(speed)
+        self.controller.send(send)
         return self.timeOut()
 
     def setAmplitude(self, amplitude: int):
+        send = ""
         if amplitude < 10:
-            send = "t0" + str(amplitude)
+            send = "a0" + str(amplitude)
         else:
-            send = "t" + str(amplitude)
+            send = "a" + str(amplitude)
+
+        self.controller.send(send)
         return self.timeOut()
 
     def moveForward(self):
@@ -120,6 +127,7 @@ class Snake:
         """
         data = self.controller.receive()
         if data == "d":
+            Logger.logg(f"snake finisht command", Logger.info)
             return True
         else:
             return False

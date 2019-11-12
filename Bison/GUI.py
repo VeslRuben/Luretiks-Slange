@@ -143,7 +143,7 @@ class StartFrame(wx.Frame):
         self.imgR.image = image = wx.ImageFromBuffer(w, h, array)
         self.imgR.Update()
         self.imgR.Refresh()
-        Logger.logg("GUI right image updated", Logger.info)
+        #Logger.logg("GUI right image updated", Logger.info)
 
     def OnNewImageL(self, event=None):
         array = event.GetMyVal()
@@ -153,13 +153,13 @@ class StartFrame(wx.Frame):
         self.imgL.image = image = wx.ImageFromBuffer(w, h, array)
         self.imgL.Update()
         self.imgL.Refresh()
-        Logger.logg("GUI left image updated", Logger.info)
+        #Logger.logg("GUI left image updated", Logger.info)
 
     def OnNewText(self, event=None):
         text = event.GetMyVal()
         self.logTextField.AppendText(text + "\n")
         self.logTextField.Refresh()
-        Logger.logg("GUI text box updated", Logger.info)
+        #Logger.logg("GUI text box updated", Logger.info)
 
     def OnStartBtn(self, event=None):
         with b.lock:
