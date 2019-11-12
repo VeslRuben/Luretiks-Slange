@@ -9,6 +9,7 @@ import sys
 from Bison.logger import Logger
 import matplotlib.pyplot as plt
 import numpy as np
+from Bison.ImageProcessing.maze_recogn import mazeRecognizer
 
 from Bison.GUI import CustomEvent
 
@@ -63,7 +64,7 @@ class RRTStar(RRT):
         self.goal_node = self.Node(goal[0], goal[1])
         self.showFinalAnimation = True
 
-    def planning(self, animation=True, search_until_max_iter=False):
+    def planning(self, animation=False, search_until_max_iter=False):
         """
         rrt star path planning
         animation: flag for animation on or off
@@ -243,3 +244,37 @@ class RRTStar(RRT):
         data = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
         data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         return data, path
+
+if __name__ == "__main__":
+    m = mazeRecognizer()
+    lines, _ = m.findMaze()
+    rrt_star = RRTStar(start=[810, 385], goal=[1250, 150], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
+              lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+              edge_dist=30, connect_circle_dist=450)
+
+    path = rrt_star.planning()
+
+    showFinalAnimation = True
+
+    if path is None:
+        fig = plt.figure()
+        fig.add_subplot(111)
+        rrt_star.draw_graph()
+    else:
+        print("found path!!")
+
+        # Draw final path
+        if showFinalAnimation:
+            rrt_star.draw_graph()
+            fig = plt.figure()
+            fig.add_subplot(111)
+            plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
+            for (data) in rrt_star.lineList:
+                x1 = data[0][0]
+                y1 = data[0][1]
+                x2 = data[0][2]
+                y2 = data[0][3]
+                rrt_star.plotObstaclev2(x1, y1, x2, y2)
+            plt.grid(True)
+            plt.pause(0.01)  # Need for Mac
+            plt.show()

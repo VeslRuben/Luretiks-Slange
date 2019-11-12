@@ -1,6 +1,7 @@
 import math
 import random
 from shapely.geometry import LineString
+from Bison.ImageProcessing.maze_recogn import mazeRecognizer
 
 import matplotlib.pyplot as plt
 
@@ -47,7 +48,7 @@ class RRT:
         self.lineList = lineList
         self.edge_dist = edge_dist
 
-    def planning(self, animation=True):
+    def planning(self, animation=False):
         """
         rrt path planning
         :param animation: flag for animation on or off
@@ -252,8 +253,40 @@ class RRT:
         theta = math.atan2(dy, dx)
         return d, theta
 
-def main(gx=1.1, gy=10.0, exp_dist=0.5):
-    print("Start" + __file__)
+def main():
+    m = mazeRecognizer()
+    lines, _ = m.findMaze()
+    rrt = RRT(start=[810, 385], goal=[1250, 150], rand_area_x=[250, 1500], rand_area_y=[0, 1100],
+              lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=1000, goal_sample_rate=20,
+              edge_dist=30)
+
+    path = rrt.planning()
+
+    showFinalAnimation = True
+
+    if path is None:
+        fig = plt.figure()
+        fig.add_subplot(111)
+        rrt.draw_graph()
+    else:
+        print("found path!!")
+
+        # Draw final path
+        if showFinalAnimation:
+            rrt.draw_graph()
+            fig = plt.figure()
+            fig.add_subplot(111)
+            plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
+            for (data) in rrt.lineList:
+                x1 = data[0][0]
+                y1 = data[0][1]
+                x2 = data[0][2]
+                y2 = data[0][3]
+                rrt.plotObstaclev2(x1, y1, x2, y2)
+            plt.grid(True)
+            plt.pause(0.01)  # Need for Mac
+            plt.show()
+
 
 if __name__ == '__main__':
     main()

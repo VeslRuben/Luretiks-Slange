@@ -4,6 +4,7 @@ import cv2
 import imutils
 from scipy.spatial import distance as dist
 from Bison.Com.videoStream import VideoStream
+from Bison.ImageProcessing.camera import Camera
 
 
 class FindTarget:
@@ -13,6 +14,8 @@ class FindTarget:
         pass
 
     def getTarget(self, bilde):
+
+
         center = None
         d = None
         x = None
@@ -23,6 +26,8 @@ class FindTarget:
         blueLower = (100, 170, 40)
         blueUper = (140, 255, 240)
 
+        yelowLower = (20, 100, 100)
+        yellowHiger = (30, 255, 255)
         frame = bilde
 
         # Filtering of the pictures
@@ -31,13 +36,13 @@ class FindTarget:
         # 2 We change the colors to HSV
         color = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         # 3 Removes everyting that is not inside the Color range that is chosen
-        mask = cv2.inRange(color, blueLower, blueUper)
+        mask = cv2.inRange(color, yelowLower, yellowHiger)
         # 4 Dilates the picture
         mask = cv2.dilate(mask, None, iterations=3)
         # 5 Errodes the picture
         mask = cv2.erode(mask, None, iterations=3)
-
         # 6 Finds countors inne the fillterd picture
+
         cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         cnts = imutils.grab_contours(cnts)
@@ -46,7 +51,7 @@ class FindTarget:
             c = max(cnts, key=cv2.contourArea)
             ((x, y), radius) = cv2.minEnclosingCircle(c)
             M = cv2.moments(c)
-            if radius > 20:
+            if radius > 15:
                 center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
                 cv2.circle(frame, (int(x), int(y)), int(radius),
                            (0, 255, 255), 2)
@@ -56,17 +61,20 @@ class FindTarget:
 
         if len(cnts) > 0 and d is not None and center is not None and radius is not None:
             return d, frame, radius, center
+
         return None
 
 
 if __name__ == "__main__":
 
+    Camera.initCam(1)
     c = FindTarget()
-    v = VideoStream("http://192.168.137.72")
-    v.reSize(7)
+
+    #v = VideoStream("http://192.168.137.72")
+    #v.reSize(7)
     while True:
-        bilde = v.getPicture()
-        var = c.getTarget(bilde)
+
+        var = c.getTarget()
 
         if var is not None:
             distance, bilde, radius, center = var
