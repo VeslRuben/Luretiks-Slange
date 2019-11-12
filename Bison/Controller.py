@@ -11,7 +11,7 @@ from Bison.Movement.Snake import Snake
 from Bison.ImageProcessing.camera import Camera
 from Bison.ImageProcessing.findSnake import FindSnake
 from Bison.Movement.snakeController import SnakeController
-import math
+from Bison.ImageProcessing.findTarget import FindTarget
 from Bison.ImageProcessing.Draw import drawLines
 
 
@@ -39,12 +39,13 @@ class Controller(threading.Thread):
         self.rrtStar = None
         self.rrtPathImage = None
         self.findSnake = FindSnake()
+        self.finTarget = FindTarget()
         self.finalPath = None
         ###################################
 
         # Snake variables ###########################
         self.snakeController = SnakeController()
-        self. overideMoving = True
+        self.overideMoving = True
         self.moving = False
         self.readyToMove = False
         self.firstLoop = True
@@ -52,10 +53,10 @@ class Controller(threading.Thread):
         self.curantAngle = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.72", "192.168.137.207")
+        self.snake = Snake("http://192.168.137.72", "192.168.137.196")
         time.sleep(1)
         print(self.snake.setAmplitude(30))
-        print(self.snake.setSpeed(15))
+        print(self.snake.setSpeed(10))
         #############################################
 
     def notifyGui(self, event, arg):
@@ -74,12 +75,17 @@ class Controller(threading.Thread):
         self.notifyGui("UpdateTextEvent", "Findig path...")
         try:
             cords, temp = self.findSnake.LocateSnake(self.cam.takePicture())
-            x = cords[0][0]
-            y = cords[0][1]
+            startX = cords[0][0]
+            startY = cords[0][1]
+
+            d, frame, radius, center = self.finTarget.getTarget(self.cam.takePicture())
+            goalX = center[0]
+            goalY = center[1]
         except TypeError:
             self.notifyGui("UpdateTextEvent", "fukt")
             return
-        self.rrtStar = RRTStar(start=[x, y], goal=[1300, 200], rand_area_x=[250, 1500], rand_area_y=[0, 1100],
+        self.rrtStar = RRTStar(start=[startX, startY], goal=[goalX, goalY], rand_area_x=[250, 1500],
+                               rand_area_y=[0, 1100],
                                lineList=self.lines,
                                expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=20,
                                connect_circle_dist=450,
@@ -135,16 +141,13 @@ class Controller(threading.Thread):
             self.overideMoving = False
 
         if self.moving:
-            print("moving!")
             pass
         ##########################################################
         elif self.readyToMove:
-            print("ready to move!")
             self.moving = self.snake.moveForward()
             self.readyToMove = False
-            #return
+            # return
         else:
-            print("not mowing!")
             lineStart = self.finalPath[self.i]
             lineEnd = self.finalPath[self.i + 1]
 
@@ -156,7 +159,8 @@ class Controller(threading.Thread):
                     snakePointF = snakeCordinats[1]
                     snakePointB = snakeCordinats[0]
 
-                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB, snakePointF)
+                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB,
+                                                                              snakePointF)
                     snakeAngle = self.snakeController.calculateTlheta(lV, sV, lVxsV)
                     self.moving = self.snake.turn(snakeAngle)
 
@@ -169,7 +173,8 @@ class Controller(threading.Thread):
                 if snakeCordinats:
                     snakePointF = snakeCordinats[1]
                     snakePointB = snakeCordinats[0]
-                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB, snakePointF)
+                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB,
+                                                                              snakePointF)
 
                     # Update GUI #############################
                     if len(self.traveledPath) > 1:
@@ -191,7 +196,8 @@ class Controller(threading.Thread):
                             b.yoloFlag = False
                             self.i = 0
                     ##########################################################################################
-                    turnAngle = self.snakeController.calculatTurnAngel(lV, lVxsV, snakePointF, lineStart, 0.5)
+                    turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 35)
+                    # self.notifyGui("UpdateTextEvent", f"curent angle {turnAngle}")
                     self.moving = self.snake.turn(turnAngle)
                     self.readyToMove = True
                     self.traveledPath.append(snakePointF)

@@ -1,9 +1,9 @@
 import math
 
+
 class SnakeController:
 
     def __init__(self):
-
         self.curantAngle = 0
 
     def ccw(self, A, B, C):
@@ -16,11 +16,14 @@ class SnakeController:
     def calculatTurnAngel(self, lV, lVxsV, snakeEndPoint, lineStartPoint, P):
         # usiing distans to line to regulate#########
         lVN = [lV[1], -lV[0]]
+        print(f"normalvektor: {lVN}")
         starSnakeVektor = [snakeEndPoint[0] - lineStartPoint[0], snakeEndPoint[1] - lineStartPoint[1]]
         distSnakToLine = abs(lVN[0] * starSnakeVektor[0] + lVN[1] * starSnakeVektor[1]) / math.sqrt(
             lVN[0] ** 2 + lVN[1] ** 2)
         distSnakToLine = distSnakToLine * (lVxsV / abs(lVxsV))  # (lVxsV / abs(lVxsV)) is 1 or -1
         self.curantAngle = self.curantAngle + int(distSnakToLine * P)
+        print(f"disence to line: {distSnakToLine}")
+        print(f"tturn angle: {self.curantAngle}")
         return self.curantAngle
 
     def calculateLineVektors(self, lineStartPoint, lineEndPoint, snakeStartPoint, snakeEndPoint):
@@ -36,6 +39,15 @@ class SnakeController:
         self.curantAngle = self.curantAngle + int(theta * 0.3)
         return self.curantAngle
 
+    def calculatDitanceToLine(self, lV, lVxsV, snakeEndPoint, lineStartPoint):
+        # usiing distans to line to regulate#########
+        lVN = [lV[1], -lV[0]]
+        starSnakeVektor = [snakeEndPoint[0] - lineStartPoint[0], snakeEndPoint[1] - lineStartPoint[1]]
+        distSnakToLine = (lVN[0] * starSnakeVektor[0] + lVN[1] * starSnakeVektor[1]) / math.sqrt(
+            lVN[0] ** 2 + lVN[1] ** 2)
+        #distSnakToLine = distSnakToLine * (lVxsV / abs(lVxsV))  # (lVxsV / abs(lVxsV)) is 1 or -1
+        return -distSnakToLine
+
     def calculateLines(self, lV, sV, LineEndoPoint, snakeEndPoint):
         finithVektor = [lV[1], -lV[0]]
         skalar = 10
@@ -44,11 +56,32 @@ class SnakeController:
         snakLine = [snakeEndPoint, [snakeEndPoint[0] + (-sV[0]) * 2, snakeEndPoint[1] + (-sV[1]) * 2]]
         return snakLine, finithLine
 
+    def smartTurn(self, lV, sV, lVxsV, snakeEndPoint, lineStartPoint, P, db):
+        distanceToLine = self.calculatDitanceToLine(lV, lVxsV, snakeEndPoint, lineStartPoint)
+
+        theta = math.acos((lV[0] * sV[0] + lV[1] * sV[1]) / (
+                math.sqrt(lV[0] ** 2 + lV[1] ** 2) * math.sqrt(sV[0] ** 2 + sV[1] ** 2)))
+        theta = (theta * (lVxsV / abs(lVxsV))) * 180 / math.pi  # (lVxsV / abs(lVxsV)) is 1 or -1
+
+        print(f"distance: {distanceToLine} \n theta: {theta}")
+
+        if abs(distanceToLine) > db:
+            print(f"using distance")
+            self.curantAngle = self.curantAngle + int(distanceToLine * P)
+        else:
+            print(f"using theta")
+            self.curantAngle = self.curantAngle + theta
+
+        if self.curantAngle > 90:
+            self.curantAngle = 90
+        elif self.curantAngle < - 90:
+            self.curantAngle = -90
+
+        print(f"currant angle: {self.curantAngle}")
+        return self.curantAngle
+
     def run(self):
         pass
-
-
-
 
 
 """     start = self.finalPath[self.i]

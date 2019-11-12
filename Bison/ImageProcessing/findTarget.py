@@ -10,11 +10,9 @@ from Bison.ImageProcessing.camera import Camera
 class FindTarget:
 
     def __init__(self):
-
         pass
 
     def getTarget(self, bilde):
-
 
         center = None
         d = None
@@ -22,7 +20,7 @@ class FindTarget:
         y = None
         radius = None
 
-        bilde = cv2.cvtColor(bilde, cv2.COLOR_BGR2RGB)
+        #bilde = cv2.cvtColor(bilde, cv2.COLOR_BGR2RGB)
         blueLower = (100, 170, 40)
         blueUper = (140, 255, 240)
 
@@ -38,6 +36,7 @@ class FindTarget:
         # 3 Removes everyting that is not inside the Color range that is chosen
         mask = cv2.inRange(color, yelowLower, yellowHiger)
         # 4 Dilates the picture
+
         mask = cv2.dilate(mask, None, iterations=3)
         # 5 Errodes the picture
         mask = cv2.erode(mask, None, iterations=3)
@@ -67,15 +66,10 @@ class FindTarget:
 
 if __name__ == "__main__":
 
-    Camera.initCam(1)
+    Camera.initCam(0)
     c = FindTarget()
-
-    #v = VideoStream("http://192.168.137.72")
-    #v.reSize(7)
+    cam = Camera()
     while True:
+        var = c.getTarget(cam.takePicture())
 
-        var = c.getTarget()
 
-        if var is not None:
-            distance, bilde, radius, center = var
-            break

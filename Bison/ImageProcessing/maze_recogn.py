@@ -6,7 +6,7 @@ from Bison.ImageProcessing.camera import Camera
 
 realtime = False
 stillPic = False
-testing = True
+testing = False
 
 
 
