@@ -248,15 +248,33 @@ class RRTStar(RRT):
 if __name__ == "__main__":
     m = mazeRecognizer()
     lines, _ = m.findMaze()
-    rrt_star = RRTStar(start=[810, 385], goal=[1250, 150], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
-              lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
-              edge_dist=30, connect_circle_dist=450)
+    startPoints = [[830, 365], [720, 450], [840, 870], [1250, 250]]
+    endPoints = [[720, 450], [840, 870], [1250, 250], [1400, 150]]
 
-    path = rrt_star.planning()
+    finalPath = []
+    #rrt_star = RRTStar(start=[startPoints[3][0], startPoints[3][1]], goal=[endPoints[3][0], endPoints[3][1]], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
+    #                   lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+    #                   edge_dist=30, connect_circle_dist=450)
+
+    for (data1, data2) in zip(startPoints, endPoints):
+        startx = data1[0]
+        starty = data1[1]
+        goalx = data2[0]
+        goaly = data2[1]
+        rrt_star = RRTStar(start=[startx, starty], goal=[goalx, goaly], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
+                           lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+                           edge_dist=30, connect_circle_dist=450)
+        path = rrt_star.planning()
+        print()
+        path = path[::-1]
+        for pathPoints in path:
+            finalPath.append(pathPoints)
+
+    #path = rrt_star.planning()
 
     showFinalAnimation = True
 
-    if path is None:
+    if finalPath is None:
         fig = plt.figure()
         fig.add_subplot(111)
         rrt_star.draw_graph()
@@ -268,7 +286,7 @@ if __name__ == "__main__":
             rrt_star.draw_graph()
             fig = plt.figure()
             fig.add_subplot(111)
-            plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
+            plt.plot([x for (x, y) in finalPath], [y for (x, y) in finalPath], '-r')
             for (data) in rrt_star.lineList:
                 x1 = data[0][0]
                 y1 = data[0][1]
