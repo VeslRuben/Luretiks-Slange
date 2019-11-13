@@ -193,7 +193,7 @@ class Controller(threading.Thread):
                         Logger.logg("Snake reached goal", Logger.info)
                         self.firstLoop = False
                         with b.lock:
-                            b.yoloFlag = False
+                            b.runFlag = False
                             self.i = 0
                     ##########################################################################################
                     turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20, 150)
@@ -219,7 +219,7 @@ class Controller(threading.Thread):
                 self.overrideMoving = True
                 b.autoFlag = False
                 b.startFlag = False
-                b.yoloFlag = False
+                b.runFlag = False
                 b.moveCmd = ""
                 b.stopFlag = False
                 b.lock.release()
@@ -239,7 +239,7 @@ class Controller(threading.Thread):
                 b.lock.release()
 
             b.lock.acquire()
-            if b.yoloFlag:
+            if b.runFlag:
                 b.lock.release()
                 self.yolo()
                 # b.yoloFlag = True

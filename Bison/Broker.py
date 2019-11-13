@@ -12,7 +12,7 @@ class Broker:
     findPathFlag = False
     startFlag = False
     stopFlag = False
-    yoloFlag = False
+    runFlag = False
     manualControlFlag = False
     autoFlag = False
 

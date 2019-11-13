@@ -83,9 +83,9 @@ class StartFrame(wx.Frame):
         self.stopBtn = wx.Button(panel, label="Stop", size=(130, 40))
         self.stopBtn.SetBackgroundColour("gray")
         self.stopBtn.Bind(wx.EVT_BUTTON, self.OnStopBtn)
-        self.yoloBtn = wx.Button(panel, label="yolo", size=(130, 40))
+        self.yoloBtn = wx.Button(panel, label="run", size=(130, 40))
         self.yoloBtn.SetBackgroundColour("gray")
-        self.yoloBtn.Bind(wx.EVT_BUTTON, self.OnYolo)
+        self.yoloBtn.Bind(wx.EVT_BUTTON, self.OnRun)
         bntVBoxLeft.AddMany([(self.startBtn, 1), (self.stopBtn, 1), (self.yoloBtn, 1)])
 
         bntVBoxRight = wx.BoxSizer(wx.VERTICAL)
@@ -143,7 +143,7 @@ class StartFrame(wx.Frame):
         self.imgR.image = image = wx.ImageFromBuffer(w, h, array)
         self.imgR.Update()
         self.imgR.Refresh()
-        #Logger.logg("GUI right image updated", Logger.info)
+        # Logger.logg("GUI right image updated", Logger.info)
 
     def OnNewImageL(self, event=None):
         array = event.GetMyVal()
@@ -153,13 +153,13 @@ class StartFrame(wx.Frame):
         self.imgL.image = image = wx.ImageFromBuffer(w, h, array)
         self.imgL.Update()
         self.imgL.Refresh()
-        #Logger.logg("GUI left image updated", Logger.info)
+        # Logger.logg("GUI left image updated", Logger.info)
 
     def OnNewText(self, event=None):
         text = event.GetMyVal()
         self.logTextField.AppendText(text + "\n")
         self.logTextField.Refresh()
-        #Logger.logg("GUI text box updated", Logger.info)
+        # Logger.logg("GUI text box updated", Logger.info)
 
     def OnStartBtn(self, event=None):
         with b.lock:
@@ -170,11 +170,13 @@ class StartFrame(wx.Frame):
         with b.lock:
             b.stopFlag = True
 
-    def OnYolo(self, event=None):
+    def OnRun(self, event=None):
         with b.lock:
-            b.yoloFlag = not b.yoloFlag
+            b.runFlag = not b.runFlag
 
     def OnManualBtn(self, event=None):
+        # warning dialog
+        wx.MessageBox('Use "w, s, a, d, r" to controle the snake manualy', 'Info', wx.OK | wx.ICON_INFORMATION)
         self.controlledManually = not self.controlledManually
         with b.lock:
             b.manualControlFlag = not b.manualControlFlag
@@ -182,11 +184,15 @@ class StartFrame(wx.Frame):
         Logger.logg(f"GUI manual control: {self.controlledManually}", Logger.info)
 
     def OnPrepareMaze(self, event=None):
+        # warning dialog
+        wx.MessageBox('Make sure the maze is emty', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
             b.prepMaze = True
         Logger.logg("GUI prepare maze btn preset", Logger.info)
 
     def OnFindPath(self, event=None):
+        # warning dialog
+        wx.MessageBox('Put the snake and the target in the maze', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
             b.findPathFlag = True
         Logger.logg("GUI find path btn preset", Logger.info)

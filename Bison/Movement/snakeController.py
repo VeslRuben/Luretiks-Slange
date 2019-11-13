@@ -13,19 +13,6 @@ class SnakeController:
     def intersect(self, A, B, C, D):
         return self.ccw(A, C, D) != self.ccw(B, C, D) and self.ccw(A, B, C) != self.ccw(A, B, D)
 
-    def calculateTurnAngle(self, lV, lVxsV, snakeEndPoint, lineStartPoint, P):
-        # usiing distans to line to regulate#########
-        lVN = [lV[1], -lV[0]]
-        print(f"normalvektor: {lVN}")
-        starSnakeVektor = [snakeEndPoint[0] - lineStartPoint[0], snakeEndPoint[1] - lineStartPoint[1]]
-        distSnakeToLine = abs(lVN[0] * starSnakeVektor[0] + lVN[1] * starSnakeVektor[1]) / math.sqrt(
-            lVN[0] ** 2 + lVN[1] ** 2)
-        distSnakeToLine = distSnakeToLine * (lVxsV / abs(lVxsV))  # (lVxsV / abs(lVxsV)) is 1 or -1
-        self.currentAngle = self.currentAngle + int(distSnakeToLine * P)
-        print(f"Distance to line: {distSnakeToLine}")
-        print(f"Turn angle: {self.currentAngle}")
-        return self.currentAngle
-
     def calculateLineVectors(self, lineStartPoint, lineEndPoint, snakeStartPoint, snakeEndPoint):
         lV = [lineEndPoint[0] - lineStartPoint[0], lineEndPoint[1] - lineStartPoint[1]]
         sV = [snakeEndPoint[0] - snakeStartPoint[0], snakeEndPoint[1] - snakeStartPoint[1]]
@@ -45,7 +32,7 @@ class SnakeController:
         startSnakeVektor = [snakeEndPoint[0] - lineStartPoint[0], snakeEndPoint[1] - lineStartPoint[1]]
         distSnakeToLine = (lVN[0] * startSnakeVektor[0] + lVN[1] * startSnakeVektor[1]) / math.sqrt(
             lVN[0] ** 2 + lVN[1] ** 2)
-        #distSnakToLine = distSnakToLine * (lVxsV / abs(lVxsV))  # (lVxsV / abs(lVxsV)) is 1 or -1
+        # distSnakToLine = distSnakToLine * (lVxsV / abs(lVxsV))  # (lVxsV / abs(lVxsV)) is 1 or -1
         return -distSnakeToLine
 
     def calculateLines(self, lV, sV, LineEndoPoint, snakeEndPoint):
