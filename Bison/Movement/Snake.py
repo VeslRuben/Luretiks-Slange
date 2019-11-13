@@ -17,10 +17,10 @@ class Snake:
         while True:
             data = self.controller.receive()
             if data == "a":
-                Logger.logg(f"Acc resived from snake", Logger.info)
+                Logger.logg(f"Acc received from snake", Logger.info)
                 return True
             if time.time() > timeOutTime:
-                Logger.logg(f"no acc recevd from snake", Logger.warning)
+                Logger.logg(f"No acc received from snake", Logger.warning)
                 return False
 
     def setFrameSize(self, size: int):
@@ -81,23 +81,23 @@ class Snake:
         Logger.logg("Sent: b", Logger.cmd)
         return self.timeOut()
 
-    def turn(self, degreas: int):
+    def turn(self, degrees: int):
         """
         Seds a turn comand to the snake. \n
         positive degras is right and negative is left \n
-        :param degreas: turnrate in deagras
+        :param degrees: turnrate in deagras
         :return: None
         """
         send = None
-        degreas = 90 + degreas
-        if degreas < 10:
-            send = "t00" + str(degreas)
-        elif degreas < 100:
-            send = "t0" + str(degreas)
+        degrees = 90 + degrees
+        if degrees < 10:
+            send = "t00" + str(degrees)
+        elif degrees < 100:
+            send = "t0" + str(degrees)
         else:
-            send = "t" + str(degreas)
+            send = "t" + str(degrees)
         self.controller.send(send)
-        Logger.logg(f"Sent turn: {degreas}", Logger.cmd)
+        Logger.logg(f"Sent turn: {degrees}", Logger.cmd)
         return self.timeOut()
 
     def moveLeft(self):
@@ -120,14 +120,14 @@ class Snake:
         Logger.logg("Sent: r", Logger.cmd)
         return self.timeOut()
 
-    def isComandDone(self) -> bool:
+    def isCommandDone(self) -> bool:
         """
-        cheks if the controller is connnected \n
+        Checks if the controller is connected \n
         :return: true if controller is connected
         """
         data = self.controller.receive()
         if data == "d":
-            Logger.logg(f"snake finisht command", Logger.info)
+            Logger.logg(f"Snake finished command", Logger.info)
             return True
         else:
             return False
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     print(s.reset())
 
     while True:
-        done = s.isComandDone()
+        done = s.isCommandDone()
         print(done)
         if done:
             break

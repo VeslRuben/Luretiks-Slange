@@ -14,12 +14,6 @@ const char* password =  "12345678";
 const uint16_t port = 6969;
 const char * host = "192.168.137.1";
 
-// Test array for sending
-int jallaball[100][200];
-
-// Flag for sending packet only once
-boolean notSent = false;
-
 // Buffer for packetsize
 byte packetBuffer[128];
 
@@ -29,16 +23,17 @@ WiFiUDP udpClient;
 /////////////////////////////////////////////
 // MOVEMENT VARIABLES
 /////////////////////////////////////////////
-
+// Number of servos
 const int numberOfServos = 5;
 
+//Homemade timer for movement in cycles
 int movementTimer = 0;
 
 // Establish servo array
 Servo myServo[numberOfServos];
 
 // Amplitude for the servos
-int A = 40;
+int A = 30;
 
 // Different phase shifts for the different movement
 float forwardPhi = (120.0 / 180.0) * M_PI;
@@ -63,6 +58,8 @@ int servZero[5] = {90, 93, 97, 87, 99};
 // Booleans for movement
 boolean goingForward = false;
 boolean goingBackward = false;
+boolean rotateLeft = false;
+boolean rotateRight = false;
 
 /////////////////////////////////////////
 // SETUP
@@ -87,13 +84,6 @@ void setup()
   Serial.print("WiFi connected with IP: ");
   Serial.println(WiFi.localIP());
 
-  // Making 2D array to send
-  for (int i = 0; i < 100; i++) {
-    for (int j = 0; j < 200; j++) {
-      jallaball[i][j] = 1;
-    }
-  }
-
   // Begin listening on port 9696
   udpClient.begin(9696);
 
@@ -110,38 +100,61 @@ void setup()
 
 void loop()
 {
+  //Checks for incoming packets
   char command = checkPackets();
   if (command != 'z') {
+    
+    // If packet is f, move forward
     if (command == 'f') {
       Serial.println("Going forward");
       goingForward = true;
       goingBackward = false;
       sendAliveMessage();
+      
+    // If packet is b, move backwards
     } else if (command == 'b') {
       Serial.println("Going backwards");
       goingForward = false;
       goingBackward = true;
       sendAliveMessage();
+
+    // If packet is v, straighten out, rotate left around its own axis
     } else if (command == 'v') {
       Serial.println("Adjusting left");
-      goLeft();
       sendAliveMessage();
+      rotateLeft = true;
+      rotateRight = false;
+      goStraight();
+
+    // If packet is h, straighten out, rotate right around its own axis
     } else if (command == 'h') {
       Serial.println("Adjusting right");
-      goRight();
       sendAliveMessage();
+      rotateRight = true;
+      rotateLeft = false;
+      goStraight();
+
+    // If packet is s, stop movement
     } else if (command == 's') {
       Serial.println("Stopping movement");
       goingForward = false;
       goingBackward = false;
+      rotateRight = false;
+      rotateLeft = false;
       sendAliveMessage();
+
+    // If packet is r, adjust everything straight
     } else if (command == 'r') {
       Serial.println("Adjusting straight");
       sendAliveMessage();
       goingForward = false;
       goingBackward = false;
+      rotateRight = false;
+      rotateLeft = false;
       goStraight();
       sendDoneMessage();
+
+    // If packet is t, change the turn-angle
     } else if (command == 't') {
       sendAliveMessage();
       int numb1 = (int)packetBuffer[1] - 48;
@@ -151,6 +164,8 @@ void loop()
       Serial.println(sum);
       turn(sum);
       sendDoneMessage();
+
+    // If packet is p, change the T-parameter
     } else if (command == 'p') {
       int numb1 = (int)packetBuffer[1] - 48;
       int numb2 = (int)packetBuffer[2] - 48;
@@ -159,6 +174,8 @@ void loop()
       sum = sum * 1000;
       T = sum;
       sendAliveMessage();
+
+    // If packet is a, change the A-parameter
     } else if (command == 'a') {
        int numb1 = (int)packetBuffer[1] - 48;
        int numb2 = (int)packetBuffer[2] - 48;
@@ -168,11 +185,15 @@ void loop()
        }
        A = sum;
       sendAliveMessage();
+
+    // If packet is anything else, send error to UDP server
     } else {
       Serial.println("Unknown command");
       sendErrorToServer();
     }
   }
+
+  // If boolean goingForward is high, go forward one cycle
   if (goingForward) {
     goForward();
     movementTimer++;
@@ -181,11 +202,33 @@ void loop()
       sendDoneMessage();
       movementTimer = 0;
     }
+
+  // If boolean goingBackward is high, go backward one cycle
   } else if (goingBackward) {
     goBackward();
     movementTimer++;
     if(movementTimer >= T) {
       goingBackward = false;
+      sendDoneMessage();
+      movementTimer = 0;
+    }
+  } else if (rotateLeft) {
+    goLeft();
+    movementTimer++;
+    if(movementTimer >= T) {
+      rotateLeft = false;
+      delay(10);
+      goStraight();
+      sendDoneMessage();
+      movementTimer = 0;
+    }
+  } else if (rotateRight) {
+    goRight();
+    movementTimer++;
+    if(movementTimer >= T) {
+      rotateRight = false;
+      delay(10);
+      goStraight();
       sendDoneMessage();
       movementTimer = 0;
     }
@@ -198,6 +241,7 @@ void loop()
 // WIFI FUNCTIONS
 ////////////////////////////////
 
+// Checks for incoming packets, stores in the buffer.
 char checkPackets() {
   if (udpClient.parsePacket()) {
     Serial.println("Packet received");
@@ -209,67 +253,48 @@ char checkPackets() {
   }
 }
 
+// Sends error message to UDP-server
 void sendErrorToServer() {
   udpClient.beginPacket(host, port);
   udpClient.write('x');
   udpClient.endPacket();
 }
 
+// Sends message that command is done to UDP server
 void sendDoneMessage() {
   udpClient.beginPacket(host, port);
   udpClient.write('d');
   udpClient.endPacket();
 }
 
+// Sends acknowledge-message to UDP-server
 void sendAliveMessage() {
   udpClient.beginPacket(host, port);
   udpClient.write('a');
   udpClient.endPacket();
 }
 
-void sendPacketOnce() {
-  if (!notSent) {
-    udpClient.beginPacket(host, port);
-    udpClient.write('a');
-    udpClient.endPacket();
-    udpClient.beginPacket(host, port);
-    int numRows = sizeof(jallaball) / sizeof(jallaball[0]);
-    int numCols = sizeof(jallaball[0]) / sizeof(jallaball[0][0]);
-    udpClient.write(char(numRows));
-    udpClient.write(' ');
-    udpClient.write(char(numCols));
-    udpClient.endPacket();
-    delay(50);
-    udpClient.beginPacket(host, port);
-    for (int i = 0; i < numRows; i++) {
-      for (int j = 0; j < numCols; j++) {
-        udpClient.write(jallaball[i][j]);
-      }
-    }
-    udpClient.endPacket();
-    udpClient.beginPacket(host, port);
-    udpClient.write('f');
-    udpClient.endPacket();
-    notSent = true;
-    Serial.println("Finished sending");
-  }
-}
-
 ///////////////////////////////////////////
 // MOVEMENT FUNCTIONS
 ///////////////////////////////////////////
+// Go forward
 void goForward() {
   for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * forwardPhi, A));
   }
 }
 
+// Go backward
 void goBackward() {
   for (int i = 2; i >= 0; i--) {
     myServo[i * 2].write(servZero[i * 2] + updateAngle(T, -i * forwardPhi, A));
   }
 }
 
+/*
+ * Sets the turn angle
+ * param deg: the turn angle in degrees
+ */
 void turn(int deg) {
   if (deg < 45){
     deg = 45;
@@ -281,31 +306,33 @@ void turn(int deg) {
   }
 }
 
+/*
+ * Roatates left around its own axis
+ */
 void goLeft() {
-  int movement = myServo[1].read() - 3;
-  if (movement < 45) {
-    movement = 45;
-  }
-  for (int i = 0; i < 2; i++) {
-    myServo[(i * 2) + 1].write(movement);
+  for (int i = 0; i < 3; i++) {
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, -i * rotatePhiV, A));
+    if (i < 2) {
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, -i * rotatePhiH, A));
+    }
   }
 }
 
+/*
+ * Rotates right around its own axis
+ */
 void goRight() {
-  int movement = myServo[1].read() + 3;
-  if (movement > 135) {
-    movement = 135;
-  }
-  for (int i = 0; i < 2; i++) {
-    myServo[(i * 2) + 1].write(movement);
+  for (int i = 0; i < 3; i++) {
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * rotatePhiV, A));
+    if (i < 2) {
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, i * rotatePhiH, A));
+    }
   }
 }
 
-/////////////////////
-// MÅ FIKSE FOR-LOOP FOR SVINGENDE LEDD
-// PÅ DE TRE NEDENFOR
-/////////////////////
-
+/*
+ * Currently not in use
+ */
 void lateralShift() {
   for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * lateralPhi, A));
@@ -315,30 +342,22 @@ void lateralShift() {
   }
 }
 
-void doARoll() {
-  for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, 0, A));
-    if (i < 2) {
-      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, 90, A));
-    }
-  }
-}
-
-void rotatingGait() {
-  for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * rotatePhiV, A));
-    if (i < 2) {
-      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, i * rotatePhiH, A));
-    }
-  }
-}
-
+/*
+ * Sets every module straight
+ */
 void goStraight() {
   for (int i = 0; i < 5; i++) {
     myServo[i].write(servZero[i]);
   }
 }
 
+/*
+ * Updates angle of servos
+ * 
+ * param T: period time for cycle
+ * param phase: offset for angle
+ * param A: amplitude of movement
+ */
 int updateAngle(float T, float phase, float A) {
   float y = A * sin(((2 * M_PI) / T) * movementTimer + phase);
   return y;

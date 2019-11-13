@@ -45,7 +45,7 @@ class Controller(threading.Thread):
 
         # Snake variables ###########################
         self.snakeController = SnakeController()
-        self.overideMoving = True
+        self.overrideMoving = True
         self.moving = False
         self.readyToMove = False
         self.firstLoop = True
@@ -130,15 +130,15 @@ class Controller(threading.Thread):
         """
         # Update GUI #############################
         pic = self.cam.takePicture()
-        collorPic = drawLines(pic, self.finalPath, (255, 0, 0))
-        self.notifyGui("UpdateImageEventR", collorPic)
+        colorPic = drawLines(pic, self.finalPath, (255, 0, 0))
+        self.notifyGui("UpdateImageEventR", colorPic)
         ##########################################
 
         # returns if the snake is not redy to reacev a comand ####
-        cmdDone = self.snake.isComandDone()
-        if cmdDone or self.overideMoving:
+        cmdDone = self.snake.isCommandDone()
+        if cmdDone or self.overrideMoving:
             self.moving = False
-            self.overideMoving = False
+            self.overrideMoving = False
 
         if self.moving:
             pass
@@ -153,15 +153,15 @@ class Controller(threading.Thread):
 
             # Runs ony when the snake starts ###############################
             if self.firstLoop:
-                snakeCordinats, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
-                if snakeCordinats:
+                snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
+                if snakeCoordinates:
                     self.firstLoop = False
-                    snakePointF = snakeCordinats[1]
-                    snakePointB = snakeCordinats[0]
+                    snakePointF = snakeCoordinates[1]
+                    snakePointB = snakeCoordinates[0]
 
-                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB,
+                    lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
                                                                               snakePointF)
-                    snakeAngle = self.snakeController.calculateTlheta(lV, sV, lVxsV)
+                    snakeAngle = self.snakeController.calculateTheta(lV, sV, lVxsV)
                     self.moving = self.snake.turn(snakeAngle)
 
                     # Update GUI #############################
@@ -169,11 +169,11 @@ class Controller(threading.Thread):
                     ##########################################
             #################################################################
             else:
-                snakeCordinats, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
-                if snakeCordinats:
-                    snakePointF = snakeCordinats[1]
-                    snakePointB = snakeCordinats[0]
-                    lV, sV, lVxsV = self.snakeController.calculateLineVektors(lineStart, lineEnd, snakePointB,
+                snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
+                if snakeCoordinates:
+                    snakePointF = snakeCoordinates[1]
+                    snakePointB = snakeCoordinates[0]
+                    lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
                                                                               snakePointF)
 
                     # Update GUI #############################
@@ -183,14 +183,14 @@ class Controller(threading.Thread):
                     ##########################################
 
                     # cheks if the snake has reatcht a new node ##############################################
-                    snakeLine, fintithLine = self.snakeController.calculateLines(lV, sV, lineEnd, snakePointF)
-                    if self.snakeController.intersect(fintithLine[0], fintithLine[1], snakeLine[0], snakeLine[1]):
+                    snakeLine, finishLine = self.snakeController.calculateLines(lV, sV, lineEnd, snakePointF)
+                    if self.snakeController.intersect(finishLine[0], finishLine[1], snakeLine[0], snakeLine[1]):
                         self.i += 1
 
                     if self.i >= len(self.finalPath) - 1:
                         self.snake.stop()
-                        print("stop")
-                        Logger.logg("Snake reatcht gole", Logger.info)
+                        print("Stop")
+                        Logger.logg("Snake reached goal", Logger.info)
                         self.firstLoop = False
                         with b.lock:
                             b.yoloFlag = False
@@ -216,7 +216,7 @@ class Controller(threading.Thread):
             b.lock.acquire()
             if b.stopFlag:
                 self.snake.stop()
-                self.overideMoving = True
+                self.overrideMoving = True
                 b.autoFlag = False
                 b.startFlag = False
                 b.yoloFlag = False
