@@ -48,23 +48,25 @@ class ParameterDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.topText = wx.StaticText(self, label="Amplitude: 0-10 \nSpeed: 0-100 (Higher = Slower)")
+        self.mainSizer.Add(self.topText, 0, wx.ALL, 8)
         with b.lock:
             # amplitude
             self.ampSizer = wx.BoxSizer(wx.HORIZONTAL)
-            self.label = wx.StaticText(self, label="Snake amplitude:")
-            self.ampField = wx.TextCtrl(self, value=f"{b.params[0]}", size=(300, 20))
+            self.label = wx.StaticText(self, label="Snake Amplitude:")
+            self.ampField = wx.TextCtrl(self,value=f"{b.params[0]}", size=(150, 20))
             self.ampField.Bind(wx.EVT_CHAR, self.onChar)
             self.ampSizer.Add(self.label, 0, wx.ALL, 8)
-            self.ampSizer.Add(self.ampField, 0, wx.ALL, 8)
+            self.ampSizer.Add(self.ampField, 0, wx.LEFT, 26)
             self.mainSizer.Add(self.ampSizer, 0, wx.ALL)
 
             # Speed
             self.speedSizer = wx.BoxSizer(wx.HORIZONTAL)
-            self.label = wx.StaticText(self, label="Snake amplitude:")
-            self.speedField = wx.TextCtrl(self, value=f"{b.params[1]}", size=(300, 20))
+            self.label = wx.StaticText(self, label="Snake Speed:")
+            self.speedField = wx.TextCtrl(self, value=f"{b.params[1]}", size=(150, 20))
             self.speedField.Bind(wx.EVT_CHAR, self.onChar)
             self.speedSizer.Add(self.label, 0, wx.ALL, 8)
-            self.speedSizer.Add(self.speedField, 0, wx.ALL, 8)
+            self.speedSizer.Add(self.speedField, 0, wx.LEFT, 50)
             self.mainSizer.Add(self.speedSizer, 0, wx.ALL)
 
         # Ok btn
@@ -100,9 +102,6 @@ class ParameterDialog(wx.Dialog):
 
 
 class StartFrame(wx.Frame):
-    """
-    A Frame that says Hello World
-    """
 
     def __init__(self, *args, **kw):
         # ensure the parent's __init__ is called
@@ -141,7 +140,7 @@ class StartFrame(wx.Frame):
         self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.manualControl.SetBackgroundColour("gray")
 
-        self.startBtn = wx.Button(panel, label="Update parameters", size=(130, 40))
+        self.startBtn = wx.Button(panel, label="Update Parameters", size=(130, 40))
         self.startBtn.Bind(wx.EVT_BUTTON, self.OnUpdateParametersBtn)
         self.startBtn.SetBackgroundColour("gray")
 
@@ -162,7 +161,7 @@ class StartFrame(wx.Frame):
         self.findPath.Bind(wx.EVT_BUTTON, self.OnFindPath)
         self.findPath.SetBackgroundColour("gray")
 
-        self.runBtn = wx.Button(panel, label="run", size=(130, 40))
+        self.runBtn = wx.Button(panel, label="Run", size=(130, 40))
         self.runBtn.SetBackgroundColour("gray")
         self.runBtn.Bind(wx.EVT_BUTTON, self.OnRun)
 
@@ -248,7 +247,7 @@ class StartFrame(wx.Frame):
     def OnManualBtn(self, event=None):
         # warning dialog
         if not self.controlledManually:
-            wx.MessageBox('Use "w, s, a, d, r" to controle the snake manualy', 'Info', wx.OK | wx.ICON_INFORMATION)
+            wx.MessageBox('Use "w, s, a, d, r" to control the snake manually', 'Info', wx.OK | wx.ICON_INFORMATION)
         self.controlledManually = not self.controlledManually
         with b.lock:
             b.manualControlFlag = not b.manualControlFlag
@@ -257,7 +256,7 @@ class StartFrame(wx.Frame):
 
     def OnPrepareMaze(self, event=None):
         # warning dialog
-        wx.MessageBox('Make sure the maze is emty', 'Info', wx.OK | wx.ICON_INFORMATION)
+        wx.MessageBox('Make sure the maze is empty', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
             b.prepMaze = True
         Logger.logg("GUI prepare maze btn preset", Logger.info)

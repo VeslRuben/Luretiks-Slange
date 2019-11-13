@@ -13,6 +13,10 @@ class Snake:
         self.timeOutTime = 0.5
 
     def timeOut(self):
+        """
+        Checks for acknowledge from the snake. Times out after a set amount of time given from self.timeOutTime
+        :return:  True if acknowledged, False if timed out
+        """
         timeOutTime = time.time() + self.timeOutTime
         while True:
             data = self.controller.receive()
@@ -51,6 +55,11 @@ class Snake:
         return picture
 
     def setSpeed(self, speed: int):
+        """
+        Sets the period time of the cycle for the snake
+        :param speed: the period time in 3 digits
+        :return: True if acknowledged from snake
+        """
         send = ""
         if speed < 10:
             send = "p00" + str(speed)
@@ -62,6 +71,11 @@ class Snake:
         return self.timeOut()
 
     def setAmplitude(self, amplitude: int):
+        """
+        Sets the amplitude of the snakes movement
+        :param amplitude: amplitude in 2 digits
+        :return: True if acknowledged from snake
+        """
         send = ""
         if amplitude < 10:
             send = "a0" + str(amplitude)
@@ -72,21 +86,29 @@ class Snake:
         return self.timeOut()
 
     def moveForward(self):
+        """
+        Gives the command to the snake to move forward one cycle
+        :return: True if acknowledged
+        """
         self.controller.send("f")
         Logger.logg("Sent: f", Logger.cmd)
         return self.timeOut()
 
     def moveBacwards(self):
+        """
+        Gives the command to the snake to move backward one cycle
+        :return: True if acknowledged
+        """
         self.controller.send("b")
         Logger.logg("Sent: b", Logger.cmd)
         return self.timeOut()
 
     def turn(self, degrees: int):
         """
-        Seds a turn comand to the snake. \n
-        positive degras is right and negative is left \n
-        :param degrees: turnrate in deagras
-        :return: None
+        Sends a turn command to the snake. \n
+        positive degrees is right and negative is left \n
+        :param degrees: turnrate in degrees
+        :return: True if acknowledged
         """
         send = None
         degrees = 90 + degrees
@@ -101,29 +123,45 @@ class Snake:
         return self.timeOut()
 
     def moveLeft(self):
+        """
+        Sends command to snake to lateral shift left
+        :return: True if acknowledged
+        """
         self.controller.send("v")
         Logger.logg("Sent: v", Logger.cmd)
         return self.timeOut()
 
     def moveRight(self):
+        """
+        Sends command to snake to lateral shift right
+        :return: True if acknowledged
+        """
         self.controller.send("h")
         Logger.logg("Sent: h", Logger.cmd)
         return self.timeOut()
 
     def stop(self):
+        """
+        Sends command to snake to stop movement
+        :return: True if acknowledged
+        """
         self.controller.send("s")
         Logger.logg("Sent: s", Logger.cmd)
         return self.timeOut()
 
     def reset(self):
+        """
+        Sends command to reset positions to zero point.
+        :return: True if acknowledged
+        """
         self.controller.send("r")
         Logger.logg("Sent: r", Logger.cmd)
         return self.timeOut()
 
     def isCommandDone(self) -> bool:
         """
-        Checks if the controller is connected \n
-        :return: true if controller is connected
+        Checks if the snake is done with the last command
+        :return: True if command is done
         """
         data = self.controller.receive()
         if data == "d":
