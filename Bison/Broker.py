@@ -15,7 +15,11 @@ class Broker:
     runFlag = False
     manualControlFlag = False
     autoFlag = False
+    updateParamFlag = False
 
     # manual movement of snake###
     moveCmd = ""
     ##########################
+
+    # Parameter update
+    params = [30, 10]

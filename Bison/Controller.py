@@ -54,9 +54,10 @@ class Controller(threading.Thread):
         self.traveledPath = []
         self.cam = Camera()
         self.snake = Snake("http://192.168.137.72", "192.168.137.196")
-        #time.sleep(1)
-        #print(self.snake.setAmplitude(30))
-        #print(self.snake.setSpeed(10))
+        time.sleep(1)
+        with b.lock:
+            print(self.snake.setAmplitude(b.params[0]))
+            print(self.snake.setSpeed(b.params[1]))
         #############################################
 
     def notifyGui(self, event, arg):
@@ -227,14 +228,12 @@ class Controller(threading.Thread):
                 b.lock.release()
 
             b.lock.acquire()
-            if b.startFlag:
+            if b.updateParamFlag:
+                b.updateParamFlag = False
+                params = b.params
                 b.lock.release()
-                # cheks if the steps has already been done
-                if not self.lines:
-                    self.prepMaze()
-                if not self.rrtPathImage:
-                    self.findPath()
-                b.startFlag = False
+                self.snake.setAmplitude(params[0])
+                self.snake.setSpeed(params[1])
             else:
                 b.lock.release()
 

@@ -42,6 +42,63 @@ class ImagePanel(wx.Panel):
         dc.DrawBitmap(wx.BitmapFromImage(self.image), 0, 0)
 
 
+class ParameterDialog(wx.Dialog):
+    def __init__(self, parent, id=-1, title="Enter new parameters!"):
+        wx.Dialog.__init__(self, parent, id, title, size=(-1, -1))
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        with b.lock:
+            # amplitude
+            self.ampSizer = wx.BoxSizer(wx.HORIZONTAL)
+            self.label = wx.StaticText(self, label="Snake amplitude:")
+            self.ampField = wx.TextCtrl(self, value=f"{b.params[0]}", size=(300, 20))
+            self.ampField.Bind(wx.EVT_CHAR, self.onChar)
+            self.ampSizer.Add(self.label, 0, wx.ALL, 8)
+            self.ampSizer.Add(self.ampField, 0, wx.ALL, 8)
+            self.mainSizer.Add(self.ampSizer, 0, wx.ALL)
+
+            # Speed
+            self.speedSizer = wx.BoxSizer(wx.HORIZONTAL)
+            self.label = wx.StaticText(self, label="Snake amplitude:")
+            self.speedField = wx.TextCtrl(self, value=f"{b.params[1]}", size=(300, 20))
+            self.speedField.Bind(wx.EVT_CHAR, self.onChar)
+            self.speedSizer.Add(self.label, 0, wx.ALL, 8)
+            self.speedSizer.Add(self.speedField, 0, wx.ALL, 8)
+            self.mainSizer.Add(self.speedSizer, 0, wx.ALL)
+
+        # Ok btn
+        self.buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.okbutton = wx.Button(self, label="OK", id=wx.ID_OK)
+        self.buttonSizer.Add(self.okbutton, 0, wx.ALL, 8)
+        self.mainSizer.Add(self.buttonSizer, 0, wx.ALL, 0)
+
+        self.Bind(wx.EVT_BUTTON, self.onOK, id=wx.ID_OK)
+        self.Bind(wx.EVT_TEXT_ENTER, self.onOK)
+
+        self.SetSizer(self.mainSizer)
+        self.result = None
+
+    def onOK(self, event):
+        result = [self.ampField.GetValue(), self.speedField.GetValue()]
+        self.result = result
+        self.Destroy()
+
+    def onChar(self, event):
+        key = event.GetKeyCode()
+        acceptable_characters = "1234567890."
+        # 13 = enter, 314 & 316 = arrows, 8 = backspace, 127 = del:
+        if chr(key) in acceptable_characters or key == 13 or key == 314 or key == 316 or key == 8 or key == 127:
+            event.Skip()
+            return
+        else:
+            return False
+
+    def OnClose(self, event=None):
+        self.result = None
+        self.Destroy()
+
+
 class StartFrame(wx.Frame):
     """
     A Frame that says Hello World
@@ -76,30 +133,40 @@ class StartFrame(wx.Frame):
         # Top  Buttons #############################
         bntHBox = wx.BoxSizer(wx.HORIZONTAL)
 
+        # left butons
         bntVBoxLeft = wx.BoxSizer(wx.VERTICAL)
-        self.startBtn = wx.Button(panel, label="Start", size=(130, 40))
-        self.startBtn.Bind(wx.EVT_BUTTON, self.OnStartBtn)
-        self.startBtn.SetBackgroundColour("gray")
-        self.stopBtn = wx.Button(panel, label="Stop", size=(130, 40))
-        self.stopBtn.SetBackgroundColour("gray")
-        self.stopBtn.Bind(wx.EVT_BUTTON, self.OnStopBtn)
-        self.yoloBtn = wx.Button(panel, label="run", size=(130, 40))
-        self.yoloBtn.SetBackgroundColour("gray")
-        self.yoloBtn.Bind(wx.EVT_BUTTON, self.OnRun)
-        bntVBoxLeft.AddMany([(self.startBtn, 1), (self.stopBtn, 1), (self.yoloBtn, 1)])
 
-        bntVBoxRight = wx.BoxSizer(wx.VERTICAL)
         self.manualControl = wx.Button(panel, label="Manual Override", size=(130, 40))
         self.manualControl.Bind(wx.EVT_BUTTON, self.OnManualBtn)
         self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.manualControl.SetBackgroundColour("gray")
+
+        self.startBtn = wx.Button(panel, label="Update parameters", size=(130, 40))
+        self.startBtn.Bind(wx.EVT_BUTTON, self.OnUpdateParametersBtn)
+        self.startBtn.SetBackgroundColour("gray")
+
+        self.stopBtn = wx.Button(panel, label="Stop", size=(130, 40))
+        self.stopBtn.SetBackgroundColour("gray")
+        self.stopBtn.Bind(wx.EVT_BUTTON, self.OnStopBtn)
+
+        bntVBoxLeft.AddMany([(self.manualControl, 1), (self.startBtn, 1), (self.stopBtn, 1)])
+
+        # Right butons
+        bntVBoxRight = wx.BoxSizer(wx.VERTICAL)
+
         self.prepareMaze = wx.Button(panel, label="Prepare Maze", size=(130, 40))
         self.prepareMaze.Bind(wx.EVT_BUTTON, self.OnPrepareMaze)
         self.prepareMaze.SetBackgroundColour("gray")
+
         self.findPath = wx.Button(panel, label="Find Path", size=(130, 40))
         self.findPath.Bind(wx.EVT_BUTTON, self.OnFindPath)
         self.findPath.SetBackgroundColour("gray")
-        bntVBoxRight.AddMany([(self.manualControl, 1), (self.prepareMaze, 1), (self.findPath, 1)])
+
+        self.runBtn = wx.Button(panel, label="run", size=(130, 40))
+        self.runBtn.SetBackgroundColour("gray")
+        self.runBtn.Bind(wx.EVT_BUTTON, self.OnRun)
+
+        bntVBoxRight.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
 
         bntHBox.AddMany([(bntVBoxLeft, 1, wx.TOP, 50), (bntVBoxRight, 1, wx.TOP, 50)])
         #################################################
@@ -161,10 +228,14 @@ class StartFrame(wx.Frame):
         self.logTextField.Refresh()
         # Logger.logg("GUI text box updated", Logger.info)
 
-    def OnStartBtn(self, event=None):
-        with b.lock:
-            b.startFlag = True
-        Logger.logg("GUI start btn preset", Logger.info)
+    def OnUpdateParametersBtn(self, event=None):
+        dlg = ParameterDialog(self)
+        dlg.ShowModal()
+        result = dlg.result
+        if result:
+            with b.lock:
+                b.params = result
+                b.updateParamFlag = True
 
     def OnStopBtn(self, event=None):
         with b.lock:
@@ -176,7 +247,8 @@ class StartFrame(wx.Frame):
 
     def OnManualBtn(self, event=None):
         # warning dialog
-        wx.MessageBox('Use "w, s, a, d, r" to controle the snake manualy', 'Info', wx.OK | wx.ICON_INFORMATION)
+        if not self.controlledManually:
+            wx.MessageBox('Use "w, s, a, d, r" to controle the snake manualy', 'Info', wx.OK | wx.ICON_INFORMATION)
         self.controlledManually = not self.controlledManually
         with b.lock:
             b.manualControlFlag = not b.manualControlFlag
