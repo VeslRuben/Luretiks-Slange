@@ -205,14 +205,14 @@ class RRTStar(RRT):
                 node.cost = self.calc_new_cost(parent_node, node)
                 self.propagate_cost_to_leaves(node)
 
-    def run(self):
+    def run(self, finishLoops=False):
         """
         Runs the RRT_Star-class.
 
         :return: picture of the figure as a NP-array with the path
         """
         Logger.logg("Running RRT*", Logger.info)
-        path = self.planning(animation=show_animation)
+        path = self.planning(animation=show_animation, search_until_max_iter=finishLoops)
 
         fig = None
 

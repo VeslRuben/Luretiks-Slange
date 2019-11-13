@@ -54,9 +54,9 @@ class Controller(threading.Thread):
         self.traveledPath = []
         self.cam = Camera()
         self.snake = Snake("http://192.168.137.72", "192.168.137.196")
-        time.sleep(1)
-        print(self.snake.setAmplitude(30))
-        print(self.snake.setSpeed(10))
+        #time.sleep(1)
+        #print(self.snake.setAmplitude(30))
+        #print(self.snake.setSpeed(10))
         #############################################
 
     def notifyGui(self, event, arg):
@@ -87,11 +87,11 @@ class Controller(threading.Thread):
         self.rrtStar = RRTStar(start=[startX, startY], goal=[goalX, goalY], rand_area_x=[250, 1500],
                                rand_area_y=[0, 1100],
                                lineList=self.lines,
-                               expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=20,
+                               expand_dis=100.0, path_resolution=10.0, max_iter=1000, goal_sample_rate=20,
                                connect_circle_dist=450,
                                edge_dist=30)
         self.rrtStar.lineList = self.lines
-        self.rrtPathImage, self.finalPath = self.rrtStar.run()
+        self.rrtPathImage, self.finalPath = self.rrtStar.run(finishLoops=False)
         if self.finalPath is not None:
             self.finalPath = self.finalPath[::-1]
         else:
@@ -110,9 +110,9 @@ class Controller(threading.Thread):
                     self.snake.moveForward()
                 elif b.moveCmd == "b":
                     self.snake.moveBacwards()
-                elif b.moveCmd == "r":
+                elif b.moveCmd == "h":
                     self.snake.moveRight()
-                elif b.moveCmd == "l":
+                elif b.moveCmd == "v":
                     self.snake.moveLeft()
                 elif b.moveCmd == "s":
                     self.snake.stop()
@@ -196,10 +196,16 @@ class Controller(threading.Thread):
                             b.yoloFlag = False
                             self.i = 0
                     ##########################################################################################
-                    turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 35)
+                    turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20, 150)
                     # self.notifyGui("UpdateTextEvent", f"curent angle {turnAngle}")
-                    self.moving = self.snake.turn(turnAngle)
-                    self.readyToMove = True
+                    if isinstance(turnAngle, str):
+                        if turnAngle == "right":
+                            self.moving = self.snake.moveRight()
+                        elif turnAngle == "left":
+                            self.moving = self.snake.moveLeft()
+                    else:
+                        self.moving = self.snake.turn(turnAngle)
+                        self.readyToMove = True
                     self.traveledPath.append(snakePointF)
 
     def run(self) -> None:

@@ -205,6 +205,7 @@ class StartFrame(wx.Frame):
 
     def OnKeyDown(self, event=None):
         keycode = event.GetKeyCode()
+        print(keycode)
         if self.controlledManually:
             with b.moveLock:
                 if keycode == wx.WXK_SPACE:
@@ -214,9 +215,9 @@ class StartFrame(wx.Frame):
                 elif keycode == 83:
                     b.moveCmd = "b"
                 elif keycode == 65:
-                    b.moveCmd = "l"
+                    b.moveCmd = "v"
                 elif keycode == 68:
-                    b.moveCmd = "r"
+                    b.moveCmd = "h"
                 elif keycode == 69:
                     print("rotate right")
                 elif keycode == 81:

@@ -56,7 +56,9 @@ class SnakeController:
         snakLine = [snakeEndPoint, [snakeEndPoint[0] + (-sV[0]) * 2, snakeEndPoint[1] + (-sV[1]) * 2]]
         return snakLine, finithLine
 
-    def smartTurn(self, lV, sV, lVxsV, snakeEndPoint, lineStartPoint, P, db):
+    def smartTurn(self, lV, sV, lVxsV, snakeEndPoint, lineStartPoint, P, db, rotThreshold):
+        rotate = None
+
         distanceToLine = self.calculatDitanceToLine(lV, lVxsV, snakeEndPoint, lineStartPoint)
 
         theta = math.acos((lV[0] * sV[0] + lV[1] * sV[1]) / (
@@ -65,11 +67,14 @@ class SnakeController:
 
         print(f"distance: {distanceToLine} \n theta: {theta}")
 
-        if abs(distanceToLine) > db:
-            print(f"using distance")
+        if abs(distanceToLine) > rotThreshold:
+            if distanceToLine > 0:
+                rotate = 1
+            else:
+                rotate = -1
+        elif abs(distanceToLine) > db:
             self.curantAngle = self.curantAngle + int(distanceToLine * P)
         else:
-            print(f"using theta")
             self.curantAngle = self.curantAngle + theta
 
         if self.curantAngle > 90:
@@ -77,8 +82,12 @@ class SnakeController:
         elif self.curantAngle < - 90:
             self.curantAngle = -90
 
-        print(f"currant angle: {self.curantAngle}")
-        return self.curantAngle
+        if rotate == -1:
+            return "right"
+        elif rotate == 1:
+            return "left"
+        else:
+            return self.curantAngle
 
     def run(self):
         pass
