@@ -13,6 +13,7 @@ from Bison.ImageProcessing.findSnake import FindSnake
 from Bison.Movement.snakeController import SnakeController
 from Bison.ImageProcessing.findTarget import FindTarget
 from Bison.ImageProcessing.Draw import drawLines
+import gc as soplebil
 
 
 class Controller(threading.Thread):
@@ -102,6 +103,8 @@ class Controller(threading.Thread):
 
         self.notifyGui("UpdateImageEventL", temp)
         self.notifyGui("UpdateImageEventR", self.rrtPathImage)
+
+        soplebil.collect()
 
     def moveSnakeManually(self):
         with b.moveLock:
@@ -274,6 +277,8 @@ class Controller(threading.Thread):
             with b.quitLock:
                 if b.quitFlag:
                     self.running = False
+
+            soplebil.collect()
 
         Camera.releaseCam()
         Logger.logg("Controller thread shutting down", Logger.info)
