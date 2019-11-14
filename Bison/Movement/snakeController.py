@@ -1,4 +1,5 @@
 import math
+from shapely.geometry import LineString, Point
 
 
 class SnakeController:
@@ -78,7 +79,7 @@ class SnakeController:
         """
         # Using distance to line to regulate#########
         lVN = [lV[1], -lV[0]]
-        print(f"normalvektor: {lVN}")
+        #print(f"normalvektor: {lVN}")
         startSnakeVektor = [snakeEndPoint[0] - lineStartPoint[0], snakeEndPoint[1] - lineStartPoint[1]]
         distSnakeToLine = (lVN[0] * startSnakeVektor[0] + lVN[1] * startSnakeVektor[1]) / math.sqrt(
             lVN[0] ** 2 + lVN[1] ** 2)
@@ -143,3 +144,95 @@ class SnakeController:
             return "left"
         else:
             return self.currentAngle
+
+    def getClosestPoint(self, mazeLineStart, mazeLineStop, point):
+        """
+        Gets closest point between a coordinate and a line given by two set of coordinates
+        :param mazeLineStart: (x,y) for start of the line
+        :param mazeLineStop: (x,y) for end of the line
+        :param point: (x,y) for the point to check against
+        :return: (x,y) for the nearest point
+        """
+        startToPoint = [point[0] - mazeLineStart[0], point[1] - mazeLineStart[1]]
+        startToStop = [mazeLineStop[0] - mazeLineStart[0], mazeLineStop[1] - mazeLineStart[1]]
+
+        lengdeMazeLine = startToStop[0] ** 2 + startToStop[1] ** 2
+
+        dotProduct = startToPoint[0] * startToStop[0] + startToPoint[1] * startToStop[1]
+
+        normalizedDistance = dotProduct / lengdeMazeLine
+
+        pointClosest = [mazeLineStart[0] + startToStop[0]*normalizedDistance,
+                        mazeLineStart[1] + startToStop[1]*normalizedDistance]
+
+        return pointClosest
+
+    def calculateAngleToNearestPoint(self, snakeCoord, pointCoord):
+        """
+        Calculates the angle from a point to another point in degrees
+        :param snakeCoord: (x,y) for From-coordinate
+        :param pointCoord: (x,y) for To-coordinate
+        :return: angle between points in degrees
+        """
+        vectorX = pointCoord[0] - snakeCoord[0]
+        vectorY = pointCoord[1] - snakeCoord[1]
+
+        angle = math.atan2(vectorY, vectorX)
+        angle = math.degrees(angle)
+        return angle
+
+    def checkCollision(self, snakeFrontCoords, snakeMidCoords, snakeBackCoords, mazeLineList):
+        """
+        Checks collision of snake against the obstacles of the maze given by line coordinates
+        :param snakeFrontCoords: (x,y) of front of snake
+        :param snakeMidCoords:(x,y) of middle of snake
+        :param snakeBackCoords:(x,y) of back of snake
+        :param mazeLineList: list of lines for the maze
+        :return: Dunno yet
+        """
+        snakeFront = Point(snakeFrontCoords[0], snakeFrontCoords[1])
+        snakeMid = Point(snakeMidCoords[0], snakeMidCoords[1]).buffer(100)
+        snakeBack = Point(snakeBackCoords[0], snakeBackCoords[1]).buffer(100)
+
+        lineCrashFront = []
+        lineCrashMid = []
+        lineCrashBack = []
+
+        # Check distance between the different points to the lines,
+        # add the lines that are to close to the different lists
+        for data in mazeLineList:
+            x1 = data[0][0]
+            y1 = data[0][1]
+            x2 = data[0][2]
+            y2 = data[0][3]
+            obst = LineString([(x1, y1), (x2, y2)])
+            if obst.distance(snakeFront) < 75:
+                point = self.getClosestPoint([x1, y1], [x2, y2], snakeFrontCoords)
+                print(f"Nearest Collision for Head at: {point}")
+                dist = self.calculatDistanceToLine(lV=[x2-x1, y2-y1], snakeEndPoint=snakeFrontCoords, lineStartPoint=[x1, y1])
+                angle = self.calculateAngleToNearestPoint(snakeFrontCoords, point)
+                print(f"distance: {dist}, at angle: {angle}")
+                lineCrashFront.append([dist, angle])
+            if obst.distance(snakeMid) < 1000:
+                point = self.getClosestPoint([x1, y1], [x2, y2], snakeMidCoords)
+                print(f"Nearest Collision for Middle at: {point}")
+                dist = self.calculatDistanceToLine(lV=[x2-x1, y2-y1], snakeEndPoint=snakeMidCoords, lineStartPoint=[x1,y1])
+                angle = self.calculateAngleToNearestPoint(snakeMidCoords, point)
+                print(f"distance: {dist}, at angle: {angle}")
+                lineCrashMid.append([dist, angle])
+            if obst.distance(snakeBack) < 2000:
+                point = self.getClosestPoint([x1, y1], [x2, y2], snakeBackCoords)
+                print(f"Nearest Collision for Middle at: {point}")
+                dist = self.calculatDistanceToLine(lV=[x2-x1, y2-y1], snakeEndPoint=snakeBackCoords, lineStartPoint=[x1,y1])
+                angle = self.calculateAngleToNearestPoint(snakeBackCoords, point)
+                print(f"distance: {dist}, at angle: {angle}")
+                lineCrashBack.append([dist, angle])
+
+        # Calculate angle to the obstacles
+
+if __name__ == "__main__":
+    sc = SnakeController()
+
+    sc.checkCollision(snakeFrontCoords=[1000, 500], snakeMidCoords=[200,500], snakeBackCoords=[400, 500], mazeLineList=[[[950, 300, 950, 600]]])
+
+
