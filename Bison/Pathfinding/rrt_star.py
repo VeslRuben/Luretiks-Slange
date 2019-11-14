@@ -10,6 +10,9 @@ from Bison.logger import Logger
 import matplotlib.pyplot as plt
 import numpy as np
 from Bison.ImageProcessing.maze_recogn import mazeRecognizer
+from Bison.ImageProcessing.Dead import Dead
+from Bison.ImageProcessing.Draw import drawLines
+import cv2
 
 from Bison.GUI import CustomEvent
 
@@ -245,54 +248,157 @@ class RRTStar(RRT):
         data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
         return data, path
 
+
+class multiRRTStar:
+
+    def __init__(self, rand_area_x=None, rand_area_y=None, lineList=None, expand_dis=100.0,
+                 path_resolution=10.0, max_iter=2000, goal_sample_rate=30, edge_dist=30, connect_circle_dist=450,
+                 start_point=None, listOfDeadEnds=None):
+
+        if rand_area_y is None:
+            rand_area_y = [0, 1100]
+        self.rand_area_x = rand_area_x
+        self.rand_area_y = rand_area_y
+        self.lineList = lineList
+        self.expand_dis = expand_dis
+        self.path_resolution = path_resolution
+        self.max_iter = max_iter
+        self.goal_sample_rate = goal_sample_rate
+        self.edge_dist = edge_dist
+        self.connect_circle_dist = connect_circle_dist
+        self.start_point = start_point
+        self.listOfDeadEnds = listOfDeadEnds
+
+    def tempName(self, startpoint, pointList: list):
+        paths = []
+
+        for points in pointList:
+            rrtStar = RRTStar(start=[startpoint[0], startpoint[1]], goal=[points[0], points[1]],
+                              rand_area_x=self.rand_area_x, rand_area_y=self.rand_area_y,
+                              lineList=self.lineList, expand_dis=self.expand_dis, path_resolution=self.path_resolution,
+                              max_iter=self.max_iter, goal_sample_rate=self.goal_sample_rate,
+                              edge_dist=self.edge_dist, connect_circle_dist=self.connect_circle_dist)
+            _, path = rrtStar.run(finishLoops=False)
+            paths.append(path[::-1])
+
+        return paths
+
+    def sumPaths(self, pathList):
+        listOfLengths = []
+
+        for paths in pathList:
+            sum = 0
+            if paths is None:
+                listOfLengths.append(float("inf"))
+            else:
+                for i in range(len(paths) - 1):
+                    sum += math.sqrt((paths[i+1][0] - paths[i][0]) ** 2 + (paths[i+1][1] - paths[i][1]) ** 2)
+                listOfLengths.append(sum)
+
+        return listOfLengths
+
+    def run(self):
+        finalPath = []
+
+        deadEndList = self.listOfDeadEnds.copy()
+
+        newStartPoint = self.start_point
+
+        while len(deadEndList) > 0:
+            pathList = self.tempName(newStartPoint, deadEndList)
+
+            pathSumList = self.sumPaths(pathList)
+
+            indexNewStartPoint = pathSumList.index(min(pathSumList))
+
+            finalPath.append(pathList[indexNewStartPoint])
+
+            newStartPoint = deadEndList.pop(indexNewStartPoint)
+
+        return finalPath
+
+
+
+
+
+
 if __name__ == "__main__":
-    m = mazeRecognizer()
-    lines, _ = m.findMaze()
-    startPoints = [[830, 365], [720, 450], [840, 870], [1250, 250]]
-    endPoints = [[720, 450], [840, 870], [1250, 250], [1400, 150]]
+    enkelRRT = False
+    multidriftRRT = True
 
-    finalPath = []
-    #rrt_star = RRTStar(start=[startPoints[3][0], startPoints[3][1]], goal=[endPoints[3][0], endPoints[3][1]], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
-    #                   lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
-    #                   edge_dist=30, connect_circle_dist=450)
+    if enkelRRT:
+        m = mazeRecognizer()
+        lines, _ = m.findMaze()
+        startPoints = [[830, 365], [720, 450], [840, 870], [1250, 250]]
+        endPoints = [[720, 450], [840, 870], [1250, 250], [1400, 150]]
 
-    for (data1, data2) in zip(startPoints, endPoints):
-        startx = data1[0]
-        starty = data1[1]
-        goalx = data2[0]
-        goaly = data2[1]
-        rrt_star = RRTStar(start=[startx, starty], goal=[goalx, goaly], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
-                           lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
-                           edge_dist=30, connect_circle_dist=450)
-        path = rrt_star.planning()
-        print()
-        path = path[::-1]
-        for pathPoints in path:
-            finalPath.append(pathPoints)
+        finalPath = []
+        # rrt_star = RRTStar(start=[startPoints[3][0], startPoints[3][1]], goal=[endPoints[3][0], endPoints[3][1]], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
+        #                   lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+        #                   edge_dist=30, connect_circle_dist=450)
 
-    #path = rrt_star.planning()
+        for (data1, data2) in zip(startPoints, endPoints):
+            startx = data1[0]
+            starty = data1[1]
+            goalx = data2[0]
+            goaly = data2[1]
+            rrt_star = RRTStar(start=[startx, starty], goal=[goalx, goaly], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
+                               lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+                               edge_dist=30, connect_circle_dist=450)
+            path = rrt_star.planning()
+            print()
+            path = path[::-1]
+            for pathPoints in path:
+                finalPath.append(pathPoints)
 
-    showFinalAnimation = True
+        # path = rrt_star.planning()
 
-    if finalPath is None:
-        fig = plt.figure()
-        fig.add_subplot(111)
-        rrt_star.draw_graph()
-    else:
-        print("found path!!")
+        showFinalAnimation = True
 
-        # Draw final path
-        if showFinalAnimation:
-            rrt_star.draw_graph()
+        if finalPath is None:
             fig = plt.figure()
             fig.add_subplot(111)
-            plt.plot([x for (x, y) in finalPath], [y for (x, y) in finalPath], '-r')
-            for (data) in rrt_star.lineList:
-                x1 = data[0][0]
-                y1 = data[0][1]
-                x2 = data[0][2]
-                y2 = data[0][3]
-                rrt_star.plotObstaclev2(x1, y1, x2, y2)
-            plt.grid(True)
-            plt.pause(0.01)  # Need for Mac
-            plt.show()
+            rrt_star.draw_graph()
+        else:
+            print("found path!!")
+
+            # Draw final path
+            if showFinalAnimation:
+                rrt_star.draw_graph()
+                fig = plt.figure()
+                fig.add_subplot(111)
+                plt.plot([x for (x, y) in finalPath], [y for (x, y) in finalPath], '-r')
+                for (data) in rrt_star.lineList:
+                    x1 = data[0][0]
+                    y1 = data[0][1]
+                    x2 = data[0][2]
+                    y2 = data[0][3]
+                    rrt_star.plotObstaclev2(x1, y1, x2, y2)
+                plt.grid(True)
+                plt.pause(0.01)  # Need for Mac
+                plt.show()
+    elif multidriftRRT:
+        m = mazeRecognizer()
+        lines, _ = m.findMaze()
+        d = Dead()
+        bilde = cv2.imread(os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds\\perf2.jpg")
+        listOfDeadEnds, _ = d.getDeadEnds2(bilde)
+
+        startPoint = [1280, 300]
+
+        r = multiRRTStar(rand_area_x=[500, 1600], rand_area_y=[0, 1100],
+                               lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+                               edge_dist=30, connect_circle_dist=800, start_point=startPoint, listOfDeadEnds=listOfDeadEnds)
+
+        fPath = r.run()
+
+        finalFinalPath = []
+
+        for paths in fPath:
+            for data in paths:
+                finalFinalPath.append(data)
+
+        sisteBilde = drawLines(bilde, finalFinalPath, (255, 0, 0))
+
+        cv2.imshow("Yolo", sisteBilde)
+        cv2.waitKey()
