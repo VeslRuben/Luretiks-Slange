@@ -54,7 +54,7 @@ class ParameterDialog(wx.Dialog):
             # amplitude
             self.ampSizer = wx.BoxSizer(wx.HORIZONTAL)
             self.label = wx.StaticText(self, label="Snake Amplitude:")
-            self.ampField = wx.TextCtrl(self,value=f"{b.params[0]}", size=(150, 20))
+            self.ampField = wx.TextCtrl(self, value=f"{b.params[0]}", size=(150, 20))
             self.ampField.Bind(wx.EVT_CHAR, self.onChar)
             self.ampSizer.Add(self.label, 0, wx.ALL, 8)
             self.ampSizer.Add(self.ampField, 0, wx.LEFT, 26)
@@ -150,8 +150,8 @@ class StartFrame(wx.Frame):
 
         bntVBoxLeft.AddMany([(self.manualControl, 1), (self.startBtn, 1), (self.stopBtn, 1)])
 
-        # Right butons
-        bntVBoxRight = wx.BoxSizer(wx.VERTICAL)
+        # middel butons
+        bntVBoxMidle = wx.BoxSizer(wx.VERTICAL)
 
         self.prepareMaze = wx.Button(panel, label="Prepare Maze", size=(130, 40))
         self.prepareMaze.Bind(wx.EVT_BUTTON, self.OnPrepareMaze)
@@ -165,9 +165,26 @@ class StartFrame(wx.Frame):
         self.runBtn.SetBackgroundColour("gray")
         self.runBtn.Bind(wx.EVT_BUTTON, self.OnRun)
 
-        bntVBoxRight.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
+        bntVBoxMidle.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
 
-        bntHBox.AddMany([(bntVBoxLeft, 1, wx.TOP, 50), (bntVBoxRight, 1, wx.TOP, 50)])
+        # Right buttons
+        btnVBoxRight = wx.BoxSizer(wx.VERTICAL)
+
+        self.prepareMaze2 = wx.Button(panel, label="Prepare Maze", size=(130, 40))
+        #bind....
+        self.prepareMaze.SetBackgroundColour("gray")
+
+        self.findPath2 = wx.Button(panel, label="Find Path", size=(130, 40))
+        #bind.....
+        self.prepareMaze.SetBackgroundColour("gray")
+
+        self.seekAndDestroy = wx.Button(panel, label="Seek and Destroy", size=(130, 40))
+        #bind...
+        self.prepareMaze.SetBackgroundColour("gray")
+
+        btnVBoxRight.AddMany([(self.prepareMaze2, 1), (self.findPath2, 1), (self.seekAndDestroy, 1)])
+
+        bntHBox.AddMany([(bntVBoxLeft, 1, wx.TOP, 50), (bntVBoxMidle, 1, wx.TOP, 50), (btnVBoxRight, 1, wx.TOP, 50)])
         #################################################
         topGrid.Add(bntHBox, 1, wx.EXPAND | wx.LEFT, 50)
 
