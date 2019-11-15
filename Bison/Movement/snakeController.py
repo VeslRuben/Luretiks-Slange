@@ -145,6 +145,145 @@ class SnakeController:
         else:
             return self.currentAngle
 
+
+class snakeCollision:
+
+    def __init__(self, mazeLineList, frontRightLim, frontRightFrontLim, frontFrontLeftLim, frontLeftLim, midRightMin,
+                 midRightMax, midLeftMin, midLeftMax, backRightLim, backRightBackLim, backBackLeftLim, backLeftLim):
+        """
+        Because of how atan2 works, all angles in the positive y-axis, are given as positive angles, while the angles
+        for the negative y-axis are given as negative angles. This makes the creation of sectors for the collision
+        detection a bit tricky. As such, if you want to have the sector on the left of the front to be from
+        135 degrees to 195 degrees, you have to set frontFrontLeftLim to 135 degrees,
+        and the frontLeftLim to -165 degrees.
+
+        :param mazeLineList: List of lines in maze
+        :param frontRightLim: Minimum angle right, i.e. -15 deg
+        :param frontRightFrontLim: Split between right and front, i.e. 45deg
+        :param frontFrontLeftLim: Split between front and left, i.e. 135deg
+        :param frontLeftLim: Max angle left, i.e. -165 deg
+        :param midRightMin: Min angle right, i.e. -15 deg
+        :param midRightMax: Max angle right, i.e. 15 deg
+        :param midLeftMin: Min angle left, i.e. -165 deg
+        :param midLeftMax: Max angle left, i.e. 165
+        :param backRightLim: Max Angle right, i.e. 15 deg
+        :param backRightBackLim: Split between right and back, i.e. -45deg
+        :param backBackLeftLim: Split between back and left, i.e. -135deg
+        :param backLeftLim: Max angle left, i.e. 165deg
+        """
+        self.mazeLines = mazeLineList
+        self.frontRightLim = frontRightLim
+        self.frontRightFrontLim = frontRightFrontLim
+        self.frontFrontLeftLim = frontFrontLeftLim
+        self.frontLeftLim = frontLeftLim
+        self.midRightMin = midRightMin
+        self.midRightMax = midRightMax
+        self.midLeftMin = midLeftMin
+        self.midLeftMax = midLeftMax
+        self.backRightLim = backRightLim
+        self.backRightBackLim = backRightBackLim
+        self.backBackLeftLim = backBackLeftLim
+        self.backLeftLim = backLeftLim
+
+        self.frontRightCollison = False
+        self.frontFrontCollision = False
+        self.frontLeftCollision = False
+
+        self.midRightCollision = False
+        self.midLeftCollision = False
+
+        self.backRightCollision = False
+        self.backBackCollision = False
+        self.backLeftCollision = False
+
+    def updateCollisions(self, snakeCoordList, distThreshold):
+        """
+        Updates flags for the different sectors of possible collision for each part of the snake
+
+        :param snakeCoordList: list of coordinates for front, mid and back of snake
+        :param distThreshold: the threshold to check collision against
+        :return: None
+        """
+        snakeFront = Point(snakeCoordList[0][0], snakeCoordList[0][1])
+        snakeMid = Point(snakeCoordList[1][0], snakeCoordList[1][1])
+        snakeBack = Point(snakeCoordList[2][0], snakeCoordList[2][1])
+
+        self.resetCollisions()
+
+        for data in self.mazeLines:
+            x1 = data[0][0]
+            y1 = data[0][1]
+            x2 = data[0][2]
+            y2 = data[0][3]
+            obst = LineString([(x1, y1), (x2, y2)])
+            if obst.distance(snakeFront) < distThreshold:
+                closestPoint = self.getClosestPoint([x1,y1], [x2,y2], [snakeFront.x, snakeFront.y])
+                angleToPoint = self.calculateAngleToNearestPoint([snakeFront.x, snakeFront.y], closestPoint)
+
+                # From -15deg to 45deg
+                if self.frontRightLim <= angleToPoint < self.frontRightFrontLim:
+                    self.frontRightCollision = True
+                # From 45 deg to 135deg
+                elif self.frontRightFrontLim <= angleToPoint <= self.frontFrontLeftLim:
+                    self.frontFrontCollision = True
+                # From -165 deg to 135deg, takes the opposite
+                elif not (self.frontLeftLim < angleToPoint <= self.frontFrontLeftLim):
+                    self.frontLeftCollision = True
+            if obst.distance(snakeMid) < distThreshold:
+                closestPoint = self.getClosestPoint([x1,y1], [x2,y2], [snakeMid.x, snakeMid.y])
+                angleToPoint = self.calculateAngleToNearestPoint([snakeMid.x, snakeMid.y], closestPoint)
+
+                # Checks from -15deg to 15deg
+                if self.midRightMin <= angleToPoint <= self.midRightMax:
+                    self.midRightCollision = True
+                # Checks -165deg to 165deg, takes the opposite
+                elif not (self.midLeftMin <= angleToPoint <= self.midLeftMax):
+                    self.midLeftCollision = True
+            if obst.distance(snakeBack) < distThreshold:
+                closestPoint = self.getClosestPoint([x1,y1], [x2,y2], [snakeBack.x, snakeBack.y])
+                angleToPoint = self.calculateAngleToNearestPoint([snakeBack.x, snakeBack.y], closestPoint)
+
+                # Checks from -165 to 135, and takes the opposite of it. Because of how atan2 works
+                if not (self.backBackLeftLim <= angleToPoint < self.backLeftLim):
+                    self.backLeftCollision = True
+                # Checks from -45 to -135
+                if self.backBackLeftLim <= angleToPoint <= self.backRightBackLim:
+                    self.backBackCollision = True
+                # Checks from -45 to 15
+                if self.backRightBackLim < angleToPoint <= self.backRightLim:
+                    self.backRightCollision = True
+
+    def resetCollisions(self):
+        """
+        Resets the collision flags
+        :return: None
+        """
+        self.frontLeftCollision = False
+        self.frontFrontCollision = False
+        self.frontRightCollision = False
+
+        self.midRightCollision = False
+        self.midLeftCollision = False
+
+        self.backLeftCollision = False
+        self.backBackCollision = False
+        self.backRightCollision = False
+
+
+    def calculateAngleToNearestPoint(self, snakeCoord, pointCoord):
+        """
+        Calculates the angle from a point to another point in degrees
+        :param snakeCoord: (x,y) for From-coordinate
+        :param pointCoord: (x,y) for To-coordinate
+        :return: angle between points in degrees
+        """
+        vectorX = pointCoord[0] - snakeCoord[0]
+        vectorY = pointCoord[1] - snakeCoord[1]
+
+        angle = math.atan2(vectorY, vectorX)
+        angle = math.degrees(angle)
+        return angle
+
     def getClosestPoint(self, mazeLineStart, mazeLineStop, point):
         """
         Gets closest point between a coordinate and a line given by two set of coordinates
@@ -167,72 +306,6 @@ class SnakeController:
 
         return pointClosest
 
-    def calculateAngleToNearestPoint(self, snakeCoord, pointCoord):
-        """
-        Calculates the angle from a point to another point in degrees
-        :param snakeCoord: (x,y) for From-coordinate
-        :param pointCoord: (x,y) for To-coordinate
-        :return: angle between points in degrees
-        """
-        vectorX = pointCoord[0] - snakeCoord[0]
-        vectorY = pointCoord[1] - snakeCoord[1]
-
-        angle = math.atan2(vectorY, vectorX)
-        angle = math.degrees(angle)
-        return angle
-
-    def checkCollision(self, snakeFrontCoords, snakeMidCoords, snakeBackCoords, mazeLineList):
-        """
-        Checks collision of snake against the obstacles of the maze given by line coordinates
-        :param snakeFrontCoords: (x,y) of front of snake
-        :param snakeMidCoords:(x,y) of middle of snake
-        :param snakeBackCoords:(x,y) of back of snake
-        :param mazeLineList: list of lines for the maze
-        :return: Dunno yet
-        """
-        snakeFront = Point(snakeFrontCoords[0], snakeFrontCoords[1])
-        snakeMid = Point(snakeMidCoords[0], snakeMidCoords[1]).buffer(100)
-        snakeBack = Point(snakeBackCoords[0], snakeBackCoords[1]).buffer(100)
-
-        lineCrashFront = []
-        lineCrashMid = []
-        lineCrashBack = []
-
-        # Check distance between the different points to the lines,
-        # add the lines that are to close to the different lists
-        for data in mazeLineList:
-            x1 = data[0][0]
-            y1 = data[0][1]
-            x2 = data[0][2]
-            y2 = data[0][3]
-            obst = LineString([(x1, y1), (x2, y2)])
-            if obst.distance(snakeFront) < 75:
-                point = self.getClosestPoint([x1, y1], [x2, y2], snakeFrontCoords)
-                print(f"Nearest Collision for Head at: {point}")
-                dist = self.calculatDistanceToLine(lV=[x2-x1, y2-y1], snakeEndPoint=snakeFrontCoords, lineStartPoint=[x1, y1])
-                angle = self.calculateAngleToNearestPoint(snakeFrontCoords, point)
-                print(f"distance: {dist}, at angle: {angle}")
-                lineCrashFront.append([dist, angle])
-            if obst.distance(snakeMid) < 1000:
-                point = self.getClosestPoint([x1, y1], [x2, y2], snakeMidCoords)
-                print(f"Nearest Collision for Middle at: {point}")
-                dist = self.calculatDistanceToLine(lV=[x2-x1, y2-y1], snakeEndPoint=snakeMidCoords, lineStartPoint=[x1,y1])
-                angle = self.calculateAngleToNearestPoint(snakeMidCoords, point)
-                print(f"distance: {dist}, at angle: {angle}")
-                lineCrashMid.append([dist, angle])
-            if obst.distance(snakeBack) < 2000:
-                point = self.getClosestPoint([x1, y1], [x2, y2], snakeBackCoords)
-                print(f"Nearest Collision for Middle at: {point}")
-                dist = self.calculatDistanceToLine(lV=[x2-x1, y2-y1], snakeEndPoint=snakeBackCoords, lineStartPoint=[x1,y1])
-                angle = self.calculateAngleToNearestPoint(snakeBackCoords, point)
-                print(f"distance: {dist}, at angle: {angle}")
-                lineCrashBack.append([dist, angle])
-
-        # Calculate angle to the obstacles
 
 if __name__ == "__main__":
-    sc = SnakeController()
-
-    sc.checkCollision(snakeFrontCoords=[1000, 500], snakeMidCoords=[200,500], snakeBackCoords=[400, 500], mazeLineList=[[[950, 300, 950, 600]]])
-
-
+    pass
