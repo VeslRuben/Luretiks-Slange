@@ -19,7 +19,7 @@ import gc as soplebil
 class Controller(threading.Thread):
 
     def setup(self):
-        Camera.initCam(0)
+        Camera.initCam(1)
 
     def __init__(self, eventData):
         super().__init__()
@@ -55,7 +55,7 @@ class Controller(threading.Thread):
         self.curantAngle = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.72", "192.168.137.196")
+        self.snake = Snake("http://192.168.137.72", "192.168.137.160")
         time.sleep(1)
         with b.lock:
             print(self.snake.setAmplitude(b.params[0]))

@@ -109,7 +109,7 @@ class FindSnake:
 
                 maskBP = cv2.inRange(hsvFrame, burpleLower, burpleHiger)
                 burpleFrames.append(maskBP)
-                cv2.imshow("burple",maskBP)
+                #cv2.imshow("burple",maskBP)
 
             greenSum = greenFrams.pop(0)
             if greenFrams:
@@ -128,14 +128,15 @@ class FindSnake:
 
             readMask = cv2.erode(readSum, None, iterations=2)
             readMask = cv2.dilate(readMask, None, iterations=3)
+            #cv2.imshow("swag", readMask)
 
             greanMask = cv2.erode(greenSum, None, iterations=4)
             greanMask = cv2.dilate(greanMask, None, iterations=4)
 
             burpleMask = cv2.erode(burpleSum,None, iterations=2)
             burpleMask = cv2.dilate(burpleMask, None, iterations=5)
-            cv2.imshow("BurpleMask", burpleMask)
-            cv2.waitKey()
+            #cv2.imshow("BurpleMask", burpleMask)
+            #cv2.waitKey()
             mask = greanMask + readMask + burpleMask
 
             greenCnts = cv2.findContours(greanMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
