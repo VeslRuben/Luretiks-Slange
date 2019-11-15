@@ -121,7 +121,7 @@ class SnakeController:
 
         theta = self.calculateTheta(lV, sV, lVxsV)
 
-        print(f"Distance: {distanceToLine} \n Theta: {theta}")
+        #print(f"Distance: {distanceToLine} \n Theta: {theta}")
 
         if abs(distanceToLine) > rotThreshold:
             if distanceToLine > 0:

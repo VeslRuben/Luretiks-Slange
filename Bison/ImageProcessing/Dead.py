@@ -38,6 +38,36 @@ class Dead:
         template20 = cv2.imread(path + "DeadEnd20.PNG", 0)
         template21 = cv2.imread(path + "DeadEnd21.PNG", 0)
         template22 = cv2.imread(path + "DeadEnd22.PNG", 0)
+        template23 = cv2.imread(path + "DeadEnd23.PNG", 0)
+        template24 = cv2.imread(path + "DeadEnd24.PNG", 0)
+        template25 = cv2.imread(path + "DeadEnd25.PNG", 0)
+        template26 = cv2.imread(path + "DeadEnd26.PNG", 0)
+        template27 = cv2.imread(path + "DeadEnd27.PNG", 0)
+        template28 = cv2.imread(path + "DeadEnd28.PNG", 0)
+        template29 = cv2.imread(path + "DeadEnd29.PNG", 0)
+        template30 = cv2.imread(path + "DeadEnd30.PNG", 0)
+        template31 = cv2.imread(path + "DeadEnd31.PNG", 0)
+        template32 = cv2.imread(path + "DeadEnd32.PNG", 0)
+        template33 = cv2.imread(path + "DeadEnd33.PNG", 0)
+        template34 = cv2.imread(path + "DeadEnd34.PNG", 0)
+        template35 = cv2.imread(path + "DeadEnd35.PNG", 0)
+        template36 = cv2.imread(path + "DeadEnd36.PNG", 0)
+        template37 = cv2.imread(path + "DeadEnd37.PNG", 0)
+        template38 = cv2.imread(path + "DeadEnd38.PNG", 0)
+        template39 = cv2.imread(path + "DeadEnd39.PNG", 0)
+        template40 = cv2.imread(path + "DeadEnd40.PNG", 0)
+        template41 = cv2.imread(path + "DeadEnd41.PNG", 0)
+        template42 = cv2.imread(path + "DeadEnd42.PNG", 0)
+        template43 = cv2.imread(path + "DeadEnd43.PNG", 0)
+        template44 = cv2.imread(path + "DeadEnd44.PNG", 0)
+        template45 = cv2.imread(path + "DeadEnd45.PNG", 0)
+        template46 = cv2.imread(path + "DeadEnd46.PNG", 0)
+
+
+
+
+
+
         """img_canny2 = cv2.Canny(template2, 50, 120, apertureSize=3)
         img_canny3 = cv2.Canny(template3, 50, 120, apertureSize=3)
         img_canny4 = cv2.Canny(template4, 50, 120, apertureSize=3)
@@ -76,6 +106,33 @@ class Dead:
         templateList.append(template20)
         templateList.append(template21)
         templateList.append(template22)
+        templateList.append(template23)
+        templateList.append(template24)
+        templateList.append(template25)
+        templateList.append(template26)
+        templateList.append(template27)
+        templateList.append(template28)
+        templateList.append(template29)
+        templateList.append(template30)
+        templateList.append(template31)
+        templateList.append(template32)
+        templateList.append(template33)
+        templateList.append(template34)
+        templateList.append(template35)
+        templateList.append(template36)
+        templateList.append(template37)
+        templateList.append(template38)
+        templateList.append(template39)
+        templateList.append(template40)
+        templateList.append(template41)
+        templateList.append(template42)
+        templateList.append(template43)
+        templateList.append(template44)
+        templateList.append(template45)
+        templateList.append(template46)
+
+
+
 
         w, h = template.shape[::-1]
 
@@ -85,7 +142,7 @@ class Dead:
         res3 = cv2.matchTemplate(img_gray,template4,cv2.TM_CCOEFF_NORMED)
         res4 = cv2.matchTemplate(img_gray,template5,cv2.TM_CCOEFF_NORMED)
         res5 = cv2.matchTemplate(img_gray,template6,cv2.TM_CCOEFF_NORMED)"""
-        threshold = 0.8
+        threshold = 0.82
 
         # loc = np.where( res4 >= threshold)# and np.where(res1 >= threshold) and np.where(res2 >= threshold) and np.where(res3 >= threshold)
 
