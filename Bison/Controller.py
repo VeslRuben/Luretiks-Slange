@@ -10,7 +10,7 @@ from Bison.logger import Logger
 from Bison.Movement.Snake import Snake
 from Bison.ImageProcessing.camera import Camera
 from Bison.ImageProcessing.findSnake import FindSnake
-from Bison.Movement.snakeController import SnakeController
+from Bison.Movement.snakeController import SnakeController, SnakeCollision
 from Bison.ImageProcessing.findTarget import FindTarget
 from Bison.ImageProcessing.Draw import drawLines
 import gc as soplebil
@@ -19,7 +19,7 @@ import gc as soplebil
 class Controller(threading.Thread):
 
     def setup(self):
-        Camera.initCam(1)
+        Camera.initCam(0)
 
     def __init__(self, eventData):
         super().__init__()
@@ -46,9 +46,10 @@ class Controller(threading.Thread):
 
         # Snake variables ###########################
         self.snakeController = SnakeController()
+        self.snakeCollision = SnakeCollision(None, -15, 45, 135, -165, -15, 15, -165, 165, 15, -45, -135, 165)
         self.overrideMoving = True
+        self.readyToMoveForward = False
         self.moving = False
-        self.readyToMove = False
         self.firstLoop = True
         self.i = 0
         self.j = 0
@@ -82,6 +83,7 @@ class Controller(threading.Thread):
         """
         self.notifyGui("UpdateTextEvent", "Preparing Maze")
         self.lines, self.lineImageArray = self.maze.findMaze()
+        self.snakeCollision.mazeLines = self.lines
 
         self.notifyGui("UpdateImageEventR", self.lineImageArray)
         self.notifyGui("UpdateTextEvent", "Maze Ready")
@@ -181,18 +183,15 @@ class Controller(threading.Thread):
             self.moving = False
             self.overrideMoving = False
 
-
         """
         Checks if the snake is in movement, if not in movement, checks if it is ready to move.
         If ready to move, sends command to snake to move forward one cycle.
         """
         if self.moving:
             pass
-
-        elif self.readyToMove:
+        elif self.readyToMoveForward:
             self.moving = self.snake.moveForward()
-            self.readyToMove = False
-            # return
+            self.readyToMoveForward = False
         else:
             lineStart = self.finalPath[self.i]
             lineEnd = self.finalPath[self.i + 1]
@@ -254,6 +253,29 @@ class Controller(threading.Thread):
                             b.runFlag = False
                             self.i = 0
 
+                    """ Moving logic"""
+                    theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
+                    distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
+                    self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+
+                    # alt er fint
+                    if abs(theta) < 60 and abs(distanceToLine) < 20:
+                        self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20, 150)
+                        self.readyToMoveForward = True
+                        pass
+                    # vinker fin distance fuckt
+                    elif abs(theta) < 60 and abs(distanceToLine) >= 20:
+                        # Lateral shift
+                        pass
+                    # vinkel fuckt distance fin
+                    elif abs(theta) >= 60 and abs(distanceToLine) < 20:
+                        #Rotate
+                        pass
+                    # alt er fuckt
+                    elif abs(theta) >= 60 and abs(distanceToLine) >= 20:
+                        pass
+
+                    """ Moving logic END!!!!!!"""
                     # Gets the turn angle for the snake in relation to the path
                     turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20, 150)
                     # self.notifyGui("UpdateTextEvent", f"curent angle {turnAngle}")
@@ -268,7 +290,6 @@ class Controller(threading.Thread):
                     # If no lateral shift, applies turning, and sets moving and ready to move-flag to True
                     else:
                         self.moving = self.snake.turn(turnAngle)
-                        self.readyToMove = True
                     # Appends the new position of the snake to its traveled path
                     self.traveledPath.append(snakePointF)
 
@@ -300,9 +321,9 @@ class Controller(threading.Thread):
         if self.moving:
             pass
 
-        elif self.readyToMove:
+        elif self.readyToMoveForward:
             self.moving = self.snake.moveForward()
-            self.readyToMove = False
+            self.readyToMoveForward = False
             # return
         else:
             lineStart = self.finalPath[self.j][self.i]
@@ -389,7 +410,7 @@ class Controller(threading.Thread):
                     # If no lateral shift, applies turning, and sets moving and ready to move-flag to True
                     else:
                         self.moving = self.snake.turn(turnAngle)
-                        self.readyToMove = True
+                        self.readyToMoveForward = True
                     # Appends the new position of the snake to its traveled path
                     self.traveledPath.append(snakePointF)
 

@@ -146,7 +146,7 @@ class SnakeController:
             return self.currentAngle
 
 
-class snakeCollision:
+class SnakeCollision:
 
     def __init__(self, mazeLineList, frontRightLim, frontRightFrontLim, frontFrontLeftLim, frontLeftLim, midRightMin,
                  midRightMax, midLeftMin, midLeftMax, backRightLim, backRightBackLim, backBackLeftLim, backLeftLim):
