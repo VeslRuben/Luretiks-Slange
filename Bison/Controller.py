@@ -51,6 +51,7 @@ class Controller(threading.Thread):
         self.readyToMoveBackward = False
         self.deadBand = 100
         self.deadBandAngle = 60
+        self.collisionDistance = 50
         self.moving = False
         self.firstLoop = True
         self.i = 0
@@ -193,21 +194,21 @@ class Controller(threading.Thread):
         elif self.readyToMoveForward:
             snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
             if snakeCoordinates:
-                self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+                self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
                 if not self.snakeCollision.frontFrontCollision:
                     self.moving = self.snake.moveForward()
                     self.readyToMoveForward = False
                 else:
-                    self.readyToMoveForward = False
+                    self.collisionHandling()
         elif self.readyToMoveBackward:
             snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
             if snakeCoordinates:
-                self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+                self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
                 if not self.snakeCollision.backBackCollision:
                     self.moving = self.snake.moveBacwards()
                     self.readyToMoveBackward = False
                 else:
-                    self.readyToMoveBackward = False
+                    self.collisionHandling()
         else:
             lineStart = self.finalPath[self.i]
             lineEnd = self.finalPath[self.i + 1]
@@ -272,7 +273,7 @@ class Controller(threading.Thread):
                     """ Moving logic"""
                     theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
                     distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
-                    self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+                    self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
 
                     if self.snakeCollision.noCollisions():
                         # alt er fint
@@ -308,12 +309,76 @@ class Controller(threading.Thread):
                                 # Rotate CW, right
                                 self.moving = self.snake.rotateCW()
                     else:
-                        print("fant vegg")
+                        self.collisionHandling()
 
                     """ Moving logic END!!!!!!"""
 
                     # Appends the new position of the snake to its traveled path
                     self.traveledPath.append(snakePointF)
+
+    def collisionHandling(self):
+        # Checking for front
+        if not self.snakeCollision.frontFrontCollision:
+            # Checking both sectors at once
+            if self.snakeCollision.bothSectorCollision():
+                # Double backwards
+                self.moving = self.snake.moveBacwards()
+                self.readyToMoveForward = False
+                self.readyToMoveBackward = True
+            # Checking left sector
+            elif self.snakeCollision.leftSectorCollision():
+                # Lateral shift right, ready to move backwards
+                self.moving = self.snake.moveRight()
+                self.readyToMoveForward = False
+                self.readyToMoveBackward = True
+            # Checking right sector
+            elif self.snakeCollision.rightSectorCollision():
+                # Lateral shift left, ready to move backwards
+                self.moving = self.snake.moveLeft()
+                self.readyToMoveForward = False
+                self.readyToMoveBackward = True
+            # If only collision in front
+            else:
+                # Back it up motherfucker
+                self.moving = self.snake.reset()
+                self.readyToMoveForward = False
+                self.readyToMoveBackward = True
+        # Checking for back
+        elif not self.snakeCollision.backBackCollision:
+            # Checking both sectors at once
+            if self.snakeCollision.bothSectorCollision():
+                # Front it up motherfucker
+                print("Crashed back and both sides")
+            # Checking left sector
+            elif self.snakeCollision.leftSectorCollision():
+                # Do something
+                print("Crashed back and left side")
+            # Checking right sector
+            elif self.snakeCollision.rightSectorCollision():
+                # Do something
+                print("Crashed back and right side")
+            # If only collision in front
+            else:
+                # Front it up motherfucker
+                print("Crashed only on back")
+        else:
+            # Checking both sectors at once
+            if self.snakeCollision.bothSectorCollision():
+                # Straighten snake, hope for the best
+                self.moving = self.snake.reset()
+            # Checking left sector
+            elif self.snakeCollision.leftSectorCollision():
+                # Reset moving flags, and lateral shift right
+                self.moving = self.snake.moveRight()
+                self.readyToMoveForward = False
+                self.readyToMoveBackward = False
+            # Checking right sector
+            elif self.snakeCollision.rightSectorCollision():
+                # Reset moving flags, and lateral shift left
+                self.moving = self.snake.moveLeft()
+                self.readyToMoveBackward = False
+                self.readyToMoveForward = False
+
 
     def seekAndDestroy(self):
         """

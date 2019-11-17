@@ -264,6 +264,24 @@ class SnakeCollision:
         else:
             return False
 
+    def rightSectorCollision(self):
+        if any([self.frontRightCollision, self.midRightCollision, self.backRightCollision]):
+            return True
+        else:
+            return False
+
+    def leftSectorCollision(self):
+        if any([self.frontLeftCollision, self.midLeftCollision, self.backLeftCollision]):
+            return True
+        else:
+            return False
+
+    def bothSectorCollision(self):
+        if self.leftSectorCollision() and self.rightSectorCollision():
+            return True
+        else:
+            return False
+
     def calculateAngleToNearestPoint(self, snakeCoord, pointCoord):
         """
         Calculates the angle from a point to another point in degrees
