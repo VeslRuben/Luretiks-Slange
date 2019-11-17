@@ -79,7 +79,7 @@ class SnakeController:
         """
         # Using distance to line to regulate#########
         lVN = [lV[1], -lV[0]]
-        #print(f"normalvektor: {lVN}")
+        # print(f"normalvektor: {lVN}")
         startSnakeVektor = [snakeEndPoint[0] - lineStartPoint[0], snakeEndPoint[1] - lineStartPoint[1]]
         distSnakeToLine = (lVN[0] * startSnakeVektor[0] + lVN[1] * startSnakeVektor[1]) / math.sqrt(
             lVN[0] ** 2 + lVN[1] ** 2)
@@ -102,7 +102,7 @@ class SnakeController:
         snakeLine = [snakeEndPoint, [snakeEndPoint[0] + (-sV[0]) * 2, snakeEndPoint[1] + (-sV[1]) * 2]]
         return snakeLine, finishLine
 
-    def smartTurn(self, lV, sV, lVxsV, snakeEndPoint, lineStartPoint, P, db, rotThreshold):
+    def smartTurn(self, lV, sV, lVxsV, snakeEndPoint, lineStartPoint, P, db):
         """
         Calculates the turn angle for the snake
         :param lV: path vector
@@ -112,23 +112,16 @@ class SnakeController:
         :param lineStartPoint: (x,y) for the start of the path
         :param P: Proportional gain
         :param db: deadband in pixels
-        :param rotThreshold: threshold for using lateral shift
         :return: turn angle in int, or "right"/"left" if lateral shift
         """
-        rotate = None
 
         distanceToLine = self.calculatDistanceToLine(lV, snakeEndPoint, lineStartPoint)
 
         theta = self.calculateTheta(lV, sV, lVxsV)
 
-        #print(f"Distance: {distanceToLine} \n Theta: {theta}")
+        # print(f"Distance: {distanceToLine} \n Theta: {theta}")
 
-        if abs(distanceToLine) > rotThreshold:
-            if distanceToLine > 0:
-                rotate = 1
-            else:
-                rotate = -1
-        elif abs(distanceToLine) > db:
+        if abs(distanceToLine) > db:
             self.currentAngle = self.currentAngle + int(distanceToLine * P)
         else:
             self.currentAngle = self.currentAngle + theta
@@ -138,12 +131,7 @@ class SnakeController:
         elif self.currentAngle < - 90:
             self.currentAngle = -90
 
-        if rotate == -1:
-            return "right"
-        elif rotate == 1:
-            return "left"
-        else:
-            return self.currentAngle
+        return self.currentAngle
 
 
 class SnakeCollision:
@@ -185,7 +173,7 @@ class SnakeCollision:
         self.backBackLeftLim = backBackLeftLim
         self.backLeftLim = backLeftLim
 
-        self.frontRightCollison = False
+        self.frontRightCollision = False
         self.frontFrontCollision = False
         self.frontLeftCollision = False
 
@@ -217,7 +205,7 @@ class SnakeCollision:
             y2 = data[0][3]
             obst = LineString([(x1, y1), (x2, y2)])
             if obst.distance(snakeFront) < distThreshold:
-                closestPoint = self.getClosestPoint([x1,y1], [x2,y2], [snakeFront.x, snakeFront.y])
+                closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeFront.x, snakeFront.y])
                 angleToPoint = self.calculateAngleToNearestPoint([snakeFront.x, snakeFront.y], closestPoint)
 
                 # From -15deg to 45deg
@@ -230,7 +218,7 @@ class SnakeCollision:
                 elif not (self.frontLeftLim < angleToPoint <= self.frontFrontLeftLim):
                     self.frontLeftCollision = True
             if obst.distance(snakeMid) < distThreshold:
-                closestPoint = self.getClosestPoint([x1,y1], [x2,y2], [snakeMid.x, snakeMid.y])
+                closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeMid.x, snakeMid.y])
                 angleToPoint = self.calculateAngleToNearestPoint([snakeMid.x, snakeMid.y], closestPoint)
 
                 # Checks from -15deg to 15deg
@@ -240,7 +228,7 @@ class SnakeCollision:
                 elif not (self.midLeftMin <= angleToPoint <= self.midLeftMax):
                     self.midLeftCollision = True
             if obst.distance(snakeBack) < distThreshold:
-                closestPoint = self.getClosestPoint([x1,y1], [x2,y2], [snakeBack.x, snakeBack.y])
+                closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeBack.x, snakeBack.y])
                 angleToPoint = self.calculateAngleToNearestPoint([snakeBack.x, snakeBack.y], closestPoint)
 
                 # Checks from -165 to 135, and takes the opposite of it. Because of how atan2 works
@@ -269,6 +257,12 @@ class SnakeCollision:
         self.backBackCollision = False
         self.backRightCollision = False
 
+    def noCollisions(self):
+        if not (all([self.frontLeftCollision, self.frontFrontCollision, self.frontRightCollision, self.midLeftCollision,
+                     self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision])):
+            return True
+        else:
+            return False
 
     def calculateAngleToNearestPoint(self, snakeCoord, pointCoord):
         """
@@ -301,11 +295,12 @@ class SnakeCollision:
 
         normalizedDistance = dotProduct / lengdeMazeLine
 
-        pointClosest = [mazeLineStart[0] + startToStop[0]*normalizedDistance,
-                        mazeLineStart[1] + startToStop[1]*normalizedDistance]
+        pointClosest = [mazeLineStart[0] + startToStop[0] * normalizedDistance,
+                        mazeLineStart[1] + startToStop[1] * normalizedDistance]
 
         return pointClosest
 
 
 if __name__ == "__main__":
-    pass
+    sc = SnakeCollision(None, -15, 45, 135, -165, -15, 15, -165, 165, 15, -45, -135, 165)
+    print(sc.noCollisions())

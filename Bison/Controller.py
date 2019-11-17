@@ -49,11 +49,11 @@ class Controller(threading.Thread):
         self.snakeCollision = SnakeCollision(None, -15, 45, 135, -165, -15, 15, -165, 165, 15, -45, -135, 165)
         self.overrideMoving = True
         self.readyToMoveForward = False
+        self.readyToMoveBackward = False
         self.moving = False
         self.firstLoop = True
         self.i = 0
         self.j = 0
-        self.curantAngle = 0
         self.traveledPath = []
         self.cam = Camera()
         self.snake = Snake("http://192.168.137.72", "192.168.137.160")
@@ -190,8 +190,21 @@ class Controller(threading.Thread):
         if self.moving:
             pass
         elif self.readyToMoveForward:
-            self.moving = self.snake.moveForward()
-            self.readyToMoveForward = False
+            snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
+            self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+            if not self.snakeCollision.frontFrontCollision:
+                self.moving = self.snake.moveForward()
+                self.readyToMoveForward = False
+            else:
+                self.readyToMoveForward = False
+        elif self.readyToMoveBackward:
+            snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
+            self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+            if not self.snakeCollision.backBackCollision:
+                self.moving = self.snake.moveBacwards()
+                self.readyToMoveBackward = False
+            else:
+                self.readyToMoveBackward = False
         else:
             lineStart = self.finalPath[self.i]
             lineEnd = self.finalPath[self.i + 1]
@@ -258,38 +271,44 @@ class Controller(threading.Thread):
                     distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
                     self.snakeCollision.updateCollisions(snakeCoordinates, 20)
 
-                    # alt er fint
-                    if abs(theta) < 60 and abs(distanceToLine) < 20:
-                        self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20, 150)
-                        self.readyToMoveForward = True
-                        pass
-                    # vinker fin distance fuckt
-                    elif abs(theta) < 60 and abs(distanceToLine) >= 20:
-                        # Lateral shift
-                        pass
-                    # vinkel fuckt distance fin
-                    elif abs(theta) >= 60 and abs(distanceToLine) < 20:
-                        #Rotate
-                        pass
-                    # alt er fuckt
-                    elif abs(theta) >= 60 and abs(distanceToLine) >= 20:
+                    if self.snakeCollision.noCollisions():
+                        # alt er fint
+                        if abs(theta) < 60 and abs(distanceToLine) < 20:
+                            turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20)
+                            self.moving = self.snake.turn(turnAngle)
+                            self.readyToMoveForward = True
+                        # vinker fin distance fuckt
+                        elif abs(theta) < 60 and abs(distanceToLine) >= 20:
+                            # Lateral shift
+                            if distanceToLine < 0:
+                                # Lateral right
+                                self.moving = self.snake.moveRight()
+                            elif distanceToLine > 0:
+                                # Lateral left
+                                self.moving = self.snake.moveLeft()
+                        # vinkel fuckt distance fin
+                        elif abs(theta) >= 60 and abs(distanceToLine) < 20:
+                            # Rotate
+                            if theta > 0:
+                                # Rotate CCW, left
+                                self.moving = self.snake.rotateCCW()
+                            elif theta < 0:
+                                # Rotate CW, right
+                                self.moving = self.snake.rotateCW()
+                        # alt er fuckt
+                        elif abs(theta) >= 60 and abs(distanceToLine) >= 20:
+                            # Rotate
+                            if theta > 0:
+                                # Rotate CCW, left
+                                self.moving = self.snake.rotateCCW()
+                            elif theta < 0:
+                                # Rotate CW, right
+                                self.moving = self.snake.rotateCW()
+                    else:
                         pass
 
                     """ Moving logic END!!!!!!"""
-                    # Gets the turn angle for the snake in relation to the path
-                    turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20, 150)
-                    # self.notifyGui("UpdateTextEvent", f"curent angle {turnAngle}")
 
-                    # If the turn angle returns a string, it does a lateral shift left/right depending on the string
-                    if isinstance(turnAngle, str):
-                        if turnAngle == "right":
-                            self.moving = self.snake.moveRight()
-                        elif turnAngle == "left":
-                            self.moving = self.snake.moveLeft()
-
-                    # If no lateral shift, applies turning, and sets moving and ready to move-flag to True
-                    else:
-                        self.moving = self.snake.turn(turnAngle)
                     # Appends the new position of the snake to its traveled path
                     self.traveledPath.append(snakePointF)
 

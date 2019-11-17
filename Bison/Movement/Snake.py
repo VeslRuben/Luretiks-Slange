@@ -140,6 +140,16 @@ class Snake:
         Logger.logg("Sent: h", Logger.cmd)
         return self.timeOut()
 
+    def rotateCCW(self):
+        self.controller.send("n")
+        Logger.logg("Sent: n", Logger.cmd)
+        return self.timeOut()
+
+    def rotateCW(self):
+        self.controller.send("m")
+        Logger.logg("Sent: m", Logger.cmd)
+        return self.timeOut()
+
     def stop(self):
         """
         Sends command to snake to stop movement
