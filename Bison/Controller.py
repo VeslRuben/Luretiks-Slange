@@ -45,7 +45,7 @@ class Controller(threading.Thread):
 
         # Snake variables ###########################
         self.snakeController = SnakeController()
-        self.snakeCollision = SnakeCollision(None, -15, 45, 135, -165, -15, 15, -165, 165, 15, -45, -135, 165)
+        self.snakeCollision = SnakeCollision(None, -15, 45, 135, 195, -15, 15, 165, 195, 15, -45, -135, 165)
         self.overrideMoving = True
         self.readyToMoveForward = False
         self.readyToMoveBackward = False

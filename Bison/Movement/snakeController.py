@@ -149,11 +149,11 @@ class SnakeCollision:
         :param frontRightLim: Minimum angle right, i.e. -15 deg
         :param frontRightFrontLim: Split between right and front, i.e. 45deg
         :param frontFrontLeftLim: Split between front and left, i.e. 135deg
-        :param frontLeftLim: Max angle left, i.e. -165 deg
+        :param frontLeftLim: Max angle left, i.e. 195 deg
         :param midRightMin: Min angle right, i.e. -15 deg
         :param midRightMax: Max angle right, i.e. 15 deg
-        :param midLeftMin: Min angle left, i.e. -165 deg
-        :param midLeftMax: Max angle left, i.e. 165
+        :param midLeftMin: Min angle left, i.e. 165 deg
+        :param midLeftMax: Max angle left, i.e. 195 deg
         :param backRightLim: Max Angle right, i.e. 15 deg
         :param backRightBackLim: Split between right and back, i.e. -45deg
         :param backBackLeftLim: Split between back and left, i.e. -135deg
@@ -192,12 +192,10 @@ class SnakeCollision:
         :param distThreshold: the threshold to check collision against
         :return: None
         """
-        # Boolean to ignore the back of the snake for testing purposes
-        checkSnakeBack = False
 
         snakeFront = Point(snakeCoordList[0][0], snakeCoordList[0][1])
         snakeMid = Point(snakeCoordList[1][0], snakeCoordList[1][1])
-        snakeBack = Point(snakeCoordList[2][0], snakeCoordList[2][1])
+        # snakeBack = Point(snakeCoordList[2][0], snakeCoordList[2][1])
 
         self.resetCollisions()
 
@@ -211,38 +209,51 @@ class SnakeCollision:
                 closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeFront.x, snakeFront.y])
                 angleToPoint = self.calculateAngleToNearestPoint([snakeFront.x, snakeFront.y], closestPoint)
 
+                print(f"Closest point front: {closestPoint}")
+
+                if angleToPoint < -15:
+                    angleToPoint += 360
+
                 # From -15deg to 45deg
                 if self.frontRightLim <= angleToPoint < self.frontRightFrontLim:
                     self.frontRightCollision = True
                 # From 45 deg to 135deg
-                elif self.frontRightFrontLim <= angleToPoint <= self.frontFrontLeftLim:
+                if self.frontRightFrontLim <= angleToPoint <= self.frontFrontLeftLim:
                     self.frontFrontCollision = True
-                # From -165 deg to 135deg, takes the opposite
-                elif not (self.frontLeftLim < angleToPoint <= self.frontFrontLeftLim):
+                # From 135 deg to 195deg, takes the opposite
+                if self.frontFrontLeftLim < angleToPoint <= self.frontLeftLim:
                     self.frontLeftCollision = True
             if obst.distance(snakeMid) < distThreshold:
                 closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeMid.x, snakeMid.y])
                 angleToPoint = self.calculateAngleToNearestPoint([snakeMid.x, snakeMid.y], closestPoint)
 
+                print(f"Closest point mid: {closestPoint}")
+                print(f"Angle before for mid: {angleToPoint}")
+
+                if angleToPoint < -15:
+                    angleToPoint += 360
+
+                print(f"Angle to point after for mid: {angleToPoint}")
+
                 # Checks from -15deg to 15deg
                 if self.midRightMin <= angleToPoint <= self.midRightMax:
                     self.midRightCollision = True
-                # Checks -165deg to 165deg, takes the opposite
-                elif not (self.midLeftMin <= angleToPoint <= self.midLeftMax):
+                # Checks 165deg to 195deg, takes the opposite
+                if self.midLeftMin <= angleToPoint <= self.midLeftMax:
                     self.midLeftCollision = True
-            if obst.distance(snakeBack) < distThreshold and checkSnakeBack:
-                closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeBack.x, snakeBack.y])
-                angleToPoint = self.calculateAngleToNearestPoint([snakeBack.x, snakeBack.y], closestPoint)
-
-                # Checks from -165 to 135, and takes the opposite of it. Because of how atan2 works
-                if not (self.backBackLeftLim <= angleToPoint < self.backLeftLim):
-                    self.backLeftCollision = True
-                # Checks from -45 to -135
-                if self.backBackLeftLim <= angleToPoint <= self.backRightBackLim:
-                    self.backBackCollision = True
-                # Checks from -45 to 15
-                if self.backRightBackLim < angleToPoint <= self.backRightLim:
-                    self.backRightCollision = True
+            # if obst.distance(snakeBack) < distThreshold and checkSnakeBack:
+            #    closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeBack.x, snakeBack.y])
+            #    angleToPoint = self.calculateAngleToNearestPoint([snakeBack.x, snakeBack.y], closestPoint)
+            #
+            #    # Checks from -165 to 135, and takes the opposite of it. Because of how atan2 works
+            #    if not (self.backBackLeftLim <= angleToPoint < self.backLeftLim):
+            #        self.backLeftCollision = True
+            #    # Checks from -45 to -135
+            #    if self.backBackLeftLim <= angleToPoint <= self.backRightBackLim:
+            #        self.backBackCollision = True
+            #    # Checks from -45 to 15
+            #    if self.backRightBackLim < angleToPoint <= self.backRightLim:
+            #        self.backRightCollision = True
 
     def resetCollisions(self):
         """
@@ -323,5 +334,8 @@ class SnakeCollision:
 
 
 if __name__ == "__main__":
-    sc = SnakeCollision(None, -15, 45, 135, -165, -15, 15, -165, 165, 15, -45, -135, 165)
-    print(sc.noCollisions())
+    lines = [[[500, 200, 500, 800]], [[0, 0, 300, 200]]]
+
+    sc = SnakeCollision(lines, -15, 45, 135, 195, -15, 15, 165, 195, 15, -45, -135, 165)
+
+    sc.updateCollisions([[100, 500], [100, 150]], 500)
