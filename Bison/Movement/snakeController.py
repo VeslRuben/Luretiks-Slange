@@ -330,9 +330,13 @@ class SnakeCollision:
 
         normalizedDistance = dotProduct / lengdeMazeLine
 
-        pointClosest = [mazeLineStart[0] + startToStop[0] * normalizedDistance,
+        if normalizedDistance < 0:
+            pointClosest = mazeLineStart
+        elif normalizedDistance > 1:
+            pointClosest = mazeLineStop
+        else:
+            pointClosest = [mazeLineStart[0] + startToStop[0] * normalizedDistance,
                         mazeLineStart[1] + startToStop[1] * normalizedDistance]
-
         return pointClosest
 
 
