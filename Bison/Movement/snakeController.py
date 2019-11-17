@@ -54,7 +54,10 @@ class SnakeController:
         """
         theta = math.acos((lV[0] * sV[0] + lV[1] * sV[1]) / (
                 math.sqrt(lV[0] ** 2 + lV[1] ** 2) * math.sqrt(sV[0] ** 2 + sV[1] ** 2)))
-        theta = (theta * (lVxsV / abs(lVxsV))) * 180 / math.pi  # (lVxsV / abs(lVxsV)) is 1 or -1
+        try:
+            theta = (theta * (lVxsV / abs(lVxsV))) * 180 / math.pi  # (lVxsV / abs(lVxsV)) is 1 or -1
+        except ZeroDivisionError:
+            theta = 0
         return theta
 
     def calculateFirstTurnAngle(self, lV, sV, lVxsV):
@@ -272,11 +275,11 @@ class SnakeCollision:
         self.backRightCollision = False
 
     def noCollisions(self):
-        if not (all([self.frontLeftCollision, self.frontFrontCollision, self.frontRightCollision, self.midLeftCollision,
-                     self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision])):
-            return True
-        else:
+        if any([self.frontLeftCollision, self.frontFrontCollision, self.frontRightCollision, self.midLeftCollision,
+                     self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision]):
             return False
+        else:
+            return True
 
     def rightSectorCollision(self):
         if any([self.frontRightCollision, self.midRightCollision, self.backRightCollision]):

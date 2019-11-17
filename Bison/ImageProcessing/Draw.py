@@ -12,7 +12,10 @@ def drawLines(image, lines, color=(0, 0, 0)):
     return image
 
 
-def drawSection(image, center, radius, startangle, endAngle, collore):
+def drawSection(image, center, startangle, endAngle, collore, radius=50):
+    center = (int(center[0]), int(center[1]))
+    startangle = int(startangle)
+    endAngle = int(endAngle)
     image = cv2.ellipse(image, center, (radius, radius), 0, startangle, endAngle, collore, 2)
     x1 = int(center[0] + radius * math.cos(math.radians(startangle)))
     y1 = int(center[1] + radius * math.sin(math.radians(startangle)))
@@ -27,6 +30,6 @@ def drawSection(image, center, radius, startangle, endAngle, collore):
 
 if __name__ == "__main__":
     x = cv2.imread("..\\..\\Pictures/jallaball2.jpg")
-    y = drawSection(x, (500, 500), 100, 45, 135, (0, 255, 0))
+    y = drawSection(x, (500, 500), -45, -135, (0, 255, 0))
     cv2.imshow("askdjhf", y)
     cv2.waitKey()

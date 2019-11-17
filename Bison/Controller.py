@@ -2,9 +2,11 @@ import gc as soplebil
 import threading
 import time
 
+import cv2
+
 from Bison.Broker import Broker as b
 from Bison.GUI import CustomEvent
-from Bison.ImageProcessing.Draw import drawLines
+from Bison.ImageProcessing.Draw import drawLines, drawSection
 from Bison.ImageProcessing.camera import Camera
 from Bison.ImageProcessing.findSnake import FindSnake
 from Bison.ImageProcessing.findTarget import FindTarget
@@ -46,12 +48,15 @@ class Controller(threading.Thread):
         # Snake variables ###########################
         self.snakeController = SnakeController()
         self.snakeCollision = SnakeCollision(None, -15, 45, 135, 195, -15, 15, 165, 195, 15, -45, -135, 165)
+        self.pizzaSlices = [[[15+180, -15+180], [-165+180, -195+180]],
+                            [[15+180, -45+180], [45, 135], [-135+180, -195+180]]]
+        self.snakeCollision = SnakeCollision(None, -15, 45, 135, -165, -15, 15, -165, 165, 15, -45, -135, 165)
         self.overrideMoving = True
         self.readyToMoveForward = False
         self.readyToMoveBackward = False
         self.deadBand = 100
         self.deadBandAngle = 60
-        self.collisionDistance = 50
+        self.collisionDistance = 100
         self.moving = False
         self.firstLoop = True
         self.i = 0
@@ -169,9 +174,37 @@ class Controller(threading.Thread):
         Gets the snake to move towards a target.
         :return: Nothing
         """
-        # Update GUI #############################
         pic = self.cam.takePicture()
+
+        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=pic)
+        if snakeCoordinates:
+            self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
+
+        # Update GUI #############################
         colorPic = drawLines(pic, self.finalPath, (255, 0, 0))
+        if snakeCoordinates:
+            pizzaSlicesCollision = [[self.snakeCollision.midRightCollision, self.snakeCollision.midLeftCollision],
+                                    [self.snakeCollision.frontRightCollision,
+                                     self.snakeCollision.frontFrontCollision,
+                                     self.snakeCollision.frontLeftCollision]]
+            xVector = [1, 0]
+            snakeVector = [snakeCoordinates[1][0] - snakeCoordinates[0][0],
+                           snakeCoordinates[1][1] - snakeCoordinates[0][1]]
+            xVxsV = xVector[0] * snakeVector[1] - xVector[1] * snakeVector[0]
+            offset = self.snakeController.calculateTheta(xVector, snakeVector, xVxsV)
+            if offset < 0:
+                offset += 360
+            for pos, piece, coll in zip(snakeCoordinates, self.pizzaSlices, pizzaSlicesCollision):
+                i = 0
+                for startAngle, endAngle in piece:
+                    if coll[i]:
+                        color = (0, 0, 255)
+                    else:
+                        color = (0, 255, 0)
+                    colorPic = drawSection(colorPic, tuple(pos), startAngle + offset - 90, endAngle + offset - 90,
+                                           color, radius=self.collisionDistance)
+                    i += 1
+        colorPic = cv2.cvtColor(colorPic, cv2.COLOR_BGR2RGB)
         self.notifyGui("UpdateImageEventR", colorPic)
         ##########################################
 
@@ -192,18 +225,18 @@ class Controller(threading.Thread):
         if self.moving:
             pass
         elif self.readyToMoveForward:
-            snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
+            # snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
             if snakeCoordinates:
-                self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
+                # self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
                 if not self.snakeCollision.frontFrontCollision:
                     self.moving = self.snake.moveForward()
                     self.readyToMoveForward = False
                 else:
                     self.collisionHandling()
         elif self.readyToMoveBackward:
-            snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
+            # snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
             if snakeCoordinates:
-                self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
+                # self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
                 if not self.snakeCollision.backBackCollision:
                     self.moving = self.snake.moveBacwards()
                     self.readyToMoveBackward = False
@@ -219,7 +252,7 @@ class Controller(threading.Thread):
             """
             if self.firstLoop:
                 # Find snake coordinates, and the masked picture
-                snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
+                # snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
 
                 # Check that the snake coordinates are found
                 if snakeCoordinates:
@@ -242,7 +275,7 @@ class Controller(threading.Thread):
             ############################################################################
             else:
                 # Get snake coordinates and the masked picture
-                snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
+                # snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
                 # Check that the snake is found
                 if snakeCoordinates:
                     snakePointF = snakeCoordinates[1]
@@ -273,7 +306,7 @@ class Controller(threading.Thread):
                     """ Moving logic"""
                     theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
                     distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
-                    self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
+                    # self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
 
                     if self.snakeCollision.noCollisions():
                         # alt er fint
@@ -318,7 +351,7 @@ class Controller(threading.Thread):
 
     def collisionHandling(self):
         # Checking for front
-        if not self.snakeCollision.frontFrontCollision:
+        if self.snakeCollision.frontFrontCollision:
             # Checking both sectors at once
             if self.snakeCollision.bothSectorCollision():
                 # Double backwards
@@ -344,7 +377,7 @@ class Controller(threading.Thread):
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = True
         # Checking for back
-        elif not self.snakeCollision.backBackCollision:
+        elif self.snakeCollision.backBackCollision:
             # Checking both sectors at once
             if self.snakeCollision.bothSectorCollision():
                 # Front it up motherfucker
@@ -378,7 +411,6 @@ class Controller(threading.Thread):
                 self.moving = self.snake.moveLeft()
                 self.readyToMoveBackward = False
                 self.readyToMoveForward = False
-
 
     def seekAndDestroy(self):
         """
