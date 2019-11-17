@@ -192,6 +192,9 @@ class SnakeCollision:
         :param distThreshold: the threshold to check collision against
         :return: None
         """
+        # Boolean to ignore the back of the snake for testing purposes
+        checkSnakeBack = False
+
         snakeFront = Point(snakeCoordList[0][0], snakeCoordList[0][1])
         snakeMid = Point(snakeCoordList[1][0], snakeCoordList[1][1])
         snakeBack = Point(snakeCoordList[2][0], snakeCoordList[2][1])
@@ -227,7 +230,7 @@ class SnakeCollision:
                 # Checks -165deg to 165deg, takes the opposite
                 elif not (self.midLeftMin <= angleToPoint <= self.midLeftMax):
                     self.midLeftCollision = True
-            if obst.distance(snakeBack) < distThreshold:
+            if obst.distance(snakeBack) < distThreshold and checkSnakeBack:
                 closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeBack.x, snakeBack.y])
                 angleToPoint = self.calculateAngleToNearestPoint([snakeBack.x, snakeBack.y], closestPoint)
 
