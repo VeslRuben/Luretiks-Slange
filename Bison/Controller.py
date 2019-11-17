@@ -1,19 +1,18 @@
+import gc as soplebil
 import threading
-import numpy as np
-from shapely.geometry import Point, LineString
 import time
+
 from Bison.Broker import Broker as b
-from Bison.ImageProcessing.maze_recogn import mazeRecognizer
-from Bison.Pathfinding.rrt_star import RRTStar
 from Bison.GUI import CustomEvent
-from Bison.logger import Logger
-from Bison.Movement.Snake import Snake
+from Bison.ImageProcessing.Draw import drawLines
 from Bison.ImageProcessing.camera import Camera
 from Bison.ImageProcessing.findSnake import FindSnake
-from Bison.Movement.snakeController import SnakeController, SnakeCollision
 from Bison.ImageProcessing.findTarget import FindTarget
-from Bison.ImageProcessing.Draw import drawLines
-import gc as soplebil
+from Bison.ImageProcessing.maze_recogn import mazeRecognizer
+from Bison.Movement.Snake import Snake
+from Bison.Movement.snakeController import SnakeController, SnakeCollision
+from Bison.Pathfinding.rrt_star import RRTStar
+from Bison.logger import Logger
 
 
 class Controller(threading.Thread):
@@ -50,13 +49,15 @@ class Controller(threading.Thread):
         self.overrideMoving = True
         self.readyToMoveForward = False
         self.readyToMoveBackward = False
+        self.deadBand = 100
+        self.deadBandAngle = 60
         self.moving = False
         self.firstLoop = True
         self.i = 0
         self.j = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.72", "192.168.137.160")
+        self.snake = Snake("http://192.168.137.72", "192.168.137.167")
         time.sleep(1)
         with b.lock:
             print(self.snake.setAmplitude(b.params[0]))
@@ -191,20 +192,22 @@ class Controller(threading.Thread):
             pass
         elif self.readyToMoveForward:
             snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
-            self.snakeCollision.updateCollisions(snakeCoordinates, 20)
-            if not self.snakeCollision.frontFrontCollision:
-                self.moving = self.snake.moveForward()
-                self.readyToMoveForward = False
-            else:
-                self.readyToMoveForward = False
+            if snakeCoordinates:
+                self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+                if not self.snakeCollision.frontFrontCollision:
+                    self.moving = self.snake.moveForward()
+                    self.readyToMoveForward = False
+                else:
+                    self.readyToMoveForward = False
         elif self.readyToMoveBackward:
             snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
-            self.snakeCollision.updateCollisions(snakeCoordinates, 20)
-            if not self.snakeCollision.backBackCollision:
-                self.moving = self.snake.moveBacwards()
-                self.readyToMoveBackward = False
-            else:
-                self.readyToMoveBackward = False
+            if snakeCoordinates:
+                self.snakeCollision.updateCollisions(snakeCoordinates, 20)
+                if not self.snakeCollision.backBackCollision:
+                    self.moving = self.snake.moveBacwards()
+                    self.readyToMoveBackward = False
+                else:
+                    self.readyToMoveBackward = False
         else:
             lineStart = self.finalPath[self.i]
             lineEnd = self.finalPath[self.i + 1]
@@ -273,12 +276,12 @@ class Controller(threading.Thread):
 
                     if self.snakeCollision.noCollisions():
                         # alt er fint
-                        if abs(theta) < 60 and abs(distanceToLine) < 20:
+                        if abs(theta) < self.deadBandAngle and abs(distanceToLine) < self.deadBand:
                             turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20)
                             self.moving = self.snake.turn(turnAngle)
                             self.readyToMoveForward = True
                         # vinker fin distance fuckt
-                        elif abs(theta) < 60 and abs(distanceToLine) >= 20:
+                        elif abs(theta) < self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
                             # Lateral shift
                             if distanceToLine < 0:
                                 # Lateral right
@@ -287,7 +290,7 @@ class Controller(threading.Thread):
                                 # Lateral left
                                 self.moving = self.snake.moveLeft()
                         # vinkel fuckt distance fin
-                        elif abs(theta) >= 60 and abs(distanceToLine) < 20:
+                        elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) < self.deadBand:
                             # Rotate
                             if theta > 0:
                                 # Rotate CCW, left
@@ -296,7 +299,7 @@ class Controller(threading.Thread):
                                 # Rotate CW, right
                                 self.moving = self.snake.rotateCW()
                         # alt er fuckt
-                        elif abs(theta) >= 60 and abs(distanceToLine) >= 20:
+                        elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
                             # Rotate
                             if theta > 0:
                                 # Rotate CCW, left
@@ -305,7 +308,7 @@ class Controller(threading.Thread):
                                 # Rotate CW, right
                                 self.moving = self.snake.rotateCW()
                     else:
-                        pass
+                        print("fant vegg")
 
                     """ Moving logic END!!!!!!"""
 
@@ -396,7 +399,7 @@ class Controller(threading.Thread):
                         self.i += 1
 
                     # Checks if the snake has reached the goal
-                    if self.i >= len(self.finalPath[j]) - 1:
+                    if self.i >= len(self.finalPath[self.j]) - 1:
                         self.snake.stop()
                         print("Stop")
                         Logger.logg("Snake reached first goal", Logger.info)
@@ -416,7 +419,7 @@ class Controller(threading.Thread):
                             self.j = 0
 
                     # Gets the turn angle for the snake in relation to the path
-                    turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20, 150)
+                    turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20)
                     # self.notifyGui("UpdateTextEvent", f"curent angle {turnAngle}")
 
                     # If the turn angle returns a string, it does a lateral shift left/right depending on the string
