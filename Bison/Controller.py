@@ -19,12 +19,9 @@ from Bison.logger import Logger
 
 class Controller(threading.Thread):
 
-    def setup(self):
-        Camera.initCam(0)
-
     def __init__(self, eventData):
         super().__init__()
-        self.setup()
+        Camera.initCam(0)
         self.running = True
 
         self.guiEvents = eventData["events"]
@@ -48,9 +45,8 @@ class Controller(threading.Thread):
         # Snake variables ###########################
         self.snakeController = SnakeController()
         self.snakeCollision = SnakeCollision(None, -15, 45, 135, 195, -15, 15, 165, 195, 15, -45, -135, 165)
-        self.pizzaSlices = [[[15+180, -15+180], [-165+180, -195+180]],
-                            [[15+180, -45+180], [45, 135], [-135+180, -195+180]]]
-        self.snakeCollision = SnakeCollision(None, -15, 45, 135, -165, -15, 15, -165, 165, 15, -45, -135, 165)
+        self.pizzaSlices = [[[15 + 180, -15 + 180], [-165 + 180, -195 + 180]],
+                            [[15 + 180, -45 + 180], [45, 135], [-135 + 180, -195 + 180]]]
         self.overrideMoving = True
         self.readyToMoveForward = False
         self.readyToMoveBackward = False
@@ -63,7 +59,7 @@ class Controller(threading.Thread):
         self.j = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.72", "192.168.137.167")
+        self.snake = Snake("http://192.168.137.102", "192.168.137.167")
         time.sleep(1)
         with b.lock:
             print(self.snake.setAmplitude(b.params[0]))
@@ -103,6 +99,9 @@ class Controller(threading.Thread):
         :return:
         """
         self.notifyGui("UpdateTextEvent", "Finding path...")
+        temp = None
+        startX = None
+        startY = None
         try:
             cords, temp = self.findSnake.LocateSnake(self.cam.takePicture())
             startX = cords[0][0]
@@ -178,20 +177,19 @@ class Controller(threading.Thread):
 
         snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=pic)
         if snakeCoordinates:
-            self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
-
-        # Update GUI #############################
-        colorPic = drawLines(pic, self.finalPath, (255, 0, 0))
-        if snakeCoordinates:
-            pizzaSlicesCollision = [[self.snakeCollision.midRightCollision, self.snakeCollision.midLeftCollision],
-                                    [self.snakeCollision.frontRightCollision,
-                                     self.snakeCollision.frontFrontCollision,
-                                     self.snakeCollision.frontLeftCollision]]
             xVector = [1, 0]
             snakeVector = [snakeCoordinates[1][0] - snakeCoordinates[0][0],
                            snakeCoordinates[1][1] - snakeCoordinates[0][1]]
             xVxsV = xVector[0] * snakeVector[1] - xVector[1] * snakeVector[0]
             offset = self.snakeController.calculateTheta(xVector, snakeVector, xVxsV)
+            self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance, offset)
+
+            # Update GUI #############################
+            colorPic = drawLines(pic, self.finalPath, (255, 0, 0))
+            pizzaSlicesCollision = [[self.snakeCollision.midRightCollision, self.snakeCollision.midLeftCollision],
+                                    [self.snakeCollision.frontRightCollision,
+                                     self.snakeCollision.frontFrontCollision,
+                                     self.snakeCollision.frontLeftCollision]]
             if offset < 0:
                 offset += 360
             for pos, piece, coll in zip(snakeCoordinates, self.pizzaSlices, pizzaSlicesCollision):
@@ -225,18 +223,14 @@ class Controller(threading.Thread):
         if self.moving:
             pass
         elif self.readyToMoveForward:
-            # snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
             if snakeCoordinates:
-                # self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
                 if not self.snakeCollision.frontFrontCollision:
                     self.moving = self.snake.moveForward()
                     self.readyToMoveForward = False
                 else:
                     self.collisionHandling()
         elif self.readyToMoveBackward:
-            # snakeCoordinates, _ = self.findSnake.LocateSnakeAverage(1, 1)
             if snakeCoordinates:
-                # self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
                 if not self.snakeCollision.backBackCollision:
                     self.moving = self.snake.moveBacwards()
                     self.readyToMoveBackward = False
@@ -251,10 +245,6 @@ class Controller(threading.Thread):
             Adjusts the start angle before movement starts
             """
             if self.firstLoop:
-                # Find snake coordinates, and the masked picture
-                # snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
-
-                # Check that the snake coordinates are found
                 if snakeCoordinates:
                     self.firstLoop = False
                     snakePointF = snakeCoordinates[1]
@@ -274,8 +264,6 @@ class Controller(threading.Thread):
             # Makes the snake turn or ready to move depending on its angle.
             ############################################################################
             else:
-                # Get snake coordinates and the masked picture
-                # snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1)
                 # Check that the snake is found
                 if snakeCoordinates:
                     snakePointF = snakeCoordinates[1]
@@ -306,7 +294,6 @@ class Controller(threading.Thread):
                     """ Moving logic"""
                     theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
                     distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
-                    # self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance)
 
                     if self.snakeCollision.noCollisions():
                         # alt er fint
