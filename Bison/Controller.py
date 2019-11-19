@@ -44,7 +44,7 @@ class Controller(threading.Thread):
 
         # Snake variables ###########################
         self.snakeController = SnakeController()
-        self.snakeCollision = SnakeCollision(None, -15, 45, 135, 195, -15, 15, 165, 195, 15, -45, -135, 165)
+        self.snakeCollision = SnakeCollision(None, -105, -45, 45, 105, -75, -105, 75, 105, 0, 0, 0, 0)
         self.pizzaSlices = [[[15 + 180, -15 + 180], [-165 + 180, -195 + 180]],
                             [[15 + 180, -45 + 180], [45, 135], [-135 + 180, -195 + 180]]]
         self.overrideMoving = True
@@ -53,7 +53,7 @@ class Controller(threading.Thread):
         self.ampChanged = False
         self.deadBand = 100
         self.deadBandAngle = 60
-        self.collisionDistance = 80
+        self.collisionDistance = 60
         self.moving = False
         self.firstLoop = True
         self.i = 0
@@ -119,7 +119,7 @@ class Controller(threading.Thread):
         self.rrtStar = RRTStar(start=[startX, startY], goal=[goalX, goalY], rand_area_x=[250, 1500],
                                rand_area_y=[0, 1100],
                                lineList=self.lines,
-                               expand_dis=100.0, path_resolution=10.0, max_iter=1000, goal_sample_rate=20,
+                               expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=20,
                                connect_circle_dist=450,
                                edge_dist=self.collisionDistance)
         self.rrtStar.lineList = self.lines
@@ -174,9 +174,9 @@ class Controller(threading.Thread):
         Gets the snake to move towards a target.
         :return: Nothing
         """
-        pic = self.cam.takePicture()
+        colorPic = self.cam.takePicture()
 
-        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=pic)
+        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
         if snakeCoordinates:
             xVector = [1, 0]
             snakeVector = [snakeCoordinates[1][0] - snakeCoordinates[0][0],
@@ -186,27 +186,23 @@ class Controller(threading.Thread):
             self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance, offset)
 
             # Update GUI #############################
-            colorPic = drawLines(pic, self.finalPath, (255, 0, 0))
+            colorPic = drawLines(colorPic, self.finalPath, (255, 0, 0))
             pizzaSlicesCollision = [[self.snakeCollision.midRightCollision, self.snakeCollision.midLeftCollision],
                                     [self.snakeCollision.frontRightCollision,
                                      self.snakeCollision.frontFrontCollision,
                                      self.snakeCollision.frontLeftCollision]]
             if offset < 0:
                 offset += 360
-            c0 = 0
             for pos, piece, coll in zip(snakeCoordinates, self.pizzaSlices, pizzaSlicesCollision):
                 i = 0
-                c = 80
                 for startAngle, endAngle in piece:
                     if coll[i]:
                         color = (0, 0, 255)
                     else:
                         color = (0, 255, 0)
                     colorPic = drawSection(colorPic, tuple(pos), startAngle + offset - 90, endAngle + offset - 90,
-                                           (c0, 0, c), radius=self.collisionDistance)
+                                           color, radius=self.collisionDistance)
                     i += 1
-                    c *= 2
-                c0 += 255
         colorPic = cv2.cvtColor(colorPic, cv2.COLOR_BGR2RGB)
         self.notifyGui("UpdateImageEventR", colorPic)
         ##########################################

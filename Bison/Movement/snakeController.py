@@ -202,16 +202,12 @@ class SnakeCollision:
         snakeMid = Point(snakeCoordList[1][0], snakeCoordList[1][1])
         # snakeBack = Point(snakeCoordList[2][0], snakeCoordList[2][1])
 
-        snakeFrontLeftLine = LineString([(snakeFront.x, snakeFront.y),
-                                         (snakeFront.x + distThreshold * math.cos(
-                                             math.radians(self.frontFrontLeftLim + offset - 90)),
-                                          snakeFront.y + distThreshold * math.sin(
-                                              math.radians(self.frontFrontLeftLim + offset - 90)))])
-        snakeFrontRightLine = LineString([(snakeFront.x, snakeFront.y),
-                                          (snakeFront.x + distThreshold * math.cos(
-                                              math.radians(self.frontRightFrontLim + offset - 90)),
-                                           snakeFront.y + distThreshold * math.sin(
-                                               math.radians(self.frontRightFrontLim + offset - 90)))])
+        snakeFrontLeftLine = LineString([(snakeFront.x, snakeFront.y), (
+            snakeFront.x + distThreshold * math.cos(math.radians(self.frontFrontLeftLim + offset)),
+            snakeFront.y + distThreshold * math.sin(math.radians(self.frontFrontLeftLim + offset)))])
+        snakeFrontRightLine = LineString([(snakeFront.x, snakeFront.y), (
+            snakeFront.x + distThreshold * math.cos(math.radians(self.frontRightFrontLim + offset)),
+            snakeFront.y + distThreshold * math.sin(math.radians(self.frontRightFrontLim + offset)))])
 
         self.resetCollisions()
 
@@ -225,26 +221,24 @@ class SnakeCollision:
 
             if dist < distThreshold:
                 closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeFront.x, snakeFront.y])
-                angleToPoint = self.calculateAngleToNearestPoint([snakeFront.x, snakeFront.y],
-                                                                 closestPoint) + offset - 90
-                if angleToPoint < -15:
-                    angleToPoint += 360
+                angleToPoint = self.calculateAngleToNearestPointV2(snakeCoordList, [snakeFront.x, snakeFront.y],
+                                                                   closestPoint)
 
                 # From -15deg to 45deg
-                if self.frontFrontLeftLim < angleToPoint <= self.frontLeftLim or obst.intersects(snakeFrontLeftLine):
+                if self.frontFrontLeftLim > angleToPoint >= self.frontLeftLim or obst.intersects(snakeFrontLeftLine):
                     self.frontLeftCollision = True
                     Logger.logg(
                         f"front left collision @closet point: {closestPoint} snake pos: {snakeFront.x}, {snakeFront.y}",
                         Logger.info)
                 # From 45 deg to 135deg
-                if self.frontRightFrontLim <= angleToPoint <= self.frontFrontLeftLim or obst.intersects(
+                if self.frontRightFrontLim >= angleToPoint >= self.frontFrontLeftLim or obst.intersects(
                         snakeFrontLeftLine) or obst.intersects(snakeFrontRightLine):
                     self.frontFrontCollision = True
                     Logger.logg(
                         f"front front collision @closet point: {closestPoint} snake pos: {snakeFront.x}, {snakeFront.y}",
                         Logger.info)
                 # From 135 deg to 195deg, takes the opposite
-                if self.frontRightLim <= angleToPoint < self.frontRightFrontLim or obst.intersects(snakeFrontRightLine):
+                if self.frontRightLim >= angleToPoint > self.frontRightFrontLim or obst.intersects(snakeFrontRightLine):
                     self.frontRightCollision = True
                     Logger.logg(
                         f"front right collision @closet point: {closestPoint} snake pos: {snakeFront.x}, {snakeFront.y}",
@@ -253,18 +247,16 @@ class SnakeCollision:
             dist2 = obst.distance(snakeMid)
             if dist2 < distThreshold:
                 closestPoint2 = self.getClosestPoint([x1, y1], [x2, y2], [snakeMid.x, snakeMid.y])
-                angleToPoint2 = self.calculateAngleToNearestPoint([snakeMid.x, snakeMid.y], closestPoint2) + offset
+                angleToPoint2 = self.calculateAngleToNearestPointV2(snakeCoordList, [snakeMid.x, snakeMid.y],
+                                                                    closestPoint2)
 
-                if angleToPoint2 < -15:
-                    angleToPoint2 += 360
-
-                # Checks from -15deg to 15deg
-                if self.midLeftMin <= angleToPoint2 <= self.midLeftMax:
+                # Checks from -75deg to -105deg
+                if self.midLeftMin >= angleToPoint2 >= self.midLeftMax:
                     self.midLeftCollision = True
                     Logger.logg(
                         f"front mid left collision @closet point: {closestPoint2} snake pos: {snakeMid.x}, {snakeMid.y}",
                         Logger.info)
-                # Checks 165deg to 195deg, takes the opposite
+                # Checks 75deg to 105deg, takes the opposite
                 if self.midRightMin <= angleToPoint2 <= self.midRightMax:
                     self.midRightCollision = True
                     Logger.logg(
@@ -311,6 +303,17 @@ class SnakeCollision:
             return True
         else:
             return False
+
+    def calculateAngleToNearestPointV2(self, snakeCoordList, fromPointm, toPoint):
+        vectorX = [snakeCoordList[1][0] - snakeCoordList[0][0], snakeCoordList[1][1] - snakeCoordList[0][1]]
+        vectorY = [toPoint[0] - fromPointm[0], toPoint[1] - fromPointm[1]]
+
+        xDoty = vectorX[0] * vectorY[0] + vectorX[1] * vectorY[1]
+        length = math.sqrt(vectorX[0] ** 2 + vectorX[1] ** 2) * math.sqrt(vectorY[0] ** 2 + vectorY[1] ** 2)
+        angle = math.acos(xDoty / length)
+        XxY = vectorX[0] * vectorY[1] - vectorX[1] * vectorY[0]
+        angle = angle * (XxY / abs(XxY))
+        return math.degrees(angle)
 
     def calculateAngleToNearestPoint(self, snakeCoord, pointCoord):
         """
