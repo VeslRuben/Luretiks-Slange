@@ -201,6 +201,16 @@ class SnakeCollision:
         snakeMid = Point(snakeCoordList[1][0], snakeCoordList[1][1])
         # snakeBack = Point(snakeCoordList[2][0], snakeCoordList[2][1])
 
+        snakeFrontLeftLine = LineString([(snakeFront.x, snakeFront.y),
+                                         (snakeFront.x + distThreshold * math.cos(math.radians(self.frontFrontLeftLim)),
+                                          snakeFront.y + distThreshold * math.sin(
+                                              math.radians(self.frontFrontLeftLim)))])
+        snakeFrontRightLine = LineString([(snakeFront.x, snakeFront.y),
+                                          (snakeFront.x + distThreshold * math.cos(
+                                              math.radians(self.frontRightFrontLim)),
+                                           snakeFront.y + distThreshold * math.sin(
+                                               math.radians(self.frontRightFrontLim)))])
+
         self.resetCollisions()
 
         for data in self.mazeLines:
@@ -222,13 +232,14 @@ class SnakeCollision:
                     angleToPoint += 360
 
                 # From -15deg to 45deg
-                if self.frontFrontLeftLim < angleToPoint <= self.frontLeftLim:
+                if self.frontFrontLeftLim < angleToPoint <= self.frontLeftLim or obst.intersects(snakeFrontLeftLine):
                     self.frontLeftCollision = True
                 # From 45 deg to 135deg
-                if self.frontRightFrontLim <= angleToPoint <= self.frontFrontLeftLim:
+                if self.frontRightFrontLim <= angleToPoint <= self.frontFrontLeftLim or obst.intersects(
+                        snakeFrontLeftLine) or obst.intersects(snakeFrontRightLine):
                     self.frontFrontCollision = True
                 # From 135 deg to 195deg, takes the opposite
-                if self.frontRightLim <= angleToPoint < self.frontRightFrontLim:
+                if self.frontRightLim <= angleToPoint < self.frontRightFrontLim or obst.intersects(snakeFrontRightLine):
                     self.frontRightCollision = True
 
             if obst.distance(snakeMid) < distThreshold:
