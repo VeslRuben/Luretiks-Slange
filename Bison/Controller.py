@@ -50,9 +50,10 @@ class Controller(threading.Thread):
         self.overrideMoving = True
         self.readyToMoveForward = False
         self.readyToMoveBackward = False
+        self.ampChanged = False
         self.deadBand = 100
         self.deadBandAngle = 60
-        self.collisionDistance = 100
+        self.collisionDistance = 80
         self.moving = False
         self.firstLoop = True
         self.i = 0
@@ -120,7 +121,7 @@ class Controller(threading.Thread):
                                lineList=self.lines,
                                expand_dis=100.0, path_resolution=10.0, max_iter=1000, goal_sample_rate=20,
                                connect_circle_dist=450,
-                               edge_dist=30)
+                               edge_dist=self.collisionDistance)
         self.rrtStar.lineList = self.lines
         self.rrtPathImage, self.finalPath = self.rrtStar.run(finishLoops=False)
         if self.finalPath is not None:
@@ -192,16 +193,20 @@ class Controller(threading.Thread):
                                      self.snakeCollision.frontLeftCollision]]
             if offset < 0:
                 offset += 360
+            c0 = 0
             for pos, piece, coll in zip(snakeCoordinates, self.pizzaSlices, pizzaSlicesCollision):
                 i = 0
+                c = 80
                 for startAngle, endAngle in piece:
                     if coll[i]:
                         color = (0, 0, 255)
                     else:
                         color = (0, 255, 0)
                     colorPic = drawSection(colorPic, tuple(pos), startAngle + offset - 90, endAngle + offset - 90,
-                                           color, radius=self.collisionDistance)
+                                           (c0, 0, c), radius=self.collisionDistance)
                     i += 1
+                    c *= 2
+                c0 += 255
         colorPic = cv2.cvtColor(colorPic, cv2.COLOR_BGR2RGB)
         self.notifyGui("UpdateImageEventR", colorPic)
         ##########################################
@@ -223,6 +228,12 @@ class Controller(threading.Thread):
         if self.moving:
             pass
         elif self.readyToMoveForward:
+            if self.ampChanged:
+                amp = None
+                with b.lock:
+                    amp = b.params[0]
+                self.snake.setAmplitude(amp)
+                self.ampChanged = False
             if snakeCoordinates:
                 if not self.snakeCollision.frontFrontCollision:
                     self.moving = self.snake.moveForward()
@@ -230,6 +241,12 @@ class Controller(threading.Thread):
                 else:
                     self.collisionHandling()
         elif self.readyToMoveBackward:
+            if self.ampChanged:
+                amp = None
+                with b.lock:
+                    amp = b.params[0]
+                self.snake.setAmplitude(amp)
+                self.ampChanged = False
             if snakeCoordinates:
                 if not self.snakeCollision.backBackCollision:
                     self.moving = self.snake.moveBacwards()
@@ -348,13 +365,17 @@ class Controller(threading.Thread):
             # Checking left sector
             elif self.snakeCollision.leftSectorCollision():
                 # Lateral shift right, ready to move backwards
+                self.snake.setAmplitude(15)
                 self.moving = self.snake.moveRight()
+                self.ampChanged = True
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = True
             # Checking right sector
             elif self.snakeCollision.rightSectorCollision():
                 # Lateral shift left, ready to move backwards
+                self.snake.setAmplitude(15)
                 self.moving = self.snake.moveLeft()
+                self.ampChanged = True
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = True
             # If only collision in front
@@ -389,13 +410,17 @@ class Controller(threading.Thread):
             # Checking left sector
             elif self.snakeCollision.leftSectorCollision():
                 # Reset moving flags, and lateral shift right
+                self.snake.setAmplitude(15)
                 self.moving = self.snake.moveRight()
+                self.ampChanged = True
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = False
             # Checking right sector
             elif self.snakeCollision.rightSectorCollision():
                 # Reset moving flags, and lateral shift left
+                self.snake.setAmplitude(15)
                 self.moving = self.snake.moveLeft()
+                self.ampChanged = True
                 self.readyToMoveBackward = False
                 self.readyToMoveForward = False
 
