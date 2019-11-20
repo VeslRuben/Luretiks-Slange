@@ -58,8 +58,10 @@ int servZero[5] = {90, 93, 97, 87, 99};
 // Booleans for movement
 boolean goingForward = false;
 boolean goingBackward = false;
-boolean rotateLeft = false;
-boolean rotateRight = false;
+boolean latLeft = false;
+boolean latRight = false;
+boolean rotCW = false;
+boolean rotCCW = false;
 
 /////////////////////////////////////////
 // SETUP
@@ -118,29 +120,45 @@ void loop()
       goingBackward = true;
       sendAliveMessage();
 
-    // If packet is v, straighten out, rotate left around its own axis
+    // If packet is v, straighten out, lateral shift left
     } else if (command == 'v') {
       Serial.println("Adjusting left");
       sendAliveMessage();
-      rotateLeft = true;
-      rotateRight = false;
-      goStraight();
+      latLeft = true;
+      latRight = false;
+      //goStraight();
 
-    // If packet is h, straighten out, rotate right around its own axis
+    // If packet is h, straighten out, lateral shift right
     } else if (command == 'h') {
       Serial.println("Adjusting right");
       sendAliveMessage();
-      rotateRight = true;
-      rotateLeft = false;
-      goStraight();
+      latRight = true;
+      latLeft = false;
+      //goStraight();
+
+    // If packet is m, rotate CW
+    } else if (command == 'm') {
+      Serial.println("Rotating CW");
+      sendAliveMessage();
+      rotCW = true;
+      rotCCW = false;
+      //goStraight();
+
+    // If packet is n, rotate CCW
+    } else if (command == 'n') {
+      Serial.println("Rotating CCW");
+      sendAliveMessage();
+      rotCCW = true;
+      rotCW = false;
+      //goStraight();
 
     // If packet is s, stop movement
     } else if (command == 's') {
       Serial.println("Stopping movement");
       goingForward = false;
       goingBackward = false;
-      rotateRight = false;
-      rotateLeft = false;
+      latRight = false;
+      latLeft = false;
       sendAliveMessage();
 
     // If packet is r, adjust everything straight
@@ -149,8 +167,8 @@ void loop()
       sendAliveMessage();
       goingForward = false;
       goingBackward = false;
-      rotateRight = false;
-      rotateLeft = false;
+      latRight = false;
+      latLeft = false;
       goStraight();
       sendDoneMessage();
 
@@ -212,23 +230,47 @@ void loop()
       sendDoneMessage();
       movementTimer = 0;
     }
-  } else if (rotateLeft) {
-    goLeft();
+  // If boolean latLeft is high, lateral shifts left one cycle
+  } else if (latLeft) {
+    lateralLeft();
     movementTimer++;
     if(movementTimer >= T) {
-      rotateLeft = false;
-      delay(10);
-      goStraight();
+      latLeft = false;
+      //delay(10);
+      //goStraight();
       sendDoneMessage();
       movementTimer = 0;
     }
-  } else if (rotateRight) {
-    goRight();
+  // If boolean latRight is high, lateral shifts right one cycle
+  } else if (latRight) {
+    lateralRight();
     movementTimer++;
     if(movementTimer >= T) {
-      rotateRight = false;
-      delay(10);
-      goStraight();
+      latRight = false;
+      //delay(10);
+      //goStraight();
+      sendDoneMessage();
+      movementTimer = 0;
+    }
+  // If boolean rotCW is high, rotates clockwise one cycle
+  } else if (rotCW) {
+    rotateCW();
+    movementTimer++;
+    if(movementTimer >= T) {
+      rotCW = false;
+      //delay(10);
+      //goStraight();
+      sendDoneMessage();
+      movementTimer = 0;
+    }
+  // If boolean rotCCW is high, rotates counter-clockwise one cycle
+  } else if (rotCCW) {
+    rotateCCW();
+    movementTimer++;
+    if(movementTimer >= T) {
+      rotCCW = false;
+      //delay(10);
+      //goStraight();
       sendDoneMessage();
       movementTimer = 0;
     }
@@ -307,9 +349,9 @@ void turn(int deg) {
 }
 
 /*
- * Roatates left around its own axis
+ * Lateral shifts left
  */
-void goLeft() {
+void lateralLeft() {
   for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(servZero[i * 2] + updateAngle(T, -i * rotatePhiV, A));
     if (i < 2) {
@@ -319,9 +361,9 @@ void goLeft() {
 }
 
 /*
- * Rotates right around its own axis
+ * Lateral shifts right
  */
-void goRight() {
+void lateralRight() {
   for (int i = 0; i < 3; i++) {
     myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * rotatePhiV, A));
     if (i < 2) {
@@ -331,13 +373,30 @@ void goRight() {
 }
 
 /*
- * Currently not in use
+ * Rotates Clockwise
  */
-void lateralShift() {
+void rotateCW() {
   for (int i = 0; i < 3; i++) {
-    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * lateralPhi, A));
-    if (i < 2) {
-      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, i * lateralPhi, A));
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, i * rotatePhiV, A));
+    if (i == 0) {
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, i * rotatePhiH, A));
+    } else if (i == 1) {
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, i * (rotatePhiH + M_PI), A));
+    }
+  }
+}
+
+/*
+ * Rotates Counter-Clockwise
+ */
+void rotateCCW() {
+  // Pass
+  for (int i = 0; i < 3; i++) {
+    myServo[i * 2].write(servZero[i * 2] + updateAngle(T, -i * rotatePhiV, A));
+    if (i == 0) {
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, -i * rotatePhiH , A));
+    } else if (i == 1) {
+      myServo[(i * 2) + 1].write(servZero[(i * 2) + 1] + updateAngle(T, -i * (rotatePhiH + M_PI) , A));
     }
   }
 }
