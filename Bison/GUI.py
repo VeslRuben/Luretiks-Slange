@@ -154,16 +154,18 @@ class StartFrame(wx.Frame):
         bntVBoxMidle = wx.BoxSizer(wx.VERTICAL)
 
         self.prepareMaze = wx.Button(panel, label="Prepare Maze", size=(130, 40))
-        self.prepareMaze.Bind(wx.EVT_BUTTON, self.OnPrepareMaze)
+        self.prepareMaze.Bind(wx.EVT_BUTTON, self.OnPrepareMazeSingle)
         self.prepareMaze.SetBackgroundColour("gray")
 
         self.findPath = wx.Button(panel, label="Find Path", size=(130, 40))
-        self.findPath.Bind(wx.EVT_BUTTON, self.OnFindPath)
+        self.findPath.Bind(wx.EVT_BUTTON, self.OnFindPathSingle)
         self.findPath.SetBackgroundColour("gray")
+        self.findPath.Disable()
 
         self.runBtn = wx.Button(panel, label="Run", size=(130, 40))
         self.runBtn.SetBackgroundColour("gray")
         self.runBtn.Bind(wx.EVT_BUTTON, self.OnRun)
+        self.runBtn.Disable()
 
         bntVBoxMidle.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
 
@@ -171,16 +173,18 @@ class StartFrame(wx.Frame):
         btnVBoxRight = wx.BoxSizer(wx.VERTICAL)
 
         self.prepareMaze2 = wx.Button(panel, label="Prepare Maze", size=(130, 40))
-        #bind....
-        self.prepareMaze.SetBackgroundColour("gray")
+        self.prepareMaze2.Bind(wx.EVT_BUTTON, self.OnPrepareMazeMulti)
+        self.prepareMaze2.SetBackgroundColour("gray")
 
         self.findPath2 = wx.Button(panel, label="Find Path", size=(130, 40))
-        #bind.....
-        self.prepareMaze.SetBackgroundColour("gray")
+        self.findPath2.Bind(wx.EVT_BUTTON, self.OnFindPathMulti)
+        self.findPath2.SetBackgroundColour("gray")
+        self.findPath2.Disable()
 
         self.seekAndDestroy = wx.Button(panel, label="Seek and Destroy", size=(130, 40))
-        #bind...
-        self.prepareMaze.SetBackgroundColour("gray")
+        self.seekAndDestroy.Bind(wx.EVT_BUTTON, self.OnSeekAndDestroy)
+        self.seekAndDestroy.SetBackgroundColour("gray")
+        self.seekAndDestroy.Disable()
 
         btnVBoxRight.AddMany([(self.prepareMaze2, 1), (self.findPath2, 1), (self.seekAndDestroy, 1)])
 
@@ -261,6 +265,10 @@ class StartFrame(wx.Frame):
         with b.lock:
             b.runFlag = not b.runFlag
 
+    def OnSeekAndDestroy(self, event=None):
+        with b.lock:
+            b.seekAndDestroyFlag = not b.seekAndDestroyFlag
+
     def OnManualBtn(self, event=None):
         # warning dialog
         if not self.controlledManually:
@@ -271,19 +279,37 @@ class StartFrame(wx.Frame):
         self.logTextField.AppendText(f"Snake manual mode: {self.controlledManually}\n")
         Logger.logg(f"GUI manual control: {self.controlledManually}", Logger.info)
 
-    def OnPrepareMaze(self, event=None):
+    def OnPrepareMazeSingle(self, event=None):
         # warning dialog
         wx.MessageBox('Make sure the maze is empty', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
-            b.prepMaze = True
-        Logger.logg("GUI prepare maze btn preset", Logger.info)
+            b.prepMazeSingle = True
+        self.findPath.Enable()
+        Logger.logg("GUI prepare maze btn pressed", Logger.info)
 
-    def OnFindPath(self, event=None):
+    def OnPrepareMazeMulti(self, event=None):
+        # Warning dialog
+        wx.MessageBox('Make sure the maze is empty', 'Info', wx.OK | wx.ICON_INFORMATION)
+        with b.lock:
+            b.prepMazeMulti = True
+        self.findPath2.Enable()
+        Logger.logg("Gui prepare maze btn pressed", Logger.info)
+
+    def OnFindPathSingle(self, event=None):
         # warning dialog
         wx.MessageBox('Put the snake and the target in the maze', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
-            b.findPathFlag = True
+            b.findPathSingleFlag = True
+        self.runBtn.Enable()
         Logger.logg("GUI find path btn preset", Logger.info)
+
+    def OnFindPathMulti(self, event=None):
+        # Warning Dialog
+        wx.MessageBox('Put the snake and the target in the maze', 'Info', wx.OK | wx.ICON_INFORMATION)
+        with b.lock:
+            b.findPathMultiFlag = True
+        self.seekAndDestroy.Enable()
+        Logger.logg("GUI Find Path Multi btn pressed", Logger.info)
 
     def OnClose(self, event=None):
         """

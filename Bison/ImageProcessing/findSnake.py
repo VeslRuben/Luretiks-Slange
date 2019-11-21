@@ -9,7 +9,6 @@ import imutils
 class FindSnake:
 
     def __init__(self):
-
         pass
 
     def LocateSnake(self, frame):

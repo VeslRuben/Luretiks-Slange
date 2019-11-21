@@ -7,12 +7,15 @@ class Broker:
     lock = Lock()
     moveLock = Lock()
     # Flags ##############
-    prepMaze = False
+    prepMazeSingle = False
+    prepMazeMulti = False
     quitFlag = False
-    findPathFlag = False
+    findPathSingleFlag = False
+    findPathMultiFlag = False
     startFlag = False
     stopFlag = False
     runFlag = False
+    seekAndDestroyFlag = False
     manualControlFlag = False
     autoFlag = False
     updateParamFlag = False
