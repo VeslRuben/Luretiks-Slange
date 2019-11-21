@@ -22,4 +22,4 @@ class Broker:
     ##########################
 
     # Parameter update
-    params = [30, 10]
+    params = [30, 12]

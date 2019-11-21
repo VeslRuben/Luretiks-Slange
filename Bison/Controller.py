@@ -50,10 +50,12 @@ class Controller(threading.Thread):
         self.overrideMoving = True
         self.readyToMoveForward = False
         self.readyToMoveBackward = False
+        self.cmdDoneTimer = 5
+        self.lastCmdSendt = 0
         self.ampChanged = False
-        self.deadBand = 100
-        self.deadBandAngle = 60
-        self.collisionDistance = 60
+        self.deadBand = 80
+        self.deadBandAngle = 50
+        self.collisionDistance = 75
         self.moving = False
         self.firstLoop = True
         self.i = 0
@@ -120,7 +122,7 @@ class Controller(threading.Thread):
                                rand_area_y=[0, 1100],
                                lineList=self.lines,
                                expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=20,
-                               connect_circle_dist=450,
+                               connect_circle_dist=700,
                                edge_dist=self.collisionDistance)
         self.rrtStar.lineList = self.lines
         self.rrtPathImage, self.finalPath = self.rrtStar.run(finishLoops=False)
@@ -209,6 +211,9 @@ class Controller(threading.Thread):
 
         # returns if the snake is not ready to receive a command ####
         cmdDone = self.snake.isCommandDone()
+        if self.moving and self.lastCmdSendt + self.cmdDoneTimer < time.time():
+            self.overrideMoving = True
+            Logger.logg(f"No done message reacevd in {self.cmdDoneTimer} sec, overiding movment", Logger.info)
         """
         If the snake returns that the last command is done, sets moving flag to false again.
         On the first loop this will pass because of OverrideMoving-flag to set moving to false.
@@ -216,6 +221,7 @@ class Controller(threading.Thread):
         if cmdDone or self.overrideMoving:
             self.moving = False
             self.overrideMoving = False
+            self.lastCmdSendt = time.time()
 
         """
         Checks if the snake is in movement, if not in movement, checks if it is ready to move.
@@ -228,8 +234,9 @@ class Controller(threading.Thread):
                 amp = None
                 with b.lock:
                     amp = b.params[0]
-                self.snake.setAmplitude(amp)
+                acc = self.snake.setAmplitude(amp)
                 self.ampChanged = False
+                Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
             if snakeCoordinates:
                 if not self.snakeCollision.frontFrontCollision:
                     self.moving = self.snake.moveForward()
@@ -241,7 +248,8 @@ class Controller(threading.Thread):
                 amp = None
                 with b.lock:
                     amp = b.params[0]
-                self.snake.setAmplitude(amp)
+                acc = self.snake.setAmplitude(amp)
+                Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
                 self.ampChanged = False
             if snakeCoordinates:
                 if not self.snakeCollision.backBackCollision:
@@ -351,6 +359,7 @@ class Controller(threading.Thread):
 
     def collisionHandling(self):
         # Checking for front
+        Logger.logg(f"Executing collison comand", Logger.info)
         if self.snakeCollision.frontFrontCollision:
             # Checking both sectors at once
             if self.snakeCollision.bothSectorCollision():
@@ -361,7 +370,8 @@ class Controller(threading.Thread):
             # Checking left sector
             elif self.snakeCollision.leftSectorCollision():
                 # Lateral shift right, ready to move backwards
-                self.snake.setAmplitude(15)
+                acc = self.snake.setAmplitude(15)
+                Logger.logg(f"ampletude turnd down for lateral shift right, acc: {acc}", Logger.cmd)
                 self.moving = self.snake.moveRight()
                 self.ampChanged = True
                 self.readyToMoveForward = False
@@ -369,7 +379,8 @@ class Controller(threading.Thread):
             # Checking right sector
             elif self.snakeCollision.rightSectorCollision():
                 # Lateral shift left, ready to move backwards
-                self.snake.setAmplitude(15)
+                acc = self.snake.setAmplitude(15)
+                Logger.logg(f"ampletude turnd down for lateral shift left, acc: {acc}", Logger.cmd)
                 self.moving = self.snake.moveLeft()
                 self.ampChanged = True
                 self.readyToMoveForward = False
@@ -406,7 +417,8 @@ class Controller(threading.Thread):
             # Checking left sector
             elif self.snakeCollision.leftSectorCollision():
                 # Reset moving flags, and lateral shift right
-                self.snake.setAmplitude(15)
+                acc = self.snake.setAmplitude(15)
+                Logger.logg(f"ampletude turnd down for lateral shift right, acc: {acc}", Logger.cmd)
                 self.moving = self.snake.moveRight()
                 self.ampChanged = True
                 self.readyToMoveForward = False
@@ -414,7 +426,8 @@ class Controller(threading.Thread):
             # Checking right sector
             elif self.snakeCollision.rightSectorCollision():
                 # Reset moving flags, and lateral shift left
-                self.snake.setAmplitude(15)
+                acc = self.snake.setAmplitude(15)
+                Logger.logg(f"ampletude turnd down for lateral shift left, acc: {acc}", Logger.cmd)
                 self.moving = self.snake.moveLeft()
                 self.ampChanged = True
                 self.readyToMoveBackward = False
