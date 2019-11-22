@@ -177,7 +177,6 @@ class Controller(threading.Thread):
 
         soplebil.collect()
 
-
     def moveSnakeManually(self):
         """
         Sets the snake in manual mode. Makes it possible to steer the snake manually.
