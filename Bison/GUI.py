@@ -1,5 +1,4 @@
 import time
-
 import cv2
 import wx
 import numpy as np
@@ -108,10 +107,6 @@ class StartFrame(wx.Frame):
         super(StartFrame, self).__init__(*args, **kw)
         self.Maximize(True)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-
-        # variabels for threding #################
-
-        ##########################################
 
         # Maual controll
         self.controlledManually = False
