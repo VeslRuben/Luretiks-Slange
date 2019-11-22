@@ -13,7 +13,7 @@ from Bison.ImageProcessing.findTarget import FindTarget
 from Bison.ImageProcessing.maze_recogn import mazeRecognizer
 from Bison.Movement.Snake import Snake
 from Bison.Movement.snakeController import SnakeController, SnakeCollision
-from Bison.Pathfinding.rrt_star import RRTStar
+from Bison.Pathfinding.rrt_star import RRTStar, multiRRTStar
 from Bison.logger import Logger
 from Bison.ImageProcessing.Dead import Dead
 
@@ -40,6 +40,9 @@ class Controller(threading.Thread):
 
         # RRT* Variabels ##################
         self.rrtStar = None
+        self.multiRrtStar = multiRRTStar(rand_area_x=[500, 1600], rand_area_y=[0, 1100],
+                               lineList=None, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+                               edge_dist=30, connect_circle_dist=800, start_point=None, listOfDeadEnds=None)
         self.rrtPathImage = None
         self.findSnake = FindSnake()
         self.finTarget = FindTarget()
@@ -105,7 +108,7 @@ class Controller(threading.Thread):
         Updates events in GUI to show a picture with the maze and found path.
         :return:
         """
-        self.notifyGui("UpdateTextEvent", "Finding path...")
+        self.notifyGui("UpdateTextEvent", "Finding path single-target")
         temp = None
         startX = None
         startY = None
@@ -144,7 +147,36 @@ class Controller(threading.Thread):
         soplebil.collect()
 
     def findPathMulti(self):
-        pass
+        self.notifyGui("UpdateTextEvent", "Finding path multi-target. This can take some time")
+        temp = None
+        startX = None
+        startY = None
+
+        try:
+            cords, temp = self.findSnake.LocateSnake(self.cam.takePicture())
+            startX = cords[0][0]
+            startY = cords[0][1]
+        except TypeError:
+            self.notifyGui("UpdateTextEvent", "Could not find snake")
+
+        self.multiRrtStar.start_point = [startX, startY]
+
+        self.finalPath = self.multiRrtStar.run()
+
+        if self.finalPath is not None:
+            self.notifyGui("UpdateTextEvent", "Path found!")
+        else:
+            self.notifyGui("UpdateTextEvent", "Could not find path")
+
+        self.traveledPath = []
+        bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0,0,255))
+
+
+        self.notifyGui("UpdateImageEventL", temp)
+        self.notifyGui("UpdateImageEventR", bilde)
+
+        soplebil.collect()
+
 
     def moveSnakeManually(self):
         """
@@ -181,6 +213,8 @@ class Controller(threading.Thread):
         self.snakeCollision.mazeLines = self.lines
 
         self.listOfDeadEnds, picDeadEnd = self.deadEnds.getDeadEnds2(self.cam.takePicture())
+        self.multiRrtStar.lineList = self.lines
+        self.multiRrtStar.listOfDeadEnds = self.listOfDeadEnds
 
         self.notifyGui("UpdateImageEventR", self.lineImageArray)
         self.notifyGui("UpdateImageEventL", picDeadEnd)
