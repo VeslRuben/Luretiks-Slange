@@ -14,8 +14,6 @@ from Bison.ImageProcessing.Dead import Dead
 from Bison.ImageProcessing.Draw import drawLines
 import cv2
 
-from Bison.GUI import CustomEvent
-
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../RRT/")
 
@@ -333,10 +331,6 @@ if __name__ == "__main__":
         endPoints = [[720, 450], [840, 870], [1250, 250], [1400, 150]]
 
         finalPath = []
-        # rrt_star = RRTStar(start=[startPoints[3][0], startPoints[3][1]], goal=[endPoints[3][0], endPoints[3][1]], rand_area_x=[500, 1600], rand_area_y=[0, 1100],
-        #                   lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
-        #                   edge_dist=30, connect_circle_dist=450)
-
         rrt_star = None
 
         for (data1, data2) in zip(startPoints, endPoints):

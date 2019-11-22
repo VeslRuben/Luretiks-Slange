@@ -12,6 +12,7 @@ from Bison.ImageProcessing.camera import Camera
 from Bison.ImageProcessing.findSnake import FindSnake
 from Bison.ImageProcessing.findTarget import FindTarget
 from Bison.ImageProcessing.maze_recogn import mazeRecognizer
+from Bison.ImageProcessing.cheakPathForObs import cheakPathForObs
 from Bison.Movement.Snake import Snake
 from Bison.Movement.snakeController import SnakeController, SnakeCollision
 from Bison.Pathfinding.rrt_star import RRTStar, multiRRTStar
@@ -74,6 +75,8 @@ class Controller(threading.Thread):
         self.traveledPath = []
         self.cam = Camera()
         self.snake = Snake("http://192.168.137.102", "192.168.137.167")
+        self.snake.setFrameSize(7)
+        self.snakeObstacle = cheakPathForObs()
         time.sleep(1)
         with b.lock:
             print(self.snake.setAmplitude(b.params[0]))
@@ -287,7 +290,12 @@ class Controller(threading.Thread):
         Checks if the snake is in movement, if not in movement, checks if it is ready to move.
         If ready to move, sends command to snake to move forward one cycle.
         """
-        if self.moving:
+        snakePic = self.snake.takePicture()
+
+        colliding = self.snakeObstacle.FindObsInPath(snakePic)
+        if colliding:
+            self.notifyGui("UpdateImageEventL", snakePic)
+        elif self.moving:
             pass
         elif self.readyToMoveForward:
             if self.ampChanged:
