@@ -337,6 +337,8 @@ if __name__ == "__main__":
         #                   lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
         #                   edge_dist=30, connect_circle_dist=450)
 
+        rrt_star = None
+
         for (data1, data2) in zip(startPoints, endPoints):
             startx = data1[0]
             starty = data1[1]
@@ -399,6 +401,8 @@ if __name__ == "__main__":
                 finalFinalPath.append(data)
 
         sisteBilde = drawLines(bilde, finalFinalPath, (255, 0, 0))
+
+        cv2.imwrite("finalpicture.jpg", sisteBilde)
 
         cv2.imshow("Yolo", sisteBilde)
         cv2.waitKey()

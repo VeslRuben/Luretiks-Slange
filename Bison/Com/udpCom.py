@@ -44,7 +44,7 @@ class UdpConnection:
         return data
 
 if __name__ == '__main__':
-    s = UdpConnection("192.168.137.76")
+    s = UdpConnection("192.168.137.167")
 
     while True:
         f = input(': ')
