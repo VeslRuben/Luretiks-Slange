@@ -1,6 +1,7 @@
 import math
 from shapely.geometry import LineString, Point
 from Bison.logger import Logger
+import vectormath as Vector
 
 
 class SnakeController:

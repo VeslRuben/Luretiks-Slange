@@ -16,9 +16,10 @@ class Camera:
         :param camNr: Camra to use, 0 is the standard webCam og te PC
         :return: None
         """
-        Camera.cam = cv2.VideoCapture(camNr)
+        Camera.cam = cv2.VideoCapture(camNr, cv2.CAP_DSHOW)
         Camera.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         Camera.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        Camera.cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
 
     @staticmethod
     def releaseCam():
