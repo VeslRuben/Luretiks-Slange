@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import imutils
-from scipy.spatial import distance as dist
 from Bison.Movement.Snake import Snake
 
 
@@ -11,12 +9,10 @@ class cheakPathForObs:
         pass
 
     def FindObsInPath(self, bilde):
-        tashHold = 61200000
+        threshold = (bilde.shape[0] * bilde.shape[1] * 255) / 2
         bilde = cv2.cvtColor(bilde, cv2.COLOR_RGB2BGR)
         notWhiteLower = (0, 60, 0)
         notWhiteUpper = (255, 255, 255)
-        yelowLower = (20, 100, 100)
-        yellowHiger = (30, 255, 255)
 
         blurred = cv2.GaussianBlur(bilde, (11, 11), 0)
         color = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -24,12 +20,11 @@ class cheakPathForObs:
         mask = cv2.dilate(mask, None, iterations=3)
         mask = cv2.erode(mask, None, iterations=3)
         mask = np.array(mask)
-        if np.sum(mask) > tashHold:
-            print(np.sum(mask))
-            return "marcus ER SMART"
 
-
-
+        if np.sum(mask) > threshold:
+            return True
+        else:
+            return False
 
 
 if __name__ == "__main__":

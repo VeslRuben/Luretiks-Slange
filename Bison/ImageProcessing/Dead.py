@@ -1,8 +1,5 @@
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
-import imutils
-from shapely.geometry import LineString
 from Bison.ImageProcessing.camera import Camera
 import os
 
