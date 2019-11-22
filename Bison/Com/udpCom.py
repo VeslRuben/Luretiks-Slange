@@ -1,6 +1,5 @@
 import socket
 import time
-from Bison.logger import Logger
 
 
 class UdpConnection:

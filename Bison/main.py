@@ -1,4 +1,4 @@
-from Bison.GUI import GUI, CustomEvent
+from Bison.GUI import GUI
 from Bison.Controller import Controller
 from Bison.logger import Logger
 

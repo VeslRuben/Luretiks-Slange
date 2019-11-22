@@ -1,9 +1,6 @@
-# import the necessary packages
-from collections import deque
 import cv2
 import imutils
 from scipy.spatial import distance as dist
-from Bison.Com.videoStream import VideoStream
 from Bison.ImageProcessing.camera import Camera
 
 
