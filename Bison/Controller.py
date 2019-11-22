@@ -1,7 +1,8 @@
 import gc as soplebil
+import math
 import threading
 import time
-
+import vectormath as Vector
 import cv2
 
 from Bison.Broker import Broker as b
@@ -41,8 +42,9 @@ class Controller(threading.Thread):
         # RRT* Variabels ##################
         self.rrtStar = None
         self.multiRrtStar = multiRRTStar(rand_area_x=[500, 1600], rand_area_y=[0, 1100],
-                               lineList=None, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
-                               edge_dist=30, connect_circle_dist=800, start_point=None, listOfDeadEnds=None)
+                                         lineList=None, expand_dis=100.0, path_resolution=10.0, max_iter=2000,
+                                         goal_sample_rate=30,
+                                         edge_dist=30, connect_circle_dist=800, start_point=None, listOfDeadEnds=None)
         self.rrtPathImage = None
         self.findSnake = FindSnake()
         self.finTarget = FindTarget()
@@ -57,9 +59,11 @@ class Controller(threading.Thread):
         self.overrideMoving = True
         self.readyToMoveForward = False
         self.readyToMoveBackward = False
+        self.targetAccuaierd = False
         self.cmdDoneTimer = 5
         self.lastCmdSent = 0
         self.ampChanged = False
+        self.seekDistance = 200
         self.deadBand = 80
         self.deadBandAngle = 50
         self.collisionDistance = 75
@@ -118,6 +122,7 @@ class Controller(threading.Thread):
             startY = cords[0][1]
         except TypeError:
             self.notifyGui("UpdateTextEvent", "Could not find snake")
+            return
         try:
             d, frame, radius, center = self.finTarget.getTarget(self.cam.takePicture())
             goalX = center[0]
@@ -146,6 +151,19 @@ class Controller(threading.Thread):
 
         soplebil.collect()
 
+    def prepMazeMulti(self):
+        self.notifyGui("UpdateTextEvent", "Preparing Maze")
+        self.lines, self.lineImageArray = self.maze.findMaze()
+        self.snakeCollision.mazeLines = self.lines
+
+        self.listOfDeadEnds, picDeadEnd = self.deadEnds.getDeadEnds2(self.cam.takePicture())
+        self.multiRrtStar.lineList = self.lines
+        self.multiRrtStar.listOfDeadEnds = self.listOfDeadEnds
+
+        self.notifyGui("UpdateImageEventR", self.lineImageArray)
+        self.notifyGui("UpdateImageEventL", cv2.cvtColor(picDeadEnd, cv2.COLOR_BGR2RGB))
+        self.notifyGui("UpdateTextEvent", "Maze Ready")
+
     def findPathMulti(self):
         self.notifyGui("UpdateTextEvent", "Finding path multi-target. This can take some time")
         temp = None
@@ -158,25 +176,28 @@ class Controller(threading.Thread):
             startY = cords[0][1]
         except TypeError:
             self.notifyGui("UpdateTextEvent", "Could not find snake")
+            return
 
         self.multiRrtStar.start_point = [startX, startY]
-
-        self.finalPath = self.multiRrtStar.run()
+        try:
+            self.finalPath = self.multiRrtStar.run()
+        except TypeError:
+            self.notifyGui("UpdateTextEvent", "Could not find path")
+            return
 
         if self.finalPath is not None:
             self.notifyGui("UpdateTextEvent", "Path found!")
         else:
             self.notifyGui("UpdateTextEvent", "Could not find path")
+            return
 
         self.traveledPath = []
-        bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0,0,255))
+        bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0, 0, 255))
 
-
-        self.notifyGui("UpdateImageEventL", temp)
+        self.notifyGui("UpdateImageEventL", cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
         self.notifyGui("UpdateImageEventR", bilde)
 
         soplebil.collect()
-
 
     def moveSnakeManually(self):
         """
@@ -206,19 +227,6 @@ class Controller(threading.Thread):
                 elif b.moveCmd == "r":
                     self.snake.reset()
                 b.moveCmd = ""
-
-    def prepMazeMulti(self):
-        self.notifyGui("UpdateTextEvent", "Preparing Maze")
-        self.lines, self.lineImageArray = self.maze.findMaze()
-        self.snakeCollision.mazeLines = self.lines
-
-        self.listOfDeadEnds, picDeadEnd = self.deadEnds.getDeadEnds2(self.cam.takePicture())
-        self.multiRrtStar.lineList = self.lines
-        self.multiRrtStar.listOfDeadEnds = self.listOfDeadEnds
-
-        self.notifyGui("UpdateImageEventR", self.lineImageArray)
-        self.notifyGui("UpdateImageEventL", picDeadEnd)
-        self.notifyGui("UpdateTextEvent", "Maze Ready")
 
     def autoMode(self):
         pass
@@ -538,6 +546,12 @@ class Controller(threading.Thread):
             self.overrideMoving = False
             self.lastCmdSent = time.time()
 
+        endPoint = self.finalPath[self.j][len(self.finalPath[self.j]) - 1]
+        angleToEnd = self.snakeCollision.calculateAngleToNearestPointV2(snakeCoordinates, snakeCoordinates[1],
+                                                                        endPoint)
+        snakToEndVektor = (endPoint[0] - snakeCoordinates[1][0], endPoint[1] - snakeCoordinates[1][1])
+        lenSnakToEndVektor = math.sqrt(snakToEndVektor[0] ** 2 + snakToEndVektor[1] ** 2)
+
         """
         Checks if the snake is in movement, if not in movement, checks if it is ready to move.
         If ready to move, sends command to snake to move forward one cycle.
@@ -572,6 +586,16 @@ class Controller(threading.Thread):
                     self.readyToMoveBackward = False
                 else:
                     self.collisionHandling()
+        elif self.targetAccuaierd:
+            pass
+        # Checks if the snake has reached the a dead end
+        elif self.i >= len(self.finalPath[self.j]) - 2 and lenSnakToEndVektor < self.seekDistance:
+            if abs(angleToEnd) < 10:
+                self.targetAccuaierd = self.tagetAccu()
+                self.j += 1
+                self.i = 1
+            else:
+                self.snake.turn(self.snakeController.currentAngle + angleToEnd)
         else:
             lineStart = self.finalPath[self.j][self.i]
             lineEnd = self.finalPath[self.j][self.i + 1]
@@ -617,16 +641,6 @@ class Controller(threading.Thread):
                     if self.snakeController.intersect(finishLine[0], finishLine[1], snakeLine[0], snakeLine[1]):
                         self.i += 1
 
-                    # Checks if the snake has reached the goal
-                    if self.i >= len(self.finalPath[self.j]) - 1:
-                        self.snake.stop()
-                        print("Stop")
-                        Logger.logg("Snake reached goal", Logger.info)
-                        self.firstLoop = False
-                        with b.lock:
-                            b.runFlag = False
-                            self.i = 0
-
                     """ Moving logic"""
                     theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
                     distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
@@ -671,6 +685,14 @@ class Controller(threading.Thread):
 
                     # Appends the new position of the snake to its traveled path
                     self.traveledPath.append(snakePointF)
+
+    def tagetAccu(self) -> bool:
+        pic = self.snake.takePicture()
+        temp = self.finTarget.getTarget(pic)
+        if temp:
+            return True
+        else:
+            return False
 
     def run(self) -> None:
         """

@@ -1,6 +1,5 @@
 from threading import Lock
 
-
 class Broker:
     # Locks##############
     quitLock = Lock()
