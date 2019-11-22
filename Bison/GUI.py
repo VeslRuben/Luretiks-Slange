@@ -5,6 +5,7 @@ import wx
 import numpy as np
 from Bison.Broker import Broker as b
 from Bison.logger import Logger
+import wx.lib.agw.gradientbutton as GB
 
 UpdateImageEventR = wx.NewEventType()
 EVT_UPDATE_IMAGE_R = wx.PyEventBinder(UpdateImageEventR, 1)
@@ -113,8 +114,7 @@ class StartFrame(wx.Frame):
 
         ##########################################
 
-        # Maual controll
-        self.controlledManually = False
+        # show some image details
 
         # Update events #######################
         self.Bind(EVT_UPDATE_IMAGE_R, self.OnNewImageR)
@@ -124,10 +124,18 @@ class StartFrame(wx.Frame):
         #######################################
 
         panel = wx.Panel(self)
-        panel.SetBackgroundColour("gray")
+        #panel.SetBackgroundColour("gray")
+        image_file = r'C:\Users\marcu\PycharmProjects\Luretriks-Slange\Pictures\BlueShit.jpg'
+        bmp1 = wx.Image(
+            image_file,
+            wx.BITMAP_TYPE_ANY).ConvertToBitmap()
+        # image's upper left corner anchors at panel
+        #coordinates (0, 0)
+        self.bitmap1 = wx.StaticBitmap(
+        panel, -1, bmp1, (0, 0))
 
         outerGrid = wx.FlexGridSizer(2, 0, 10, 10)
-        topGrid = wx.FlexGridSizer(0, 2, 10, 10)
+        botGrid = wx.FlexGridSizer(0, 2, 10, 10)
 
         # Top  Buttons #############################
         bntHBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -135,68 +143,63 @@ class StartFrame(wx.Frame):
         # left butons
         bntVBoxLeft = wx.BoxSizer(wx.VERTICAL)
 
-        self.manualControl = wx.Button(panel, label="Manual Override", size=(130, 40))
+        self.manualControl = wx.Button(panel, label="Manual Override", size=(130, 50))
         self.manualControl.Bind(wx.EVT_BUTTON, self.OnManualBtn)
         self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.manualControl.SetBackgroundColour("gray")
 
-        self.startBtn = wx.Button(panel, label="Update Parameters", size=(130, 40))
-        self.startBtn.Bind(wx.EVT_BUTTON, self.OnUpdateParametersBtn)
-        self.startBtn.SetBackgroundColour("gray")
+        self.updateParam = GB.GradientButton(panel, label="Update Parameters", size=(130, 50))
+        self.updateParam.Bind(wx.EVT_BUTTON, self.OnUpdateParametersBtn)
+        self.updateParam.SetBackgroundColour("gray")
 
-        self.stopBtn = wx.Button(panel, label="Stop", size=(130, 40))
+        self.stopBtn = GB.GradientButton(panel, label="Stop", size=(130, 50))
         self.stopBtn.SetBackgroundColour("gray")
         self.stopBtn.Bind(wx.EVT_BUTTON, self.OnStopBtn)
-
-        bntVBoxLeft.AddMany([(self.manualControl, 1), (self.startBtn, 1), (self.stopBtn, 1)])
 
         # middel butons
         bntVBoxMidle = wx.BoxSizer(wx.VERTICAL)
 
-        self.prepareMaze = wx.Button(panel, label="Prepare Maze", size=(130, 40))
+        self.prepareMaze = GB.GradientButton(panel, label="Prepare Maze", size=(130, 50))
         self.prepareMaze.Bind(wx.EVT_BUTTON, self.OnPrepareMaze)
-        self.prepareMaze.SetBackgroundColour("gray")
 
-        self.findPath = wx.Button(panel, label="Find Path", size=(130, 40))
+        self.findPath = GB.GradientButton(panel, label="Find Path", size=(130, 50))
         self.findPath.Bind(wx.EVT_BUTTON, self.OnFindPath)
         self.findPath.SetBackgroundColour("gray")
 
-        self.runBtn = wx.Button(panel, label="Run", size=(130, 40))
+        self.runBtn = GB.GradientButton(panel, label="Run", size=(130, 50))
         self.runBtn.SetBackgroundColour("gray")
         self.runBtn.Bind(wx.EVT_BUTTON, self.OnRun)
 
-        bntVBoxMidle.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
-
+        bntVBoxMidle.AddMany([(self.runBtn, 1), (self.findPath, 1), (self.updateParam, 1)])
+        bntVBoxLeft.AddMany([(self.stopBtn, 1), (self.prepareMaze, 1), (self.manualControl, 1)])
         # Right buttons
         btnVBoxRight = wx.BoxSizer(wx.VERTICAL)
 
-        self.prepareMaze2 = wx.Button(panel, label="Prepare Maze", size=(130, 40))
-        #bind....
-        self.prepareMaze.SetBackgroundColour("gray")
+        self.prepareMaze2 = GB.GradientButton(panel, label="Prepare Maze", size=(130, 40))
+        # bind....
 
-        self.findPath2 = wx.Button(panel, label="Find Path", size=(130, 40))
-        #bind.....
-        self.prepareMaze.SetBackgroundColour("gray")
+        self.findPath2 = GB.GradientButton(panel, label="Find Path", size=(130, 40))
+        # bind.....
 
-        self.seekAndDestroy = wx.Button(panel, label="Seek and Destroy", size=(130, 40))
-        #bind...
+        self.seekAndDestroy = GB.GradientButton(panel, label="Seek and Destroy", size=(130, 40))
+        # bind...
         self.prepareMaze.SetBackgroundColour("gray")
 
         btnVBoxRight.AddMany([(self.prepareMaze2, 1), (self.findPath2, 1), (self.seekAndDestroy, 1)])
 
-        bntHBox.AddMany([(bntVBoxLeft, 1, wx.TOP, 50), (bntVBoxMidle, 1, wx.TOP, 50), (btnVBoxRight, 1, wx.TOP, 50)])
+        bntHBox.AddMany([(bntVBoxLeft, 0, wx.TOP, 10), (bntVBoxMidle, 0, wx.TOP, 10), (btnVBoxRight, 0, wx.TOP, 10)])
         #################################################
-        topGrid.Add(bntHBox, 1, wx.EXPAND | wx.LEFT, 50)
+        botGrid.Add(bntHBox, 1, wx.ALIGN_LEFT | wx.LEFT, 10)
 
         # Text feeld ####################################
-        self.logTextField = wx.TextCtrl(panel, value="", size=(800, 390), style=wx.TE_MULTILINE)
+        self.logTextField = wx.TextCtrl(panel, value="", size=(820, 390), style=wx.TE_MULTILINE)
 
-        topGrid.Add(self.logTextField, 1, wx.ALIGN_RIGHT | wx.RIGHT | wx.TOP, 10)
+        botGrid.Add(self.logTextField, 1, wx.ALIGN_RIGHT|wx.LEFT, 610)
         #################################################
-        topGrid.AddGrowableRow(0)
-        topGrid.AddGrowableCol(1)
+        botGrid.AddGrowableRow(0)
+        botGrid.AddGrowableCol(1)
 
-        outerGrid.Add(topGrid, 1, wx.EXPAND)
+
 
         # create 2 videosreams on the right side##########
         videoVBox = wx.BoxSizer(wx.HORIZONTAL)
@@ -206,10 +209,12 @@ class StartFrame(wx.Frame):
         image = wx.ImageFromBuffer(w, h, array)
         self.imgL = ImagePanel(image, panel, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT, size=(w, h))
         self.imgR = ImagePanel(image, panel, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT, size=(w, h))
-        videoVBox.Add(self.imgL, 1, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.RIGHT, 10)
-        videoVBox.Add(self.imgR, 1, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT)
-        outerGrid.Add(videoVBox, 1, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.BOTTOM, 5)
+        videoVBox.Add(self.imgL, 1, wx.ALIGN_TOP | wx.ALIGN_RIGHT | wx.RIGHT, 100)
+        videoVBox.Add(self.imgR, 1, wx.ALIGN_TOP | wx.ALIGN_RIGHT)
+        outerGrid.Add(videoVBox, 1, wx.ALIGN_TOP | wx.ALIGN_RIGHT | wx.BOTTOM, 10)
         ################################################
+
+        outerGrid.Add(botGrid, 1, wx.ALIGN_LEFT)
 
         outerGrid.AddGrowableRow(0)
         outerGrid.AddGrowableCol(0)

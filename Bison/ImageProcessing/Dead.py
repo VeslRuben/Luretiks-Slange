@@ -142,7 +142,7 @@ class Dead:
         res3 = cv2.matchTemplate(img_gray,template4,cv2.TM_CCOEFF_NORMED)
         res4 = cv2.matchTemplate(img_gray,template5,cv2.TM_CCOEFF_NORMED)
         res5 = cv2.matchTemplate(img_gray,template6,cv2.TM_CCOEFF_NORMED)"""
-        threshold = 0.82
+        threshold = 0.75
 
         # loc = np.where( res4 >= threshold)# and np.where(res1 >= threshold) and np.where(res2 >= threshold) and np.where(res3 >= threshold)
 
@@ -198,15 +198,15 @@ class Dead:
         for point in deadEnds:
             cv2.circle(img_rgb, (int(point[0]), int(point[1])),10,(255,0,255), 3)
 
-        #cv2.imshow("img", img_rgb)
+        cv2.imshow("img", img_rgb)
 
-        #cv2.waitKey()
+        cv2.waitKey()
         return deadEnds, img_rgb
 
 if __name__ == "__main__":
     c = Camera()
     c.initCam(1)
-    #bilde = c.takePicture()
-    bilde = cv2.imread(os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds\\perf2.jpg")
+    bilde = c.takePicture()
+    #bilde = cv2.imread(os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds\\perf2.jpg")
     c = Dead()
     c.getDeadEnds2(bilde)
