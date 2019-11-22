@@ -12,7 +12,6 @@ class Dead:
         # img_rgb = cv2.imread(r"C:\Users\marcu\PycharmProjects\Luretriks-Slange\Pictures\DeadEnds\perf2.jpg")
         img_rgb = bilde
         img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
-        img_cannyre = cv2.Canny(img_gray, 50, 120, apertureSize=3)
 
         path = os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds2/*.PNG"
 
@@ -25,8 +24,6 @@ class Dead:
 
         threshold = 0.80
 
-        # loc = np.where( res4 >= threshold)# and np.where(res1 >= threshold) and np.where(res2 >= threshold) and np.where(res3 >= threshold)
-
         # loop over the scales of the image
         loc = []
         WH = []
@@ -38,28 +35,13 @@ class Dead:
                 loc.append(res)
                 w, h = temp.shape[::-1]
                 WH.append([w, h])
-            # loc.append(np.where( res >= threshold))
 
-        lastPt = 0
-        lastPt2 = 0
         deadEnds = []
 
         for point, WH in zip(loc, WH):
             w, h = WH
             for pt in zip(*point[::-1]):
-                """low = (int(pt[0])-100)
-                high = (int(pt[0])+100)
-                low2 = (int(pt[1]) - 100)
-                high2 = (int(pt[1]) + 100)"""
                 deadEnds.append([pt[0] + w / 2, pt[1] + h / 2])
-                """
-                if low <= lastPt <= high and low2 <= lastPt2 <= high2 :
-                    break
-                else:
-                    
-                    lastPt = int(pt[0])
-                    lastPt2 = int(pt[1])
-                    cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)"""
 
         tempDeadEnds = []
         for i in range(len(deadEnds)):

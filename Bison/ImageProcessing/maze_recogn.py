@@ -8,10 +8,6 @@ stillPic = False
 testing = False
 
 
-
-plotted = False
-
-
 class mazeRecognizer:
     """
     Reads a picture, filters it, gets the lines in the picture from the \n
@@ -70,33 +66,6 @@ class mazeRecognizer:
             y2 = data[0][3]
 
             cv2.line(pic2, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-        cv2.imwrite('linjebilde2.jpg', pic2)
-
-        while stillPic:
-            cv2.imshow("Picture2", cv2.resize(pic2, (1280, 720)))
-            cv2.imshow("Filtered2", cv2.resize(edges2, (1280, 720)))
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        while realtime:
-            frame = self.cam.takePictureRgb()
-
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            gray = cv2.GaussianBlur(gray, (7, 7), 0)
-
-            edges = cv2.Canny(gray, 100, 180, apertureSize=3)
-            edges = cv2.dilate(edges, None, iterations=1)
-            edges = cv2.erode(edges, None, iterations=1)
-
-            cv2.imshow("Frame", frame)
-            cv2.imshow("Gray", np.hstack([gray, edges]))
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cv2.destroyAllWindows()
 
         return lines2, cv2.cvtColor(pic2, cv2.COLOR_BGR2RGB)
 

@@ -1,5 +1,3 @@
-import time
-
 import cv2
 import numpy as np
 from Bison.ImageProcessing.camera import Camera
