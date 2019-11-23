@@ -75,8 +75,8 @@ class Controller(threading.Thread):
         self.j = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.66", "192.168.137.83")
-        #self.snake.setFrameSize(7)
+        self.snake = Snake("http://192.168.137.87", "192.168.137.252")
+        # self.snake.setFrameSize(7)
         self.snakeObstacle = cheakPathForObs()
         time.sleep(1)
         with b.lock:
@@ -211,8 +211,8 @@ class Controller(threading.Thread):
         self.notifyGui("UpdateImageEventL", cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
         self.notifyGui("UpdateImageEventR", bilde)
 
-        #with open('parrot.pkl', 'wb') as f:
-            #pickle.dump(self.finalPath, f)
+        # with open('parrot.pkl', 'wb') as f:
+        # pickle.dump(self.finalPath, f)
 
         soplebil.collect()
 
@@ -618,6 +618,11 @@ class Controller(threading.Thread):
                     self.targetAccuaierd = self.tagetAccu()
                     self.j += 1
                     self.i = 1
+                elif abs(angleToEnd) > 45:
+                    if angleToEnd > 0:
+                        self.snake.rotateCW()
+                    else:
+                        self.snake.rotateCCW()
                 else:
                     self.snake.turn(self.snakeController.currentAngle + angleToEnd)
             else:
@@ -672,7 +677,8 @@ class Controller(threading.Thread):
                         if self.snakeCollision.noCollisions():
                             # alt er fint
                             if abs(theta) < self.deadBandAngle and abs(distanceToLine) < self.deadBand:
-                                turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20)
+                                turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5,
+                                                                           20)
                                 self.moving = self.snake.turn(turnAngle)
                                 self.readyToMoveForward = True
                             # vinker fin distance fuckt
@@ -720,11 +726,12 @@ class Controller(threading.Thread):
 
     def calculateDistanceToGoal(self, snakeFrontCoordinates, restOfPath):
         sum = 0
+        restOfPath = restOfPath[0]
 
         firstVector = [restOfPath[0][0] - snakeFrontCoordinates[0], restOfPath[0][1] - snakeFrontCoordinates[1]]
         sum += math.sqrt(firstVector[0] ** 2 + firstVector[1] ** 2)
 
-        for i in range(len(restOfPath) - 2):
+        for i in range(len(restOfPath) - 1):
             vector = [restOfPath[i + 1][0] - restOfPath[i][0], restOfPath[i + 1][1] - restOfPath[i][1]]
 
             sum += math.sqrt(vector[0] ** 2 + vector[1] ** 2)
