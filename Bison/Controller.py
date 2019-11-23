@@ -2,6 +2,7 @@ import gc as soplebil
 import math
 import threading
 import time
+import pickle
 import cv2
 
 from Bison.Broker import Broker as b
@@ -69,12 +70,13 @@ class Controller(threading.Thread):
         self.collisionDistance = 75
         self.moving = False
         self.firstLoop = True
+        self.colliding = False
         self.i = 0
         self.j = 0
         self.traveledPath = []
         self.cam = Camera()
-        self.snake = Snake("http://192.168.137.102", "192.168.137.167")
-        self.snake.setFrameSize(7)
+        self.snake = Snake("http://192.168.137.66", "192.168.137.83")
+        #self.snake.setFrameSize(7)
         self.snakeObstacle = cheakPathForObs()
         time.sleep(1)
         with b.lock:
@@ -167,7 +169,7 @@ class Controller(threading.Thread):
         self.notifyGui("UpdateTextEvent", "Maze Ready")
 
     def findPathMulti(self):
-        self.notifyGui("UpdateTextEvent", "Finding path multi-target. This can take some time")
+        """self.notifyGui("UpdateTextEvent", "Finding path multi-target. This can take some time")
         temp = None
         startX = None
         startY = None
@@ -194,10 +196,23 @@ class Controller(threading.Thread):
             return
 
         self.traveledPath = []
+        bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0, 0, 255))"""
+
+        with open('parrot.pkl', 'rb') as f:
+            self.finalPath = pickle.load(f)
         bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0, 0, 255))
+
+        try:
+            cords, temp = self.findSnake.LocateSnake(self.cam.takePicture())
+        except TypeError:
+            self.notifyGui("UpdateTextEvent", "Could not find snake")
+            return
 
         self.notifyGui("UpdateImageEventL", cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
         self.notifyGui("UpdateImageEventR", bilde)
+
+        #with open('parrot.pkl', 'wb') as f:
+            #pickle.dump(self.finalPath, f)
 
         soplebil.collect()
 
@@ -284,15 +299,16 @@ class Controller(threading.Thread):
             self.moving = False
             self.overrideMoving = False
             self.lastCmdSent = time.time()
+            snakePic = self.snake.takePicture()
+            self.colliding = self.snakeObstacle.FindObsInPath(snakePic)
 
         """
         Checks if the snake is in movement, if not in movement, checks if it is ready to move.
         If ready to move, sends command to snake to move forward one cycle.
         """
-        snakePic = self.snake.takePicture()
-
-        colliding = self.snakeObstacle.FindObsInPath(snakePic)
-        if colliding:
+        if self.colliding:
+            snakePic = self.snake.takePicture()
+            self.colliding = self.snakeObstacle.FindObsInPath(snakePic)
             self.notifyGui("UpdateImageEventL", snakePic)
         elif self.moving:
             pass
@@ -553,145 +569,146 @@ class Controller(threading.Thread):
             self.overrideMoving = False
             self.lastCmdSent = time.time()
 
-        endPoint = self.finalPath[self.j][len(self.finalPath[self.j]) - 1]
-        angleToEnd = self.snakeCollision.calculateAngleToNearestPointV2(snakeCoordinates, snakeCoordinates[1],
-                                                                        endPoint)
-        restOfPath = [self.finalPath[self.j][self.i + 1:len(self.finalPath[self.j]) - 1]]
-        lenSnakeToEnd = self.calculateDistanceToGoal(snakeCoordinates[1], restOfPath)
-
-        """
-        Checks if the snake is in movement, if not in movement, checks if it is ready to move.
-        If ready to move, sends command to snake to move forward one cycle.
-        """
-        if self.moving:
-            pass
-        elif self.readyToMoveForward:
-            if self.ampChanged:
-                amp = None
-                with b.lock:
-                    amp = b.params[0]
-                acc = self.snake.setAmplitude(amp)
-                self.ampChanged = False
-                Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
-            if snakeCoordinates:
-                if not self.snakeCollision.frontFrontCollision:
-                    self.moving = self.snake.moveForward()
-                    self.readyToMoveForward = False
-                else:
-                    self.collisionHandling()
-        elif self.readyToMoveBackward:
-            if self.ampChanged:
-                amp = None
-                with b.lock:
-                    amp = b.params[0]
-                acc = self.snake.setAmplitude(amp)
-                Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
-                self.ampChanged = False
-            if snakeCoordinates:
-                if not self.snakeCollision.backBackCollision:
-                    self.moving = self.snake.moveBacwards()
-                    self.readyToMoveBackward = False
-                else:
-                    self.collisionHandling()
-        elif self.targetAccuaierd:
-            pass
-        # Checks if the snake has reached the a dead end
-        elif lenSnakeToEnd < self.seekDistance:
-            if abs(angleToEnd) < 10:
-                self.targetAccuaierd = self.tagetAccu()
-                self.j += 1
-                self.i = 1
-            else:
-                self.snake.turn(self.snakeController.currentAngle + angleToEnd)
-        else:
-            lineStart = self.finalPath[self.j][self.i]
-            lineEnd = self.finalPath[self.j][self.i + 1]
+        if snakeCoordinates:
+            endPoint = self.finalPath[self.j][len(self.finalPath[self.j]) - 1]
+            angleToEnd = self.snakeCollision.calculateAngleToNearestPointV2(snakeCoordinates, snakeCoordinates[1],
+                                                                            endPoint)
+            restOfPath = [self.finalPath[self.j][self.i + 1:len(self.finalPath[self.j]) - 1]]
+            lenSnakeToEnd = self.calculateDistanceToGoal(snakeCoordinates[1], restOfPath)
 
             """
-            Runs only on the first loop of the run.
-            Adjusts the start angle before movement starts
+            Checks if the snake is in movement, if not in movement, checks if it is ready to move.
+            If ready to move, sends command to snake to move forward one cycle.
             """
-            if self.firstLoop:
+            if self.moving:
+                pass
+            elif self.readyToMoveForward:
+                if self.ampChanged:
+                    amp = None
+                    with b.lock:
+                        amp = b.params[0]
+                    acc = self.snake.setAmplitude(amp)
+                    self.ampChanged = False
+                    Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
                 if snakeCoordinates:
-                    self.firstLoop = False
-                    snakePointF = snakeCoordinates[1]
-                    snakePointB = snakeCoordinates[0]
-
-                    lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
-                                                                              snakePointF)
-                    snakeAngle = self.snakeController.calculateFirstTurnAngle(lV, sV, lVxsV)
-                    self.moving = self.snake.turn(snakeAngle)
-
-                    # Update GUI
-                    self.notifyGui("UpdateImageEventL", maskPic)
-
-            ############################################################################
-            # Gets the location of the snake, and calculates vectors for path to follow
-            # as well as vector for snake. Draws path on the masked picture.
-            # Makes the snake turn or ready to move depending on its angle.
-            ############################################################################
-            else:
-                # Check that the snake is found
-                if snakeCoordinates:
-                    snakePointF = snakeCoordinates[1]
-                    snakePointB = snakeCoordinates[0]
-                    lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
-                                                                              snakePointF)
-
-                    # Update GUI with path on the masked picture
-                    if len(self.traveledPath) > 1:
-                        maskPic = drawLines(maskPic, self.traveledPath, (0, 255, 0))
-                    self.notifyGui("UpdateImageEventL", maskPic)
-
-                    # Checks if the snake has reached a new node
-                    snakeLine, finishLine = self.snakeController.calculateLines(lV, sV, lineEnd, snakePointF)
-                    if self.snakeController.intersect(finishLine[0], finishLine[1], snakeLine[0], snakeLine[1]):
-                        self.i += 1
-
-                    """ Moving logic"""
-                    theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
-                    distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
-
-                    if self.snakeCollision.noCollisions():
-                        # alt er fint
-                        if abs(theta) < self.deadBandAngle and abs(distanceToLine) < self.deadBand:
-                            turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20)
-                            self.moving = self.snake.turn(turnAngle)
-                            self.readyToMoveForward = True
-                        # vinker fin distance fuckt
-                        elif abs(theta) < self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
-                            # Lateral shift
-                            if distanceToLine < 0:
-                                # Lateral right
-                                self.moving = self.snake.moveRight()
-                            elif distanceToLine > 0:
-                                # Lateral left
-                                self.moving = self.snake.moveLeft()
-                        # vinkel fuckt distance fin
-                        elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) < self.deadBand:
-                            # Rotate
-                            if theta > 0:
-                                # Rotate CCW, left
-                                self.moving = self.snake.rotateCCW()
-                            elif theta < 0:
-                                # Rotate CW, right
-                                self.moving = self.snake.rotateCW()
-                        # alt er fuckt
-                        elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
-                            # Rotate
-                            if theta > 0:
-                                # Rotate CCW, left
-                                self.moving = self.snake.rotateCCW()
-                            elif theta < 0:
-                                # Rotate CW, right
-                                self.moving = self.snake.rotateCW()
+                    if not self.snakeCollision.frontFrontCollision:
+                        self.moving = self.snake.moveForward()
+                        self.readyToMoveForward = False
                     else:
                         self.collisionHandling()
+            elif self.readyToMoveBackward:
+                if self.ampChanged:
+                    amp = None
+                    with b.lock:
+                        amp = b.params[0]
+                    acc = self.snake.setAmplitude(amp)
+                    Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
+                    self.ampChanged = False
+                if snakeCoordinates:
+                    if not self.snakeCollision.backBackCollision:
+                        self.moving = self.snake.moveBacwards()
+                        self.readyToMoveBackward = False
+                    else:
+                        self.collisionHandling()
+            elif self.targetAccuaierd:
+                pass
+            # Checks if the snake has reached the a dead end
+            elif lenSnakeToEnd < self.seekDistance:
+                if abs(angleToEnd) < 10:
+                    self.targetAccuaierd = self.tagetAccu()
+                    self.j += 1
+                    self.i = 1
+                else:
+                    self.snake.turn(self.snakeController.currentAngle + angleToEnd)
+            else:
+                lineStart = self.finalPath[self.j][self.i]
+                lineEnd = self.finalPath[self.j][self.i + 1]
 
-                    """ Moving logic END!!!!!!"""
+                """
+                Runs only on the first loop of the run.
+                Adjusts the start angle before movement starts
+                """
+                if self.firstLoop:
+                    if snakeCoordinates:
+                        self.firstLoop = False
+                        snakePointF = snakeCoordinates[1]
+                        snakePointB = snakeCoordinates[0]
 
-                    # Appends the new position of the snake to its traveled path
-                    self.traveledPath.append(snakePointF)
+                        lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
+                                                                                  snakePointF)
+                        snakeAngle = self.snakeController.calculateFirstTurnAngle(lV, sV, lVxsV)
+                        self.moving = self.snake.turn(snakeAngle)
+
+                        # Update GUI
+                        self.notifyGui("UpdateImageEventL", maskPic)
+
+                ############################################################################
+                # Gets the location of the snake, and calculates vectors for path to follow
+                # as well as vector for snake. Draws path on the masked picture.
+                # Makes the snake turn or ready to move depending on its angle.
+                ############################################################################
+                else:
+                    # Check that the snake is found
+                    if snakeCoordinates:
+                        snakePointF = snakeCoordinates[1]
+                        snakePointB = snakeCoordinates[0]
+                        lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
+                                                                                  snakePointF)
+
+                        # Update GUI with path on the masked picture
+                        if len(self.traveledPath) > 1:
+                            maskPic = drawLines(maskPic, self.traveledPath, (0, 255, 0))
+                        self.notifyGui("UpdateImageEventL", maskPic)
+
+                        # Checks if the snake has reached a new node
+                        snakeLine, finishLine = self.snakeController.calculateLines(lV, sV, lineEnd, snakePointF)
+                        if self.snakeController.intersect(finishLine[0], finishLine[1], snakeLine[0], snakeLine[1]):
+                            self.i += 1
+
+                        """ Moving logic"""
+                        theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
+                        distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
+
+                        if self.snakeCollision.noCollisions():
+                            # alt er fint
+                            if abs(theta) < self.deadBandAngle and abs(distanceToLine) < self.deadBand:
+                                turnAngle = self.snakeController.smartTurn(lV, sV, lVxsV, snakePointF, lineStart, 0.5, 20)
+                                self.moving = self.snake.turn(turnAngle)
+                                self.readyToMoveForward = True
+                            # vinker fin distance fuckt
+                            elif abs(theta) < self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
+                                # Lateral shift
+                                if distanceToLine < 0:
+                                    # Lateral right
+                                    self.moving = self.snake.moveRight()
+                                elif distanceToLine > 0:
+                                    # Lateral left
+                                    self.moving = self.snake.moveLeft()
+                            # vinkel fuckt distance fin
+                            elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) < self.deadBand:
+                                # Rotate
+                                if theta > 0:
+                                    # Rotate CCW, left
+                                    self.moving = self.snake.rotateCCW()
+                                elif theta < 0:
+                                    # Rotate CW, right
+                                    self.moving = self.snake.rotateCW()
+                            # alt er fuckt
+                            elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
+                                # Rotate
+                                if theta > 0:
+                                    # Rotate CCW, left
+                                    self.moving = self.snake.rotateCCW()
+                                elif theta < 0:
+                                    # Rotate CW, right
+                                    self.moving = self.snake.rotateCW()
+                        else:
+                            self.collisionHandling()
+
+                        """ Moving logic END!!!!!!"""
+
+                        # Appends the new position of the snake to its traveled path
+                        self.traveledPath.append(snakePointF)
 
     def tagetAccu(self) -> bool:
         pic = self.snake.takePicture()
@@ -751,6 +768,13 @@ class Controller(threading.Thread):
                 b.lock.release()
                 self.goToTarget()
                 # b.yoloFlag = True
+            else:
+                b.lock.release()
+
+            b.lock.acquire()
+            if b.seekAndDestroyFlag:
+                b.lock.release()
+                self.seekAndDestroy()
             else:
                 b.lock.release()
 

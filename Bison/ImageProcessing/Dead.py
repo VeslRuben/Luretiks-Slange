@@ -13,7 +13,7 @@ class Dead:
         img_rgb = bilde
         img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
 
-        path = os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds2/*.PNG"
+        path = os.getcwd() + "\\" + "..\\Pictures\\DeadEnds2/*.PNG"
 
         filenames = [img for img in glob.glob(path)]
 
@@ -61,9 +61,9 @@ class Dead:
         for point in deadEnds:
             cv2.circle(img_rgb, (int(point[0]), int(point[1])), 10, (255, 0, 255), 3)
 
-        cv2.imshow("img", img_rgb)
+        #cv2.imshow("img", img_rgb)
 
-        cv2.waitKey()
+        #cv2.waitKey()
         return deadEnds, img_rgb
 
 

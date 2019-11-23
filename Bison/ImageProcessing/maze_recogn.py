@@ -32,8 +32,6 @@ class mazeRecognizer:
         edges = cv2.Canny(grayfilt, 50, 120, apertureSize=3)
         edges = cv2.dilate(edges, None, iterations=3)
         edges = cv2.erode(edges, None, iterations=2)
-        cv2.imshow("efdsfdg", edges)
-        cv2.waitKey()
         kernel = np.ones((7, 7), np.uint8)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
