@@ -2,7 +2,6 @@ import gc as soplebil
 import math
 import threading
 import time
-import vectormath as Vector
 import cv2
 
 from Bison.Broker import Broker as b
@@ -557,8 +556,8 @@ class Controller(threading.Thread):
         endPoint = self.finalPath[self.j][len(self.finalPath[self.j]) - 1]
         angleToEnd = self.snakeCollision.calculateAngleToNearestPointV2(snakeCoordinates, snakeCoordinates[1],
                                                                         endPoint)
-        snakToEndVektor = (endPoint[0] - snakeCoordinates[1][0], endPoint[1] - snakeCoordinates[1][1])
-        lenSnakToEndVektor = math.sqrt(snakToEndVektor[0] ** 2 + snakToEndVektor[1] ** 2)
+        restOfPath = [self.finalPath[self.j][self.i + 1:len(self.finalPath[self.j]) - 1]]
+        lenSnakeToEnd = self.calculateDistanceToGoal(snakeCoordinates[1], restOfPath)
 
         """
         Checks if the snake is in movement, if not in movement, checks if it is ready to move.
@@ -597,7 +596,7 @@ class Controller(threading.Thread):
         elif self.targetAccuaierd:
             pass
         # Checks if the snake has reached the a dead end
-        elif self.i >= len(self.finalPath[self.j]) - 2 and lenSnakToEndVektor < self.seekDistance:
+        elif lenSnakeToEnd < self.seekDistance:
             if abs(angleToEnd) < 10:
                 self.targetAccuaierd = self.tagetAccu()
                 self.j += 1
@@ -701,6 +700,19 @@ class Controller(threading.Thread):
             return True
         else:
             return False
+
+    def calculateDistanceToGoal(self, snakeFrontCoordinates, restOfPath):
+        sum = 0
+
+        firstVector = [restOfPath[0][0] - snakeFrontCoordinates[0], restOfPath[0][1] - snakeFrontCoordinates[1]]
+        sum += math.sqrt(firstVector[0] ** 2 + firstVector[1] ** 2)
+
+        for i in range(len(restOfPath) - 2):
+            vector = [restOfPath[i + 1][0] - restOfPath[i][0], restOfPath[i + 1][1] - restOfPath[i][1]]
+
+            sum += math.sqrt(vector[0] ** 2 + vector[1] ** 2)
+
+        return sum
 
     def run(self) -> None:
         """
