@@ -65,7 +65,7 @@ class Controller(threading.Thread):
         self.seekDistance = 200
         self.deadBand = 80
         self.deadBandAngle = 50
-        self.collisionDistance = 75
+        self.collisionDistance = 50
         self.moving = False
         self.firstLoop = True
         self.i = 0

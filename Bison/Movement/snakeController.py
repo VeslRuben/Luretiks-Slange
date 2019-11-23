@@ -119,7 +119,6 @@ class SnakeController:
 
         distanceToLine = self.calculatDistanceToLine(lV, snakeEndPoint, lineStartPoint)
 
-        # print(f"Distance: {distanceToLine} \n Theta: {theta}")
 
         self.currentAngle = self.currentAngle + int(distanceToLine * P)
 
@@ -128,6 +127,15 @@ class SnakeController:
         elif self.currentAngle < - 90:
             self.currentAngle = -90
 
+        return self.currentAngle
+
+    def turnTheta(self, theta):
+        self.currentAngle += theta
+
+        if self.currentAngle > 90:
+            self.currentAngle = 90
+        elif self.currentAngle < - 90:
+            self.currentAngle = -90
         return self.currentAngle
 
 

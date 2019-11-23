@@ -45,7 +45,7 @@ class VideoStream:
         :return: Image as an numpy array
         """
         try:
-            response = requests.get(self.url + "/capture", timeout=3)
+            response = requests.get(self.url + "/capture", timeout=1)
             img = Image.open(BytesIO(response.content))
             imgArray = np.array(img)
             imgArray = np.rot90(imgArray,3)

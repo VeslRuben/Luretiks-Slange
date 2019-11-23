@@ -12,7 +12,7 @@ class cheakPathForObs:
         try:
             threshold = (bilde.shape[0] * bilde.shape[1] * 255) / 2
             bilde = cv2.cvtColor(bilde, cv2.COLOR_RGB2BGR)
-            notWhiteLower = (0, 60, 0)
+            notWhiteLower = (0, 40, 0)
             notWhiteUpper = (255, 255, 255)
 
             blurred = cv2.GaussianBlur(bilde, (11, 11), 0)

@@ -47,18 +47,19 @@ class GoToTarget:
             else:
                 return wantedMovement()
         else:
-            self.collisionHandling()
+            return self.collisionHandling()
 
     def collisionHandling(self):
+        moving = False
         # Checking for front
         Logger.logg(f"Executing collision command", Logger.info)
         if self.snakeCollision.colliding:
-            pass
+            moving = True
         elif self.snakeCollision.frontFrontCollision:
             # Checking both sectors at once
             if self.snakeCollision.bothSectorCollision():
                 # Double backwards
-                self.moving = self.snake.moveBackward()
+                moving = self.snake.moveBackward()
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = True
             # Checking left sector
@@ -66,7 +67,7 @@ class GoToTarget:
                 # Lateral shift right, ready to move backwards
                 acc = self.snake.setAmplitude(15)
                 Logger.logg(f"Amplitude turned down for lateral shift right, acc: {acc}", Logger.cmd)
-                self.moving = self.snake.moveRight()
+                moving = self.snake.moveRight()
                 self.ampChanged = True
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = True
@@ -75,14 +76,14 @@ class GoToTarget:
                 # Lateral shift left, ready to move backwards
                 acc = self.snake.setAmplitude(15)
                 Logger.logg(f"Amplitude turned down for lateral shift left, acc: {acc}", Logger.cmd)
-                self.moving = self.snake.moveLeft()
+                moving = self.snake.moveLeft()
                 self.ampChanged = True
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = True
             # If only collision in front
             else:
                 # Back it up motherfucker
-                self.moving = self.snake.reset()
+                moving = self.snake.reset()
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = True
         # Checking for back
@@ -107,13 +108,13 @@ class GoToTarget:
             # Checking both sectors at once
             if self.snakeCollision.bothSectorCollision():
                 # Straighten snake, hope for the best
-                self.moving = self.snake.reset()
+                moving = self.snake.reset()
             # Checking left sector
             elif self.snakeCollision.leftSectorCollision():
                 # Reset moving flags, and lateral shift right
                 acc = self.snake.setAmplitude(15)
                 Logger.logg(f"Amplitude turned down for lateral shift right, acc: {acc}", Logger.cmd)
-                self.moving = self.snake.moveRight()
+                moving = self.snake.moveRight()
                 self.ampChanged = True
                 self.readyToMoveForward = False
                 self.readyToMoveBackward = False
@@ -122,10 +123,11 @@ class GoToTarget:
                 # Reset moving flags, and lateral shift left
                 acc = self.snake.setAmplitude(15)
                 Logger.logg(f"Amplitude turned down for lateral shift left, acc: {acc}", Logger.cmd)
-                self.moving = self.snake.moveLeft()
+                moving = self.snake.moveLeft()
                 self.ampChanged = True
                 self.readyToMoveBackward = False
                 self.readyToMoveForward = False
+        return moving
 
     def calculateOffset(self, snakeCoordinates):
         xVector = [1, 0]
@@ -232,7 +234,7 @@ class GoToTarget:
                         self.readyToMoveForward = True
                     # Angle is bigger than small dead band, distance is smaller than small dead band
                     elif abs(theta) > self.deadBandAngleSmall and abs(distanceToLine) < self.deadBandDistSmall:
-                        turnAngle = theta
+                        turnAngle = self.snakeController.turnTheta(theta)
                         self.moving = self.checkMovement(self.snake.turn, args=turnAngle)
                         self.readyToMoveForward = True
                     # Angle is smaller than small dead band, distance is smaller than small dead band
