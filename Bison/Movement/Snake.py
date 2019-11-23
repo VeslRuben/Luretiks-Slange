@@ -94,7 +94,7 @@ class Snake:
         Logger.logg("Sent: f", Logger.cmd)
         return self.timeOut()
 
-    def moveBacwards(self):
+    def moveBackward(self):
         """
         Gives the command to the snake to move backward one cycle
         :return: True if acknowledged

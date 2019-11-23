@@ -1,7 +1,7 @@
 import math
 from shapely.geometry import LineString, Point
 from Bison.logger import Logger
-import vectormath as Vector
+from Bison.ImageProcessing.cheakPathForObs import cheakPathForObs
 
 
 class SnakeController:
@@ -107,29 +107,21 @@ class SnakeController:
         snakeLine = [snakeEndPoint, [snakeEndPoint[0] + (-sV[0]) * 2, snakeEndPoint[1] + (-sV[1]) * 2]]
         return snakeLine, finishLine
 
-    def smartTurn(self, lV, sV, lVxsV, snakeEndPoint, lineStartPoint, P, db):
+    def turn(self, lV, snakeEndPoint, lineStartPoint, P):
         """
         Calculates the turn angle for the snake
         :param lV: path vector
-        :param sV: snake vector
-        :param lVxsV: cross product between lV and sV
         :param snakeEndPoint: (x,y) for front of the snake
         :param lineStartPoint: (x,y) for the start of the path
         :param P: Proportional gain
-        :param db: deadband in pixels
         :return: turn angle in int, or "right"/"left" if lateral shift
         """
 
         distanceToLine = self.calculatDistanceToLine(lV, snakeEndPoint, lineStartPoint)
 
-        theta = self.calculateTheta(lV, sV, lVxsV)
-
         # print(f"Distance: {distanceToLine} \n Theta: {theta}")
 
-        if abs(distanceToLine) > db:
-            self.currentAngle = self.currentAngle + int(distanceToLine * P)
-        else:
-            self.currentAngle = self.currentAngle + theta
+        self.currentAngle = self.currentAngle + int(distanceToLine * P)
 
         if self.currentAngle > 90:
             self.currentAngle = 90
@@ -189,7 +181,11 @@ class SnakeCollision:
         self.backBackCollision = False
         self.backLeftCollision = False
 
-    def updateCollisions(self, snakeCoordList, distThreshold, offset):
+        # For the front facing camera
+        self.snakeObstacle = cheakPathForObs()
+        self.colliding = False
+
+    def updateCollisions(self, snakeCoordList, distThreshold, offset, snakePic):
         """
         Updates flags for the different sectors of possible collision for each part of the snake
 
@@ -264,6 +260,8 @@ class SnakeCollision:
                         f"front mid right collision @closet point: {closestPoint2} snake pos: {snakeMid.x}, {snakeMid.y}",
                         Logger.info)
 
+        self.colliding = self.snakeObstacle.FindObsInPath(snakePic)
+
     def resetCollisions(self):
         """
         Resets the collision flags
@@ -282,7 +280,8 @@ class SnakeCollision:
 
     def noCollisions(self):
         if any([self.frontLeftCollision, self.frontFrontCollision, self.frontRightCollision, self.midLeftCollision,
-                self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision]):
+                self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision,
+                self.colliding]):
             return False
         else:
             return True

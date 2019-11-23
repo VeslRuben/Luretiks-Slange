@@ -38,6 +38,24 @@ def drawSection(image, center, startangle, endAngle, collore, radius=50):
     return image
 
 
+def drawCollisionSectors(image, snakeCoordinates, angleList, collisions, offset, radius=50):
+    if offset < 0:
+        offset += 360
+    for pos, piece, coll in zip(snakeCoordinates, angleList, collisions):
+        i = 0
+        for startAngle, endAngle in piece:
+            if coll[i]:
+                color = (0, 0, 255)
+            else:
+                color = (0, 255, 0)
+            image = drawSection(image, tuple(pos), startAngle + offset - 90, endAngle + offset - 90,
+                                   color, radius=radius)
+            i += 1
+
+    return image
+
+
+
 if __name__ == "__main__":
     x = cv2.imread("..\\..\\Pictures/jallaball2.jpg")
     y = drawSection(x, (500, 500), -45, -135, (0, 255, 0))
