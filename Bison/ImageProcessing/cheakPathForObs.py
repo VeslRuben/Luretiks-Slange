@@ -9,6 +9,17 @@ class cheakPathForObs:
         pass
 
     def FindObsInPath(self, bilde):
+        """
+        Trashold find a int that represents if half the image is white
+        Then the image gets blurred with gaussianblur
+        Then the image gets changed to Hsv
+        Then color thrasholds out every thing that is white.
+        then som filtering
+        cheks if half the image is coverd
+        returs if the image have a object infront of it or not
+        :param bilde:
+        :return:
+        """
         try:
             threshold = (bilde.shape[0] * bilde.shape[1] * 255) / 2
             bilde = cv2.cvtColor(bilde, cv2.COLOR_RGB2BGR)

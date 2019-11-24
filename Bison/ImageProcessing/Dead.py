@@ -9,12 +9,16 @@ import os
 class Dead:
 
     def getDeadEnds2(self, bilde):
+        """
+        Takes in a picture of the maze
+        Cheeks the image for dead ends, by using templating
+        :param bilde:
+        :return:
+        """
         # img_rgb = cv2.imread(r"C:\Users\marcu\PycharmProjects\Luretriks-Slange\Pictures\DeadEnds\perf2.jpg")
         img_rgb = bilde
         img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
-
         path = os.getcwd() + "\\" + "..\\Pictures\\DeadEnds2/*.PNG"
-
         filenames = [img for img in glob.glob(path)]
 
         templateList = []
@@ -37,7 +41,6 @@ class Dead:
                 WH.append([w, h])
 
         deadEnds = []
-
         for point, WH in zip(loc, WH):
             w, h = WH
             for pt in zip(*point[::-1]):
@@ -49,7 +52,6 @@ class Dead:
             if i == len(deadEnds):
                 break
             else:
-
                 for j in range(i + 1, len(deadEnds)):
                     if (abs(deadEnds[i][0] - deadEnds[j][0]) <= 100 and abs(deadEnds[i][1] - deadEnds[j][1]) <= 100):
                         apApend = False
@@ -62,7 +64,6 @@ class Dead:
             cv2.circle(img_rgb, (int(point[0]), int(point[1])), 10, (255, 0, 255), 3)
 
         #cv2.imshow("img", img_rgb)
-
         #cv2.waitKey()
         return deadEnds, img_rgb
 
