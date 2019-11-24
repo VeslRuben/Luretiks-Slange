@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from Bison.ImageProcessing.camera import Camera
+from Python.ImageProcessing.camera import Camera
 import imutils
 
 
@@ -9,7 +9,7 @@ class FindSnake:
     def __init__(self):
         pass
 
-    def LocateSnake(self, frame):
+    def locateSnake(self, frame):
 
         greenLower = np.array([42, 0, 0], dtype=np.uint8)
         greenUpper = np.array([83, 255, 255], dtype=np.uint8)
@@ -65,7 +65,7 @@ class FindSnake:
             values.remove(maximimum)
         return sum(values) / len(values)
 
-    def LocateSnakeAverage(self, iterations: int, average: int = 1, filterExtream=False, picture=None):
+    def locateSnakeAverage(self, iterations: int, average: int = 1, filterExtream=False, picture=None):
 
         cam = Camera()
 
@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
     try:
         while True:
-            cord, yolo = c.LocateSnakeAverage(1, 1, False)
+            cord, yolo = c.locateSnakeAverage(1, 1, False)
             cv2.imshow("swag", yolo)
             cv2.waitKey(10)
 

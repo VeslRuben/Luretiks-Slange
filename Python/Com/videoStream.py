@@ -3,7 +3,10 @@ from io import BytesIO
 import numpy as np
 from PIL import Image
 import requests
-from Bison.logger import Logger
+from requests import ConnectTimeout
+from urllib3.exceptions import ConnectTimeoutError
+
+from Python.logger import Logger
 
 
 class VideoStream:
@@ -45,12 +48,12 @@ class VideoStream:
         :return: Image as an numpy array
         """
         try:
-            response = requests.get(self.url + "/capture", timeout=3)
+            response = requests.get(self.url + "/capture", timeout=1)
             img = Image.open(BytesIO(response.content))
             imgArray = np.array(img)
-            imgArray = np.rot90(imgArray,3)
+            imgArray = np.rot90(imgArray, 3)
             return imgArray
-        except requests.exceptions.ConnectTimeout:
+        except Exception:
             Logger.logg("Unable to get image form camera", Logger.warning)
             return None
 

@@ -1,7 +1,7 @@
 import math
 from shapely.geometry import LineString, Point
-from Bison.logger import Logger
-import vectormath as Vector
+from Python.logger import Logger
+from Python.ImageProcessing.checkPathForObst import CheckPathForObst
 
 
 class SnakeController:
@@ -107,35 +107,35 @@ class SnakeController:
         snakeLine = [snakeEndPoint, [snakeEndPoint[0] + (-sV[0]) * 2, snakeEndPoint[1] + (-sV[1]) * 2]]
         return snakeLine, finishLine
 
-    def smartTurn(self, lV, sV, lVxsV, snakeEndPoint, lineStartPoint, P, db):
+    def turn(self, lV, snakeEndPoint, lineStartPoint, P):
         """
         Calculates the turn angle for the snake
         :param lV: path vector
-        :param sV: snake vector
-        :param lVxsV: cross product between lV and sV
         :param snakeEndPoint: (x,y) for front of the snake
         :param lineStartPoint: (x,y) for the start of the path
         :param P: Proportional gain
-        :param db: deadband in pixels
         :return: turn angle in int, or "right"/"left" if lateral shift
         """
 
         distanceToLine = self.calculatDistanceToLine(lV, snakeEndPoint, lineStartPoint)
 
-        theta = self.calculateTheta(lV, sV, lVxsV)
 
-        # print(f"Distance: {distanceToLine} \n Theta: {theta}")
-
-        if abs(distanceToLine) > db:
-            self.currentAngle = self.currentAngle + int(distanceToLine * P)
-        else:
-            self.currentAngle = self.currentAngle + theta
+        self.currentAngle = self.currentAngle + int(distanceToLine * P)
 
         if self.currentAngle > 90:
             self.currentAngle = 90
         elif self.currentAngle < - 90:
             self.currentAngle = -90
 
+        return self.currentAngle
+
+    def turnTheta(self, theta):
+        self.currentAngle += theta
+
+        if self.currentAngle > 90:
+            self.currentAngle = 90
+        elif self.currentAngle < - 90:
+            self.currentAngle = -90
         return self.currentAngle
 
 
@@ -189,7 +189,11 @@ class SnakeCollision:
         self.backBackCollision = False
         self.backLeftCollision = False
 
-    def updateCollisions(self, snakeCoordList, distThreshold, offset):
+        # For the front facing camera
+        self.snakeObstacle = CheckPathForObst()
+        self.colliding = False
+
+    def updateCollisions(self, snakeCoordList, distThreshold, offset, snakePic):
         """
         Updates flags for the different sectors of possible collision for each part of the snake
 
@@ -264,6 +268,8 @@ class SnakeCollision:
                         f"front mid right collision @closet point: {closestPoint2} snake pos: {snakeMid.x}, {snakeMid.y}",
                         Logger.info)
 
+        #self.colliding = self.snakeObstacle.FindObsInPath(snakePic)
+
     def resetCollisions(self):
         """
         Resets the collision flags
@@ -281,33 +287,57 @@ class SnakeCollision:
         self.backRightCollision = False
 
     def noCollisions(self):
+        """
+        Checks all flags to see if there are no collisions
+        :return: True if no collisions, False if any collisions
+        """
         if any([self.frontLeftCollision, self.frontFrontCollision, self.frontRightCollision, self.midLeftCollision,
-                self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision]):
+                self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision,
+                self.colliding]):
             return False
         else:
             return True
 
     def rightSectorCollision(self):
+        """
+        Checks for collisions on right sector
+        :return: True if any collisions, False if no collisions
+        """
         if any([self.frontRightCollision, self.midRightCollision, self.backRightCollision]):
             return True
         else:
             return False
 
     def leftSectorCollision(self):
+        """
+        Checks for collisions on left sector
+        :return: True if any collisions, False if no collisions
+        """
         if any([self.frontLeftCollision, self.midLeftCollision, self.backLeftCollision]):
             return True
         else:
             return False
 
     def bothSectorCollision(self):
+        """
+        Checks for collisions on both sectors
+        :return: True if collisions on both sides, False if on none or just one of the sides
+        """
         if self.leftSectorCollision() and self.rightSectorCollision():
             return True
         else:
             return False
 
-    def calculateAngleToNearestPointV2(self, snakeCoordList, fromPointm, toPoint):
+    def calculateAngleToNearestPointV2(self, snakeCoordList, fromPoint, toPoint):
+        """
+        Calculates angle to nearest point from the snake
+        :param snakeCoordList: List of coordinates for the snakes parts
+        :param fromPoint: Point from which the angle should be calculated
+        :param toPoint: Point to which the angle should be calculated
+        :return: Angle in degrees to the point given
+        """
         vectorX = [snakeCoordList[1][0] - snakeCoordList[0][0], snakeCoordList[1][1] - snakeCoordList[0][1]]
-        vectorY = [toPoint[0] - fromPointm[0], toPoint[1] - fromPointm[1]]
+        vectorY = [toPoint[0] - fromPoint[0], toPoint[1] - fromPoint[1]]
 
         xDoty = vectorX[0] * vectorY[0] + vectorX[1] * vectorY[1]
         length = math.sqrt(vectorX[0] ** 2 + vectorX[1] ** 2) * math.sqrt(vectorY[0] ** 2 + vectorY[1] ** 2)

@@ -2,8 +2,8 @@ import time
 import cv2
 import wx
 import numpy as np
-from Bison.Broker import Broker as b
-from Bison.logger import Logger
+from Python.broker import Broker as b
+from Python.logger import Logger
 
 UpdateImageEventR = wx.NewEventType()
 EVT_UPDATE_IMAGE_R = wx.PyEventBinder(UpdateImageEventR, 1)
@@ -11,6 +11,8 @@ UpdateImageEventL = wx.NewEventType()
 EVT_UPDATE_IMAGE_L = wx.PyEventBinder(UpdateImageEventL, 1)
 UpdateTextEvent = wx.NewEventType()
 EVT_UPDATE_TEXT = wx.PyEventBinder(UpdateTextEvent, 1)
+YesNoEvent = wx.NewEventType()
+EVT_YES_NO = wx.PyEventBinder(YesNoEvent, 1)
 
 
 class CustomEvent(wx.PyCommandEvent):
@@ -34,9 +36,9 @@ class ImagePanel(wx.Panel):
         wx.Panel.__init__(self, *args, **kwargs)
 
         self.image = image
-        self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.Bind(wx.EVT_PAINT, self.onPaint)
 
-    def OnPaint(self, event):
+    def onPaint(self, event):
         dc = wx.PaintDC(self)
         dc.DrawBitmap(wx.BitmapFromImage(self.image), 0, 0)
 
@@ -44,7 +46,7 @@ class ImagePanel(wx.Panel):
 class ParameterDialog(wx.Dialog):
     def __init__(self, parent, id=-1, title="Enter new parameters!"):
         wx.Dialog.__init__(self, parent, id, title, size=(-1, -1))
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
 
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.topText = wx.StaticText(self, label="Amplitude: 0-10 \nSpeed: 0-100 (Higher = Slower)")
@@ -95,7 +97,7 @@ class ParameterDialog(wx.Dialog):
         else:
             return False
 
-    def OnClose(self, event=None):
+    def onClose(self, event=None):
         self.result = None
         self.Destroy()
 
@@ -106,15 +108,16 @@ class StartFrame(wx.Frame):
         # ensure the parent's __init__ is called
         super(StartFrame, self).__init__(*args, **kw)
         self.Maximize(True)
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
 
         # Maual controll
         self.controlledManually = False
 
         # Update events #######################
-        self.Bind(EVT_UPDATE_IMAGE_R, self.OnNewImageR)
-        self.Bind(EVT_UPDATE_IMAGE_L, self.OnNewImageL)
-        self.Bind(EVT_UPDATE_TEXT, self.OnNewText)
+        self.Bind(EVT_UPDATE_IMAGE_R, self.onNewImageR)
+        self.Bind(EVT_UPDATE_IMAGE_L, self.onNewImageL)
+        self.Bind(EVT_UPDATE_TEXT, self.onNewText)
+        self.Bind(EVT_YES_NO, self.onYesNo)
 
         #######################################
 
@@ -131,17 +134,17 @@ class StartFrame(wx.Frame):
         bntVBoxLeft = wx.BoxSizer(wx.VERTICAL)
 
         self.manualControl = wx.Button(panel, label="Manual Override", size=(130, 40))
-        self.manualControl.Bind(wx.EVT_BUTTON, self.OnManualBtn)
-        self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.manualControl.Bind(wx.EVT_BUTTON, self.onManualBtn)
+        self.manualControl.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
         self.manualControl.SetBackgroundColour("gray")
 
         self.startBtn = wx.Button(panel, label="Update Parameters", size=(130, 40))
-        self.startBtn.Bind(wx.EVT_BUTTON, self.OnUpdateParametersBtn)
+        self.startBtn.Bind(wx.EVT_BUTTON, self.onUpdateParametersBtn)
         self.startBtn.SetBackgroundColour("gray")
 
         self.stopBtn = wx.Button(panel, label="Stop", size=(130, 40))
         self.stopBtn.SetBackgroundColour("gray")
-        self.stopBtn.Bind(wx.EVT_BUTTON, self.OnStopBtn)
+        self.stopBtn.Bind(wx.EVT_BUTTON, self.onStopBtn)
 
         bntVBoxLeft.AddMany([(self.manualControl, 1), (self.startBtn, 1), (self.stopBtn, 1)])
 
@@ -149,17 +152,17 @@ class StartFrame(wx.Frame):
         bntVBoxMidle = wx.BoxSizer(wx.VERTICAL)
 
         self.prepareMaze = wx.Button(panel, label="Prepare Maze", size=(130, 40))
-        self.prepareMaze.Bind(wx.EVT_BUTTON, self.OnPrepareMazeSingle)
+        self.prepareMaze.Bind(wx.EVT_BUTTON, self.onPrepareMazeSingle)
         self.prepareMaze.SetBackgroundColour("gray")
 
         self.findPath = wx.Button(panel, label="Find Path", size=(130, 40))
-        self.findPath.Bind(wx.EVT_BUTTON, self.OnFindPathSingle)
+        self.findPath.Bind(wx.EVT_BUTTON, self.onFindPathSingle)
         self.findPath.SetBackgroundColour("gray")
         self.findPath.Disable()
 
         self.runBtn = wx.Button(panel, label="Run", size=(130, 40))
         self.runBtn.SetBackgroundColour("gray")
-        self.runBtn.Bind(wx.EVT_BUTTON, self.OnRun)
+        self.runBtn.Bind(wx.EVT_BUTTON, self.onRun)
         self.runBtn.Disable()
 
         bntVBoxMidle.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
@@ -168,16 +171,16 @@ class StartFrame(wx.Frame):
         btnVBoxRight = wx.BoxSizer(wx.VERTICAL)
 
         self.prepareMaze2 = wx.Button(panel, label="Prepare Maze", size=(130, 40))
-        self.prepareMaze2.Bind(wx.EVT_BUTTON, self.OnPrepareMazeMulti)
+        self.prepareMaze2.Bind(wx.EVT_BUTTON, self.onPrepareMazeMulti)
         self.prepareMaze2.SetBackgroundColour("gray")
 
         self.findPath2 = wx.Button(panel, label="Find Path", size=(130, 40))
-        self.findPath2.Bind(wx.EVT_BUTTON, self.OnFindPathMulti)
+        self.findPath2.Bind(wx.EVT_BUTTON, self.onFindPathMulti)
         self.findPath2.SetBackgroundColour("gray")
         self.findPath2.Disable()
 
         self.seekAndDestroy = wx.Button(panel, label="Seek and Destroy", size=(130, 40))
-        self.seekAndDestroy.Bind(wx.EVT_BUTTON, self.OnSeekAndDestroy)
+        self.seekAndDestroy.Bind(wx.EVT_BUTTON, self.onSeekAndDestroy)
         self.seekAndDestroy.SetBackgroundColour("gray")
         self.seekAndDestroy.Disable()
 
@@ -213,37 +216,45 @@ class StartFrame(wx.Frame):
         outerGrid.AddGrowableRow(0)
         outerGrid.AddGrowableCol(0)
 
-        self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.manualControl.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
 
         panel.SetSizer(outerGrid)
 
-    def OnNewImageR(self, event=None):
+    def onYesNo(self, evnet=None):
+        dlg = wx.MessageBox('Is the target in front of the snake?', 'Target?', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        with b.lock:
+            if dlg == 2:
+                b.answer = True
+            elif dlg == 8:
+                b.answer = False
+
+    def onNewImageR(self, event=None):
         array = event.GetMyVal()
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
-        self.imgR.image = image = wx.ImageFromBuffer(w, h, array)
+        self.imgR.image = wx.ImageFromBuffer(w, h, array)
         self.imgR.Update()
         self.imgR.Refresh()
         # Logger.logg("GUI right image updated", Logger.info)
 
-    def OnNewImageL(self, event=None):
+    def onNewImageL(self, event=None):
         array = event.GetMyVal()
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
-        self.imgL.image = image = wx.ImageFromBuffer(w, h, array)
+        self.imgL.image = wx.ImageFromBuffer(w, h, array)
         self.imgL.Update()
         self.imgL.Refresh()
         # Logger.logg("GUI left image updated", Logger.info)
 
-    def OnNewText(self, event=None):
+    def onNewText(self, event=None):
         text = event.GetMyVal()
         self.logTextField.AppendText(text + "\n")
         self.logTextField.Refresh()
         # Logger.logg("GUI text box updated", Logger.info)
 
-    def OnUpdateParametersBtn(self, event=None):
+    def onUpdateParametersBtn(self, event=None):
         dlg = ParameterDialog(self)
         dlg.ShowModal()
         result = dlg.result
@@ -252,19 +263,19 @@ class StartFrame(wx.Frame):
                 b.params = result
                 b.updateParamFlag = True
 
-    def OnStopBtn(self, event=None):
+    def onStopBtn(self, event=None):
         with b.lock:
             b.stopFlag = True
 
-    def OnRun(self, event=None):
+    def onRun(self, event=None):
         with b.lock:
             b.runFlag = not b.runFlag
 
-    def OnSeekAndDestroy(self, event=None):
+    def onSeekAndDestroy(self, event=None):
         with b.lock:
             b.seekAndDestroyFlag = not b.seekAndDestroyFlag
 
-    def OnManualBtn(self, event=None):
+    def onManualBtn(self, event=None):
         # warning dialog
         if not self.controlledManually:
             wx.MessageBox('Use "w, s, a, d, r" to control the snake manually', 'Info', wx.OK | wx.ICON_INFORMATION)
@@ -274,7 +285,7 @@ class StartFrame(wx.Frame):
         self.logTextField.AppendText(f"Snake manual mode: {self.controlledManually}\n")
         Logger.logg(f"GUI manual control: {self.controlledManually}", Logger.info)
 
-    def OnPrepareMazeSingle(self, event=None):
+    def onPrepareMazeSingle(self, event=None):
         # warning dialog
         wx.MessageBox('Make sure the maze is empty', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -282,7 +293,7 @@ class StartFrame(wx.Frame):
         self.findPath.Enable()
         Logger.logg("GUI prepare maze btn pressed", Logger.info)
 
-    def OnPrepareMazeMulti(self, event=None):
+    def onPrepareMazeMulti(self, event=None):
         # Warning dialog
         wx.MessageBox('Make sure the maze is empty', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -290,7 +301,7 @@ class StartFrame(wx.Frame):
         self.findPath2.Enable()
         Logger.logg("Gui prepare maze btn pressed", Logger.info)
 
-    def OnFindPathSingle(self, event=None):
+    def onFindPathSingle(self, event=None):
         # warning dialog
         wx.MessageBox('Put the snake and the target in the maze', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -298,7 +309,7 @@ class StartFrame(wx.Frame):
         self.runBtn.Enable()
         Logger.logg("GUI find path btn preset", Logger.info)
 
-    def OnFindPathMulti(self, event=None):
+    def onFindPathMulti(self, event=None):
         # Warning Dialog
         wx.MessageBox('Put the snake and the target in the maze', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -306,7 +317,7 @@ class StartFrame(wx.Frame):
         self.seekAndDestroy.Enable()
         Logger.logg("GUI Find Path Multi btn pressed", Logger.info)
 
-    def OnClose(self, event=None):
+    def onClose(self, event=None):
         """
         quits the gui and sets a flagg for other threds \n
         :param event: the event
@@ -318,7 +329,7 @@ class StartFrame(wx.Frame):
         time.sleep(0.5)
         self.Destroy()
 
-    def OnKeyDown(self, event=None):
+    def onKeyDown(self, event=None):
         keycode = event.GetKeyCode()
         print(keycode)
         if self.controlledManually:
@@ -351,7 +362,8 @@ class GUI:
     def getEventInfo(self):
         events = {"UpdateImageEventR": UpdateImageEventR,
                   "UpdateImageEventL": UpdateImageEventL,
-                  "UpdateTextEvent": UpdateTextEvent}
+                  "UpdateTextEvent": UpdateTextEvent,
+                  "YesNoEvent": YesNoEvent}
         info = {"id": self.startFrame.GetId,
                 "eventHandler": self.startFrame.GetEventHandler().ProcessEvent,
                 "events": events}
