@@ -162,7 +162,68 @@ class GoToTarget:
         else:
             return False
 
-    def goToTarget(self, snakeCoordinates:list, collisionThreshold:int):
+    def decideMovement(self, lV, sV, lVxsV, snakePointF, lineStart):
+        moving = False
+        if self.readyToMoveForward or self.readyToMoveBackward:
+            if self.ampChanged:
+                amp = None
+                with b.lock:
+                    amp = b.params[0]
+                acc = self.snake.setAmplitude(amp)
+                Logger.logg(f"Amplitude set back to {amp}, acc: {acc}", Logger.cmd)
+                self.ampChanged = False
+            if self.readyToMoveForward:
+                moving = self.checkMovement(self.snake.moveForward)
+                self.readyToMoveForward = False
+            elif self.readyToMoveBackward:
+                moving = self.checkMovement(self.snake.moveBackward)
+                self.readyToMoveBackward = False
+        else:
+            # Finding the angle-offset between snake vector and the path-vector, calculating distance to the line
+            theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
+            distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
+
+            # Angle and distance worse than big deadbands
+            if abs(theta) > self.deadBandAngleBig and abs(distanceToLine) > self.deadBandDistBig:
+                if theta < 0:
+                    moving = self.checkMovement(self.snake.rotateCW)
+                else:
+                    moving = self.checkMovement(self.snake.rotateCCW)
+            # Angle is smaller than big dead band, distance is bigger than big deadband
+            elif abs(theta) < self.deadBandAngleBig and abs(distanceToLine) > self.deadBandDistBig:
+                if distanceToLine < 0:
+                    moving = self.checkMovement(self.snake.moveRight)
+                else:
+                    moving = self.checkMovement(self.snake.moveLeft)
+            # Angle is bigger than big dead band, distance is smaller than big dead band
+            elif abs(theta) > self.deadBandAngleBig and abs(distanceToLine) < self.deadBandDistBig:
+                if theta < 0:
+                    moving = self.checkMovement(self.snake.rotateCW)
+                else:
+                    moving = self.checkMovement(self.snake.rotateCCW)
+            else:
+                # Angle is bigger than small dead band, distance is bigger than small dead band
+                if abs(theta) > self.deadBandAngleSmall and abs(distanceToLine) > self.deadBandDistSmall:
+                    turnAngle = self.snakeController.turn(lV, snakePointF, lineStart, self.propGain)
+                    moving = self.checkMovement(self.snake.turn, args=turnAngle)
+                    self.readyToMoveForward = True
+                # Angle is smaller than small dead band, distance is bigger than small dead band
+                elif abs(theta) < self.deadBandAngleSmall and abs(distanceToLine) > self.deadBandDistSmall:
+                    turnAngle = self.snakeController.turn(lV, snakePointF, lineStart, self.propGain)
+                    moving = self.checkMovement(self.snake.turn, args=turnAngle)
+                    self.readyToMoveForward = True
+                # Angle is bigger than small dead band, distance is smaller than small dead band
+                elif abs(theta) > self.deadBandAngleSmall and abs(distanceToLine) < self.deadBandDistSmall:
+                    turnAngle = theta
+                    moving = self.checkMovement(self.snake.turn, args=turnAngle)
+                    self.readyToMoveForward = True
+                # Angle is smaller than small dead band, distance is smaller than small dead band
+                elif abs(theta) < self.deadBandAngleSmall and abs(distanceToLine) < self.deadBandDistSmall:
+                    moving = self.checkMovement(self.snake.moveForward)
+
+        return moving
+
+    def run(self, snakeCoordinates:list, collisionThreshold:int):
         offset = self.calculateOffset(snakeCoordinates)
 
         snakePic = self.snake.takePicture()
@@ -184,60 +245,5 @@ class GoToTarget:
         self.goalReached = self.checkForGoal()
 
         if not self.goalReached:
-            if self.readyToMoveForward or self.readyToMoveBackward:
-                if self.ampChanged:
-                    amp = None
-                    with b.lock:
-                        amp = b.params[0]
-                    acc = self.snake.setAmplitude(amp)
-                    Logger.logg(f"Amplitude set back to {amp}, acc: {acc}", Logger.cmd)
-                    self.ampChanged = False
-                if self.readyToMoveForward:
-                    self.moving = self.checkMovement(self.snake.moveForward)
-                    self.readyToMoveForward = False
-                elif self.readyToMoveBackward:
-                    self.moving = self.checkMovement(self.snake.moveBackward)
-                    self.readyToMoveBackward = False
-            else:
-                # Finding the angle-offset between snake vector and the path-vector, calculating distance to the line
-                theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
-                distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
-
-                # Angle and distance worse than big deadbands
-                if abs(theta) > self.deadBandAngleBig and abs(distanceToLine) > self.deadBandDistBig:
-                    if theta < 0:
-                        self.moving = self.checkMovement(self.snake.rotateCW)
-                    else:
-                        self.moving = self.checkMovement(self.snake.rotateCCW)
-                # Angle is smaller than big dead band, distance is bigger than big deadband
-                elif abs(theta) < self.deadBandAngleBig and abs(distanceToLine) > self.deadBandDistBig:
-                    if distanceToLine < 0:
-                        self.moving = self.checkMovement(self.snake.moveRight)
-                    else:
-                        self.moving = self.checkMovement(self.snake.moveLeft)
-                # Angle is bigger than big dead band, distance is smaller than big dead band
-                elif abs(theta) > self.deadBandAngleBig and abs(distanceToLine) < self.deadBandDistBig:
-                    if theta < 0:
-                        self.moving = self.checkMovement(self.snake.rotateCW)
-                    else:
-                        self.moving = self.checkMovement(self.snake.rotateCCW)
-                else:
-                    # Angle is bigger than small dead band, distance is bigger than small dead band
-                    if abs(theta) > self.deadBandAngleSmall and abs(distanceToLine) > self.deadBandDistSmall:
-                        turnAngle = self.snakeController.turn(lV, snakePointF, lineStart, self.propGain)
-                        self.moving = self.checkMovement(self.snake.turn, args=turnAngle)
-                        self.readyToMoveForward = True
-                    # Angle is smaller than small dead band, distance is bigger than small dead band
-                    elif abs(theta) < self.deadBandAngleSmall and abs(distanceToLine) > self.deadBandDistSmall:
-                        turnAngle = self.snakeController.turn(lV, snakePointF, lineStart, self.propGain)
-                        self.moving = self.checkMovement(self.snake.turn, args=turnAngle)
-                        self.readyToMoveForward = True
-                    # Angle is bigger than small dead band, distance is smaller than small dead band
-                    elif abs(theta) > self.deadBandAngleSmall and abs(distanceToLine) < self.deadBandDistSmall:
-                        turnAngle = self.snakeController.turnTheta(theta)
-                        self.moving = self.checkMovement(self.snake.turn, args=turnAngle)
-                        self.readyToMoveForward = True
-                    # Angle is smaller than small dead band, distance is smaller than small dead band
-                    elif abs(theta) < self.deadBandAngleSmall and abs(distanceToLine) < self.deadBandDistSmall:
-                        self.moving = self.checkMovement(self.snake.moveForward)
+            self.moving = self.decideMovement(lV, sV, lVxsV, snakePointF, lineStart)
 
