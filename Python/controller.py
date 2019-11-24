@@ -4,20 +4,20 @@ import time
 import pickle
 import cv2
 
-from Bison.Broker import Broker as b
-from Bison.GUI import CustomEvent
-from Bison.ImageProcessing.Draw import drawLines, drawSeveralLines, drawCollisionSectors
-from Bison.ImageProcessing.camera import Camera
-from Bison.ImageProcessing.findSnake import FindSnake
-from Bison.ImageProcessing.findTarget import FindTarget
-from Bison.ImageProcessing.maze_recogn import mazeRecognizer
-from Bison.Movement.Snake import Snake
-from Bison.Movement.snakeController import SnakeCollision
-from Bison.Pathfinding.rrt_star import RRTStar, multiRRTStar
-from Bison.logger import Logger
-from Bison.ImageProcessing.Dead import Dead
-from Bison.Movement.goToTarget import GoToTarget
-from Bison.Movement.seekAndDestroy import SeekAndDestroy
+from Python.broker import Broker as b
+from Python.GUI import CustomEvent
+from Python.ImageProcessing.draw import drawLines, drawSeveralLines, drawCollisionSectors
+from Python.ImageProcessing.camera import Camera
+from Python.ImageProcessing.findSnake import FindSnake
+from Python.ImageProcessing.findTarget import FindTarget
+from Python.ImageProcessing.mazeRecognizer import mazeRecognizer
+from Python.Movement.snake import Snake
+from Python.Movement.snakeController import SnakeCollision
+from Python.Pathfinding.rrt_star import RRTStar, multiRRTStar
+from Python.logger import Logger
+from Python.ImageProcessing.deadEndDetector import DeadEndDetector
+from Python.Movement.goToTarget import GoToTarget
+from Python.Movement.seekAndDestroy import SeekAndDestroy
 
 
 class Controller(threading.Thread):
@@ -37,7 +37,7 @@ class Controller(threading.Thread):
         self.lines = None
         self.lineImageArray = None
 
-        self.deadEnds = Dead()
+        self.deadEnds = DeadEndDetector()
         self.listOfDeadEnds = None
         ###################################
 
@@ -115,7 +115,7 @@ class Controller(threading.Thread):
         startX = None
         startY = None
         try:
-            cords, temp = self.findSnake.LocateSnake(self.cam.takePicture())
+            cords, temp = self.findSnake.locateSnake(self.cam.takePicture())
             startX = cords[0][0]
             startY = cords[0][1]
         except TypeError:
@@ -210,7 +210,7 @@ class Controller(threading.Thread):
         bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0, 0, 255))
 
         try:
-            cords, temp = self.findSnake.LocateSnake(self.cam.takePicture())
+            cords, temp = self.findSnake.locateSnake(self.cam.takePicture())
         except TypeError:
             self.notifyGui("UpdateTextEvent", "Could not find snake")
             return
@@ -232,7 +232,7 @@ class Controller(threading.Thread):
         """
         colorPic = self.cam.takePicture()
 
-        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
+        snakeCoordinates, maskPic = self.findSnake.locateSnakeAverage(1, 1, picture=colorPic)
         if snakeCoordinates:
             # Movement
             # returns false if the snake is not ready to receive a command
@@ -267,7 +267,7 @@ class Controller(threading.Thread):
         """
         colorPic = self.cam.takePicture()
 
-        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
+        snakeCoordinates, maskPic = self.findSnake.locateSnakeAverage(1, 1, picture=colorPic)
         if snakeCoordinates:
             # Movement
             # returns false if the snake is not ready to receive a command

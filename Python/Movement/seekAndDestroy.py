@@ -1,13 +1,13 @@
 import math
 import time
 
-from Bison.GUI import CustomEvent
-from Bison.Movement.goToTarget import GoToTarget
-from Bison.Movement.Snake import Snake
-from Bison.Movement.snakeController import SnakeCollision
-from Bison.logger import Logger
-from Bison.ImageProcessing.findTarget import FindTarget
-from Bison.Broker import Broker as b
+from Python.GUI import CustomEvent
+from Python.Movement.goToTarget import GoToTarget
+from Python.Movement.snake import Snake
+from Python.Movement.snakeController import SnakeCollision
+from Python.logger import Logger
+from Python.ImageProcessing.findTarget import FindTarget
+from Python.broker import Broker as b
 
 
 class SeekAndDestroy(GoToTarget):

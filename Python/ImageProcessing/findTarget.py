@@ -1,7 +1,7 @@
 import cv2
 import imutils
 from scipy.spatial import distance as dist
-from Bison.ImageProcessing.camera import Camera
+from Python.ImageProcessing.camera import Camera
 
 
 class FindTarget:

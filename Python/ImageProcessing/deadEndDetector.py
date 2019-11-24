@@ -2,11 +2,11 @@ import glob
 
 import cv2
 import numpy as np
-from Bison.ImageProcessing.camera import Camera
+from Python.ImageProcessing.camera import Camera
 import os
 
 
-class Dead:
+class DeadEndDetector:
 
     def getDeadEnds2(self, bilde):
         # img_rgb = cv2.imread(r"C:\Users\marcu\PycharmProjects\Luretriks-Slange\Pictures\DeadEnds\perf2.jpg")
@@ -72,5 +72,5 @@ if __name__ == "__main__":
     c.initCam(0)
     bilde = c.takePicture()
     # bilde = cv2.imread(os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds\\perf2.jpg")
-    c = Dead()
+    c = DeadEndDetector()
     c.getDeadEnds2(bilde)

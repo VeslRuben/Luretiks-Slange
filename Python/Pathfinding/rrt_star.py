@@ -6,19 +6,19 @@ author: Atsushi Sakai(@Atsushi_twi)
 import math
 import os
 import sys
-from Bison.logger import Logger
+from Python.logger import Logger
 import matplotlib.pyplot as plt
 import numpy as np
-from Bison.ImageProcessing.maze_recogn import mazeRecognizer
-from Bison.ImageProcessing.Dead import Dead
-from Bison.ImageProcessing.Draw import drawLines
+from Python.ImageProcessing.mazeRecognizer import mazeRecognizer
+from Python.ImageProcessing.deadEndDetector import DeadEndDetector
+from Python.ImageProcessing.draw import drawLines
 import cv2
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../RRT/")
 
 try:
-    from Bison.Pathfinding.rrt import RRT
+    from Python.Pathfinding.rrt import RRT
 except ImportError:
     raise
 
@@ -75,36 +75,36 @@ class RRTStar(RRT):
         self.node_list = [self.start]
         for i in range(self.max_iter):
             # print("Iter:", i, ", number of nodes:", len(self.node_list))
-            rnd = self.get_random_node()
-            nearest_ind = self.get_nearest_node_index(self.node_list, rnd)
+            rnd = self.getRandomNode()
+            nearest_ind = self.getNearestNodeIndex(self.node_list, rnd)
             new_node = self.steer(self.node_list[nearest_ind], rnd, self.expand_dis)
 
-            if self.checkObstaclev2(new_node, self.lineList, self.edge_dist):
-                near_inds = self.find_near_nodes(new_node)
-                new_node = self.choose_parent(new_node, near_inds)
+            if self.checkObstacle(new_node, self.lineList, self.edge_dist):
+                near_inds = self.findNearNodes(new_node)
+                new_node = self.chooseParent(new_node, near_inds)
                 if new_node:
                     self.node_list.append(new_node)
                     self.rewire(new_node, near_inds)
 
             if animation and i % 5 == 0:
-                self.draw_graph(rnd)
+                self.drawGraph(rnd)
 
             if (not search_until_max_iter) and new_node:  # check reaching the goal
-                last_index = self.search_best_goal_node()
+                last_index = self.searchBestGoalNode()
                 if last_index:
                     print("Iterations: ", i)
                     Logger.logg(f"RRT* found path, iterations: {i}", Logger.info)
-                    return self.generate_final_course(last_index)
+                    return self.generateFinalCourse(last_index)
 
         print("reached max iteration")
 
-        last_index = self.search_best_goal_node()
+        last_index = self.searchBestGoalNode()
         if last_index:
-            return self.generate_final_course(last_index)
+            return self.generateFinalCourse(last_index)
 
         return None
 
-    def choose_parent(self, new_node, near_inds):
+    def chooseParent(self, new_node, near_inds):
         if not near_inds:
             return None
 
@@ -113,8 +113,8 @@ class RRTStar(RRT):
         for i in near_inds:
             near_node = self.node_list[i]
             t_node = self.steer(near_node, new_node)
-            if t_node and self.checkObstaclev2(t_node, self.lineList, self.edge_dist):
-                costs.append(self.calc_new_cost(near_node, new_node))
+            if t_node and self.checkObstacle(t_node, self.lineList, self.edge_dist):
+                costs.append(self.calculateNewCost(near_node, new_node))
             else:
                 costs.append(float("inf"))  # the cost of collision node
         min_cost = min(costs)
@@ -130,14 +130,14 @@ class RRTStar(RRT):
 
         return new_node
 
-    def search_best_goal_node(self):
-        dist_to_goal_list = [self.calc_dist_to_goal(n.x, n.y) for n in self.node_list]
+    def searchBestGoalNode(self):
+        dist_to_goal_list = [self.calculateDistanceToGoal(n.x, n.y) for n in self.node_list]
         goal_inds = [dist_to_goal_list.index(i) for i in dist_to_goal_list if i <= self.expand_dis]
 
         safe_goal_inds = []
         for goal_ind in goal_inds:
             t_node = self.steer(self.node_list[goal_ind], self.goal_node)
-            if self.checkObstaclev2(t_node, self.lineList, self.edge_dist):
+            if self.checkObstacle(t_node, self.lineList, self.edge_dist):
                 safe_goal_inds.append(goal_ind)
 
         if not safe_goal_inds:
@@ -150,7 +150,7 @@ class RRTStar(RRT):
 
         return None
 
-    def find_near_nodes(self, new_node):
+    def findNearNodes(self, new_node):
         """
         Searches for nearby nodes
 
@@ -178,17 +178,17 @@ class RRTStar(RRT):
             edge_node = self.steer(new_node, near_node)
             if not edge_node:
                 continue
-            edge_node.cost = self.calc_new_cost(new_node, near_node)
+            edge_node.cost = self.calculateNewCost(new_node, near_node)
 
-            no_collision = self.checkObstaclev2(edge_node, self.lineList, self.edge_dist)
+            no_collision = self.checkObstacle(edge_node, self.lineList, self.edge_dist)
             improved_cost = near_node.cost > edge_node.cost
 
             if no_collision and improved_cost:
                 near_node = edge_node
                 near_node.parent = new_node
-                self.propagate_cost_to_leaves(new_node)
+                self.propagateCostToLeaves(new_node)
 
-    def calc_new_cost(self, from_node, to_node):
+    def calculateNewCost(self, from_node, to_node):
         """
         Calculates new cost of the path (the distance)
 
@@ -196,15 +196,15 @@ class RRTStar(RRT):
         :param to_node: to node
         :return: new node cost for the from-node
         """
-        d, _ = self.calc_distance_and_angle(from_node, to_node)
+        d, _ = self.calculateDistanceAndAngle(from_node, to_node)
         return from_node.cost + d
 
-    def propagate_cost_to_leaves(self, parent_node):
+    def propagateCostToLeaves(self, parent_node):
 
         for node in self.node_list:
             if node.parent == parent_node:
-                node.cost = self.calc_new_cost(parent_node, node)
-                self.propagate_cost_to_leaves(node)
+                node.cost = self.calculateNewCost(parent_node, node)
+                self.propagateCostToLeaves(node)
 
     def run(self, finishLoops=False):
         """
@@ -222,13 +222,13 @@ class RRTStar(RRT):
             print("Cannot find path")
             fig = plt.figure()
             fig.add_subplot(111)
-            self.draw_graph()
+            self.drawGraph()
         else:
             print("found path!!")
 
             # Draw final path
             if self.showFinalAnimation:
-                self.draw_graph()
+                self.drawGraph()
                 fig = plt.figure()
                 fig.add_subplot(111)
                 plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
@@ -237,7 +237,7 @@ class RRTStar(RRT):
                     y1 = data[0][1]
                     x2 = data[0][2]
                     y2 = data[0][3]
-                    self.plotObstaclev2(x1, y1, x2, y2)
+                    self.plotObstacle(x1, y1, x2, y2)
                 plt.grid(True)
                 plt.pause(0.01)  # Need for Mac
                 plt.show()
@@ -384,13 +384,13 @@ if __name__ == "__main__":
         if finalPath is None:
             fig = plt.figure()
             fig.add_subplot(111)
-            rrt_star.draw_graph()
+            rrt_star.drawGraph()
         else:
             print("found path!!")
 
             # Draw final path
             if showFinalAnimation:
-                rrt_star.draw_graph()
+                rrt_star.drawGraph()
                 fig = plt.figure()
                 fig.add_subplot(111)
                 plt.plot([x for (x, y) in finalPath], [y for (x, y) in finalPath], '-r')
@@ -399,14 +399,14 @@ if __name__ == "__main__":
                     y1 = data[0][1]
                     x2 = data[0][2]
                     y2 = data[0][3]
-                    rrt_star.plotObstaclev2(x1, y1, x2, y2)
+                    rrt_star.plotObstacle(x1, y1, x2, y2)
                 plt.grid(True)
                 plt.pause(0.01)  # Need for Mac
                 plt.show()
     elif multidriftRRT:
         m = mazeRecognizer()
         lines, _ = m.findMaze()
-        d = Dead()
+        d = DeadEndDetector()
         bilde = cv2.imread(os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds\\perf2.jpg")
         listOfDeadEnds, _ = d.getDeadEnds2(bilde)
 

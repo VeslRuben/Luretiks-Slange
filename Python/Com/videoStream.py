@@ -6,7 +6,7 @@ import requests
 from requests import ConnectTimeout
 from urllib3.exceptions import ConnectTimeoutError
 
-from Bison.logger import Logger
+from Python.logger import Logger
 
 
 class VideoStream:

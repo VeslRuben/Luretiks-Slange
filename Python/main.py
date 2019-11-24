@@ -1,6 +1,6 @@
-from Bison.GUI import GUI
-from Bison.Controller import Controller
-from Bison.logger import Logger
+from Python.GUI import GUI
+from Python.controller import Controller
+from Python.logger import Logger
 
 try:
     gui = GUI()
