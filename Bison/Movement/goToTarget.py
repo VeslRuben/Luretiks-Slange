@@ -10,6 +10,16 @@ class GoToTarget:
 
     def __init__(self, path, snake: Snake, snakeCollision: SnakeCollision, deadBandAngleSmall:int, deadBandAngleBig:int,
                  deadBandDistSmall:int, deadBandDistBig:int):
+        """
+
+        :param path: list of coordinates for path to go
+        :param snake: snake-object to call movement functions
+        :param snakeCollision: snakeCollision-object to check for collisions
+        :param deadBandAngleSmall: the lower deadband for angle used in movement
+        :param deadBandAngleBig: the higher deadband for angle used in movement
+        :param deadBandDistSmall: the lower deadband for distance used in movement
+        :param deadBandDistBig: the higher deadband for distance used in movement
+        """
         # Lists
         self.path = path
 
@@ -41,6 +51,12 @@ class GoToTarget:
         self.propGain = 0.5
 
     def checkMovement(self, wantedMovement, args=None):
+        """
+        Uses collision handler to check if there are any collisions before doing movement
+        :param wantedMovement: the function for the wanted movement
+        :param args: angle if wantedMovement is the turn-function
+        :return: True/False if any movement is applied
+        """
         if self.snakeCollision.noCollisions():
             if args:
                 return wantedMovement(args)
@@ -50,6 +66,10 @@ class GoToTarget:
             return self.collisionHandling()
 
     def collisionHandling(self):
+        """
+        Checks for collisions in different sectors, applies movement to try to rectify this
+        :return: True if any movement is applied, False if otherwise
+        """
         moving = False
         # Checking for front
         Logger.logg(f"Executing collision command", Logger.info)
@@ -130,6 +150,11 @@ class GoToTarget:
         return moving
 
     def calculateOffset(self, snakeCoordinates):
+        """
+        Calculates the snakes offset in relation to the X-axis of the image
+        :param snakeCoordinates: list of the coordinates of the snakes parts
+        :return: the offset in angles
+        """
         xVector = [1, 0]
         snakeVector = [snakeCoordinates[1][0] - snakeCoordinates[0][0],
                        snakeCoordinates[1][1] - snakeCoordinates[0][1]]
@@ -139,20 +164,34 @@ class GoToTarget:
         return offset
 
     def isCommandDone(self):
+        """
+        Checks if the snake has done the last command sent
+        :return: True if done, False if not
+        """
         cmdDone = self.snake.isCommandDone()
         if cmdDone:
             self.moving = False
         return cmdDone
 
     def checkForNewNode(self, lV, sV, lineEnd, snakePointF):
+        """
+        Checks if the snake has passed a node on the path
+        :param lV: The vector for the path
+        :param sV: The vector for the snake
+        :param lineEnd: (x,y) of the end point of the line
+        :param snakePointF: (x,y) for the snakes front
+        :return: None
+        """
         # Checks if the snake has reached a new node
         snakeLine, finishLine = self.snakeController.calculateLines(lV, sV, lineEnd, snakePointF)
         if self.snakeController.intersect(finishLine[0], finishLine[1], snakeLine[0], snakeLine[1]):
             self.i += 1
 
-
     def checkForGoal(self):
-        # Checks if the snake has reached the goal
+        """
+        Checks if the snake has reached the goal
+        :return: True if it has, False if else
+        """
         if self.i >= len(self.path) - 1:
             self.snake.stop()
             print("Stop")
@@ -163,6 +202,15 @@ class GoToTarget:
             return False
 
     def decideMovement(self, lV, sV, lVxsV, snakePointF, lineStart):
+        """
+        Movement decider. Decides the movement of the snake according to a decision tree
+        :param lV: vector of the path
+        :param sV: vector of the snake
+        :param lVxsV: cross-product of the line vector and the snake vector
+        :param snakePointF: (x,y) for the snakes front
+        :param lineStart: (x,y) for the start of the line vector
+        :return: True if movement is applied, False if else
+        """
         moving = False
         if self.readyToMoveForward or self.readyToMoveBackward:
             if self.ampChanged:
@@ -224,6 +272,14 @@ class GoToTarget:
         return moving
 
     def run(self, snakeCoordinates:list, collisionThreshold:int):
+        """
+        Runs through a cycle for applying movement to the snake. Updates collision, checks if new nodes are passed,
+        checks if the goal is reached.
+
+        :param snakeCoordinates: list of coordinates for the snakes parts
+        :param collisionThreshold: the threshold for which the collision would apply
+        :return: None
+        """
         offset = self.calculateOffset(snakeCoordinates)
 
         snakePic = self.snake.takePicture()

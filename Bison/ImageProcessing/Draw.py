@@ -12,6 +12,13 @@ def drawLines(image, lines, color=(0, 0, 0)):
     return image
 
 def drawSeveralLines(image, pathList, color=(0, 0, 0)):
+    """
+    Takes in a list of several paths and draws them on a picture
+    :param image: Image to draw on
+    :param pathList: List of several paths
+    :param color: Color the line should be
+    :return: Image with the paths drawn
+    """
     for lines in pathList:
         for x in range(0, len(lines) - 1):
             x0 = int(lines[x][0])
@@ -23,6 +30,16 @@ def drawSeveralLines(image, pathList, color=(0, 0, 0)):
 
 
 def drawSection(image, center, startangle, endAngle, collore, radius=50):
+    """
+    Draws a collision sector on a given picture
+    :param image: Image to draw on
+    :param center: Center coordinate from which to draw
+    :param startangle: Start angle of the sector
+    :param endAngle: End angle of the sector
+    :param collore: Color to draw the sector in
+    :param radius: Radius of the semi-cirlce
+    :return: Image with section drawn
+    """
     center = (int(center[0]), int(center[1]))
     startangle = int(startangle)
     endAngle = int(endAngle)
@@ -39,6 +56,16 @@ def drawSection(image, center, startangle, endAngle, collore, radius=50):
 
 
 def drawCollisionSectors(image, snakeCoordinates, angleList, collisions, offset, radius=50):
+    """
+    Takes in a list of angles and collisions to draw all sectors on a picture
+    :param image: Image to draw on
+    :param snakeCoordinates: List of coordinates for the snakes parts
+    :param angleList: List of start/end-angles for the sectors
+    :param collisions: List of booleans for the collisions for the sectors
+    :param offset: Snakes offset in relation to the x-axis of the picture
+    :param radius: Radius of the sector
+    :return: Image with drawn sectors
+    """
     if offset < 0:
         offset += 360
     for pos, piece, coll in zip(snakeCoordinates, angleList, collisions):
