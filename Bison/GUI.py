@@ -233,7 +233,7 @@ class StartFrame(wx.Frame):
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
-        self.imgR.image = image = wx.ImageFromBuffer(w, h, array)
+        self.imgR.image = wx.ImageFromBuffer(w, h, array)
         self.imgR.Update()
         self.imgR.Refresh()
         # Logger.logg("GUI right image updated", Logger.info)
@@ -243,7 +243,7 @@ class StartFrame(wx.Frame):
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
-        self.imgL.image = image = wx.ImageFromBuffer(w, h, array)
+        self.imgL.image = wx.ImageFromBuffer(w, h, array)
         self.imgL.Update()
         self.imgL.Refresh()
         # Logger.logg("GUI left image updated", Logger.info)
