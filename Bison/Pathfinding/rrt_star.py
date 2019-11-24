@@ -252,6 +252,20 @@ class multiRRTStar:
     def __init__(self, rand_area_x=None, rand_area_y=None, lineList=None, expand_dis=100.0,
                  path_resolution=10.0, max_iter=2000, goal_sample_rate=30, edge_dist=30, connect_circle_dist=450,
                  start_point=None, listOfDeadEnds=None):
+        """
+
+        :param rand_area_x: Range on the x-axis the new nodes can be placed
+        :param rand_area_y: Range on the y-axis the new nodes can be placed
+        :param lineList: List of maze-lines
+        :param expand_dis: Expand distance
+        :param path_resolution: Path resolution
+        :param max_iter: Max iterations RRT can run
+        :param goal_sample_rate: % the node will try to go to goal
+        :param edge_dist: Distance for path to keep from the maze walls
+        :param connect_circle_dist: Circle distance the nodes will search for nearby nodes
+        :param start_point: Start point for the RRT
+        :param listOfDeadEnds: List of coordinates for dead ends
+        """
 
         if rand_area_y is None:
             rand_area_y = [0, 1100]
@@ -268,6 +282,12 @@ class multiRRTStar:
         self.listOfDeadEnds = listOfDeadEnds
 
     def tempName(self, startpoint, pointList: list):
+        """
+        Iterates from a start point to the different points. Saves all paths in a list
+        :param startpoint: (x,y) for start point
+        :param pointList: List of points to iterate to
+        :return: List of paths
+        """
         paths = []
 
         for points in pointList:
@@ -282,6 +302,11 @@ class multiRRTStar:
         return paths
 
     def sumPaths(self, pathList):
+        """
+        Finds the lengths of paths in a given list
+        :param pathList: List of paths
+        :return: List of lengths of paths
+        """
         listOfLengths = []
 
         for paths in pathList:
@@ -296,6 +321,11 @@ class multiRRTStar:
         return listOfLengths
 
     def run(self):
+        """
+        Runs RRT* a multitude of times to try to find the best path from the snakes start through all the different
+        dead ends.
+        :return: The final most efficient path
+        """
         finalPath = []
 
         deadEndList = self.listOfDeadEnds.copy()

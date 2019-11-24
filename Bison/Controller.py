@@ -152,6 +152,12 @@ class Controller(threading.Thread):
         soplebil.collect()
 
     def prepMazeMulti(self):
+        """
+        Prepares the maze for multi-target. Finds dead ends and saves these in a list. Then gives the multiRRT the lines
+        of the maze as well as the list of dead ends. Updates GUI with pictures of the maze with the lines and the
+        dead ends.
+        :return: None
+        """
         self.notifyGui("UpdateTextEvent", "Preparing Maze")
         self.lines, self.lineImageArray = self.maze.findMaze()
         self.snakeCollision.mazeLines = self.lines
@@ -165,6 +171,10 @@ class Controller(threading.Thread):
         self.notifyGui("UpdateTextEvent", "Maze Ready")
 
     def findPathMulti(self):
+        """
+        Finds the snakes location and runs the multiRRT-method to find the most effective path between the dead ends.
+        :return: None
+        """
         """self.notifyGui("UpdateTextEvent", "Finding path multi-target. This can take some time")
         temp = None
         startX = None
@@ -254,6 +264,10 @@ class Controller(threading.Thread):
         self.drawGUIElements(snakeCoordinates, colorPic, maskPic)
 
     def runMultiTarget(self):
+        """
+        Gets the snake to go between the different dead ends to search for the target.
+        :return: None
+        """
         colorPic = self.cam.takePicture()
 
         snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
@@ -314,6 +328,14 @@ class Controller(threading.Thread):
                 b.moveCmd = ""
 
     def drawGUIElements(self, snakeCoordinates, colorPic, maskPic):
+        """
+        Updates the GUI with the pictures of the mask with the path ventured as well as the colored picture with the
+        path to go.
+        :param snakeCoordinates: List of coordinates of the snakes parts
+        :param colorPic: Live picture of the maze
+        :param maskPic: Picture of the result of the color thresholding of the snake
+        :return: None
+        """
         if snakeCoordinates:
             # Update GUI #############################
             offset = self.goToTarget.calculateOffset(snakeCoordinates)

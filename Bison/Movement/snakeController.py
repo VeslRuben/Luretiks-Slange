@@ -287,6 +287,10 @@ class SnakeCollision:
         self.backRightCollision = False
 
     def noCollisions(self):
+        """
+        Checks all flags to see if there are no collisions
+        :return: True if no collisions, False if any collisions
+        """
         if any([self.frontLeftCollision, self.frontFrontCollision, self.frontRightCollision, self.midLeftCollision,
                 self.midRightCollision, self.backRightCollision, self.backBackCollision, self.backLeftCollision,
                 self.colliding]):
@@ -295,26 +299,45 @@ class SnakeCollision:
             return True
 
     def rightSectorCollision(self):
+        """
+        Checks for collisions on right sector
+        :return: True if any collisions, False if no collisions
+        """
         if any([self.frontRightCollision, self.midRightCollision, self.backRightCollision]):
             return True
         else:
             return False
 
     def leftSectorCollision(self):
+        """
+        Checks for collisions on left sector
+        :return: True if any collisions, False if no collisions
+        """
         if any([self.frontLeftCollision, self.midLeftCollision, self.backLeftCollision]):
             return True
         else:
             return False
 
     def bothSectorCollision(self):
+        """
+        Checks for collisions on both sectors
+        :return: True if collisions on both sides, False if on none or just one of the sides
+        """
         if self.leftSectorCollision() and self.rightSectorCollision():
             return True
         else:
             return False
 
-    def calculateAngleToNearestPointV2(self, snakeCoordList, fromPointm, toPoint):
+    def calculateAngleToNearestPointV2(self, snakeCoordList, fromPoint, toPoint):
+        """
+        Calculates angle to nearest point from the snake
+        :param snakeCoordList: List of coordinates for the snakes parts
+        :param fromPoint: Point from which the angle should be calculated
+        :param toPoint: Point to which the angle should be calculated
+        :return: Angle in degrees to the point given
+        """
         vectorX = [snakeCoordList[1][0] - snakeCoordList[0][0], snakeCoordList[1][1] - snakeCoordList[0][1]]
-        vectorY = [toPoint[0] - fromPointm[0], toPoint[1] - fromPointm[1]]
+        vectorY = [toPoint[0] - fromPoint[0], toPoint[1] - fromPoint[1]]
 
         xDoty = vectorX[0] * vectorY[0] + vectorX[1] * vectorY[1]
         length = math.sqrt(vectorX[0] ** 2 + vectorX[1] ** 2) * math.sqrt(vectorY[0] ** 2 + vectorY[1] ** 2)
