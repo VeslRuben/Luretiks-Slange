@@ -23,5 +23,7 @@ class Broker:
     moveCmd = ""
     ##########################
 
+    answer = None
+
     # Parameter update
     params = [30, 12]

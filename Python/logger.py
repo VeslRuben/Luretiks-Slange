@@ -10,7 +10,7 @@ class Logger:
     error = 4
 
     path = os.getcwd().split("\\")
-    if path[len(path) - 1] == "Bison":
+    if path[len(path) - 1] == "Python":
         path = "..\\"
     else:
         for x in range(2, 10):
