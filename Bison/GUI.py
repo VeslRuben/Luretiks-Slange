@@ -11,6 +11,8 @@ UpdateImageEventL = wx.NewEventType()
 EVT_UPDATE_IMAGE_L = wx.PyEventBinder(UpdateImageEventL, 1)
 UpdateTextEvent = wx.NewEventType()
 EVT_UPDATE_TEXT = wx.PyEventBinder(UpdateTextEvent, 1)
+YesNoEvent = wx.NewEventType()
+EVT_YES_NO = wx.PyEventBinder(YesNoEvent, 1)
 
 
 class CustomEvent(wx.PyCommandEvent):
@@ -115,6 +117,7 @@ class StartFrame(wx.Frame):
         self.Bind(EVT_UPDATE_IMAGE_R, self.OnNewImageR)
         self.Bind(EVT_UPDATE_IMAGE_L, self.OnNewImageL)
         self.Bind(EVT_UPDATE_TEXT, self.OnNewText)
+        self.Bind(EVT_YES_NO, self.OnYesNo)
 
         #######################################
 
@@ -216,6 +219,14 @@ class StartFrame(wx.Frame):
         self.manualControl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
 
         panel.SetSizer(outerGrid)
+
+    def OnYesNo(self, evnet=None):
+        dlg = wx.MessageBox('Is the target her?', 'Target?', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        with b.lock:
+            if dlg == 2:
+                b.answer = True
+            elif dlg == 8:
+                b.answer = False
 
     def OnNewImageR(self, event=None):
         array = event.GetMyVal()
@@ -351,7 +362,8 @@ class GUI:
     def getEventInfo(self):
         events = {"UpdateImageEventR": UpdateImageEventR,
                   "UpdateImageEventL": UpdateImageEventL,
-                  "UpdateTextEvent": UpdateTextEvent}
+                  "UpdateTextEvent": UpdateTextEvent,
+                  "YesNoEvent": YesNoEvent}
         info = {"id": self.startFrame.GetId,
                 "eventHandler": self.startFrame.GetEventHandler().ProcessEvent,
                 "events": events}

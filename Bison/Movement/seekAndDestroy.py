@@ -1,29 +1,36 @@
 import math
+import time
 
+from Bison.GUI import CustomEvent
 from Bison.Movement.goToTarget import GoToTarget
 from Bison.Movement.Snake import Snake
 from Bison.Movement.snakeController import SnakeCollision
 from Bison.logger import Logger
 from Bison.ImageProcessing.findTarget import FindTarget
+from Bison.Broker import Broker as b
 
 
 class SeekAndDestroy(GoToTarget):
 
     def __init__(self, path: list, snake: Snake, snakeCollision: SnakeCollision, deadBandAngleSmall: int,
-                 deadBandAngleBig: int, deadBandDistSmall: int, deadBandDistBig: int):
+                 deadBandAngleBig: int, deadBandDistSmall: int, deadBandDistBig: int, eventData):
         """
-        Inherits from the GoToTarget-class.
+                Inherits from the GoToTarget-class.
 
-        :param path: the complete path for multi-target
-        :param snake: snake-object for applying commands
-        :param snakeCollision: snakeCollision-object for checking for collisions
-        :param deadBandAngleSmall: the lower deadband for angle used in movement
-        :param deadBandAngleBig: the higher deadband for angle used in movement
-        :param deadBandDistSmall: the lower deadband for distance used in movement
-        :param deadBandDistBig: the higher deadband for distance used in movement
-        """
+                :param path: the complete path for multi-target
+                :param snake: snake-object for applying commands
+                :param snakeCollision: snakeCollision-object for checking for collisions
+                :param deadBandAngleSmall: the lower deadband for angle used in movement
+                :param deadBandAngleBig: the higher deadband for angle used in movement
+                :param deadBandDistSmall: the lower deadband for distance used in movement
+                :param deadBandDistBig: the higher deadband for distance used in movement
+                """
         super().__init__(path[0], snake, snakeCollision, deadBandAngleSmall, deadBandAngleBig, deadBandDistSmall,
                          deadBandDistBig)
+        self.eventData = eventData
+        self.guiEvents = eventData["events"]
+        self.guiId = eventData["id"]
+        self.guiEventhandler = eventData["eventHandler"]
 
         # Objects
         self.findTarget = FindTarget()
@@ -32,6 +39,7 @@ class SeekAndDestroy(GoToTarget):
         self.j = 0
         self.totalPath = path
         self.targetAcq = False
+        self.goalThreshold = 150
 
     def updatePath(self):
         """
@@ -39,7 +47,7 @@ class SeekAndDestroy(GoToTarget):
         :return: None
         """
         self.j += 1
-        self.path = self.totalPath[j]
+        self.path = self.totalPath[self.j]
         self.i = 1
         Logger.logg(f"Goal reached, new path. i: {self.i}, j: {self.j}", Logger.info)
 
@@ -65,15 +73,18 @@ class SeekAndDestroy(GoToTarget):
 
     def targetAcquired(self) -> bool:
         """
-        Checks if the target is within the frame
-        :return: True if target is there, False if else
-        """
-        pic = self.snake.takePicture()
-        temp = self.findTarget.getTarget(pic)
-        if temp:
-            return True
-        else:
-            return False
+                Checks if the target is within the frame
+                :return: True if target is there, False if else
+                """
+        updateEvent = CustomEvent(self.guiEvents["YesNoEvent"], self.guiId())
+        self.guiEventhandler(updateEvent)
+        while True:
+            with b.lock:
+                if b.answer is not None:
+                    targetAccq = b.answer
+                    break
+            time.sleep(0.5)
+        return targetAccq
 
     def run(self, snakeCoordinates: list, collisionThreshold: int):
         """
@@ -87,8 +98,8 @@ class SeekAndDestroy(GoToTarget):
         if not self.targetAcq:
             offset = self.calculateOffset(snakeCoordinates)
 
-            snakePic = self.snake.takePicture()
-            self.snakeCollision.updateCollisions(snakeCoordinates, collisionThreshold, offset, snakePic)
+            #snakePic = self.snake.takePicture()
+            self.snakeCollision.updateCollisions(snakeCoordinates, collisionThreshold, offset, None)
 
             lineStart = self.path[self.i]
             lineEnd = self.path[self.i + 1]
@@ -104,7 +115,12 @@ class SeekAndDestroy(GoToTarget):
 
             restOfPath = [self.path[self.i + 1:len(self.path) - 1]]
 
-            self.goalReached = self.checkDistanceToGoal(snakePointF, restOfPath)
+            distance = self.checkDistanceToGoal(snakePointF, restOfPath)
+
+            if distance > self.goalThreshold:
+                self.goalReached = False
+            else:
+                self.goalReached = True
 
             if not self.goalReached:
                 self.moving = self.decideMovement(lV, sV, lVxsV, snakePointF, lineStart)
@@ -112,4 +128,5 @@ class SeekAndDestroy(GoToTarget):
                 self.targetAcq = self.targetAcquired()
                 if self.j < len(self.totalPath) - 1:
                     self.updatePath()
+                    self.moving = True
 

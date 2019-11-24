@@ -268,7 +268,7 @@ class SnakeCollision:
                         f"front mid right collision @closet point: {closestPoint2} snake pos: {snakeMid.x}, {snakeMid.y}",
                         Logger.info)
 
-        self.colliding = self.snakeObstacle.FindObsInPath(snakePic)
+        #self.colliding = self.snakeObstacle.FindObsInPath(snakePic)
 
     def resetCollisions(self):
         """

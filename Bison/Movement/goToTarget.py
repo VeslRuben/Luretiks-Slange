@@ -73,9 +73,9 @@ class GoToTarget:
         moving = False
         # Checking for front
         Logger.logg(f"Executing collision command", Logger.info)
-        if self.snakeCollision.colliding:
-            moving = True
-        elif self.snakeCollision.frontFrontCollision:
+        #if self.snakeCollision.colliding:
+        #    moving = True
+        if self.snakeCollision.frontFrontCollision:
             # Checking both sectors at once
             if self.snakeCollision.bothSectorCollision():
                 # Double backwards
@@ -262,7 +262,7 @@ class GoToTarget:
                     self.readyToMoveForward = True
                 # Angle is bigger than small dead band, distance is smaller than small dead band
                 elif abs(theta) > self.deadBandAngleSmall and abs(distanceToLine) < self.deadBandDistSmall:
-                    turnAngle = theta
+                    turnAngle = self.snakeController.turnTheta(theta)
                     moving = self.checkMovement(self.snake.turn, args=turnAngle)
                     self.readyToMoveForward = True
                 # Angle is smaller than small dead band, distance is smaller than small dead band
@@ -282,8 +282,8 @@ class GoToTarget:
         """
         offset = self.calculateOffset(snakeCoordinates)
 
-        snakePic = self.snake.takePicture()
-        self.snakeCollision.updateCollisions(snakeCoordinates, collisionThreshold, offset, snakePic)
+        #snakePic = self.snake.takePicture()
+        self.snakeCollision.updateCollisions(snakeCoordinates, collisionThreshold, offset, None)
 
         # Establishing start and end of the path
         lineStart = self.path[self.i]

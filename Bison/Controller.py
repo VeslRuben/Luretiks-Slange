@@ -1,5 +1,4 @@
 import gc as soplebil
-import math
 import threading
 import time
 import pickle
@@ -7,14 +6,13 @@ import cv2
 
 from Bison.Broker import Broker as b
 from Bison.GUI import CustomEvent
-from Bison.ImageProcessing.Draw import drawLines, drawSection, drawSeveralLines, drawCollisionSectors
+from Bison.ImageProcessing.Draw import drawLines, drawSeveralLines, drawCollisionSectors
 from Bison.ImageProcessing.camera import Camera
 from Bison.ImageProcessing.findSnake import FindSnake
 from Bison.ImageProcessing.findTarget import FindTarget
 from Bison.ImageProcessing.maze_recogn import mazeRecognizer
-from Bison.ImageProcessing.cheakPathForObs import cheakPathForObs
 from Bison.Movement.Snake import Snake
-from Bison.Movement.snakeController import SnakeController, SnakeCollision
+from Bison.Movement.snakeController import SnakeCollision
 from Bison.Pathfinding.rrt_star import RRTStar, multiRRTStar
 from Bison.logger import Logger
 from Bison.ImageProcessing.Dead import Dead
@@ -32,6 +30,7 @@ class Controller(threading.Thread):
         self.guiEvents = eventData["events"]
         self.guiId = eventData["id"]
         self.guiEventhandler = eventData["eventHandler"]
+        self.eventData = eventData
 
         # Mase Recognizer varibels ########
         self.maze = mazeRecognizer()
@@ -60,7 +59,7 @@ class Controller(threading.Thread):
                                  [[15 + 180, -45 + 180], [45, 135], [-135 + 180, -195 + 180]]]
         self.snake = Snake("http://192.168.137.87", "192.168.137.252")
         self.goToTarget = GoToTarget(None, self.snake, self.snakeCollision, 10, 45, 20, 80)
-        self.seekAndDestroy = SeekAndDestroy(None, self.snake, self.snakeCollision, 10, 45, 20, 80)
+        self.seekAndDestroy = None
         self.cam = Camera()
 
         # Snake variables
@@ -216,8 +215,7 @@ class Controller(threading.Thread):
             self.notifyGui("UpdateTextEvent", "Could not find snake")
             return
 
-        self.seekAndDestroy.totalPath = self.finalPath
-        self.seekAndDestroy.path = self.finalPath[0]
+        self.seekAndDestroy = SeekAndDestroy(self.finalPath, self.snake, self.snakeCollision, 10, 45, 20, 80, self.eventData)
 
         self.notifyGui("UpdateImageEventL", cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
         self.notifyGui("UpdateImageEventR", bilde)
@@ -244,7 +242,6 @@ class Controller(threading.Thread):
             if self.goToTarget.moving and self.lastCmdSent + self.cmdDoneTimer < time.time():
                 self.overrideMoving = True
                 Logger.logg(f"No done message received in {self.cmdDoneTimer} sec, Overriding movement", Logger.info)
-
 
             if cmdDone or self.overrideMoving:
                 # Reset override moving flag if active
@@ -347,9 +344,14 @@ class Controller(threading.Thread):
             colorPic = drawCollisionSectors(colorPic, snakeCoordinates, self.collisionSectors, sectorCollisionsFlags,
                                             offset,
                                             self.collisionDistance)
+        try:
+            _ = self.finalPath[0][0][0]
+            multi = True
+        except TypeError:
+            multi = False
 
-        if len(self.finalPath) > 1:
-            colorPic = drawSeveralLines(colorPic, self.finalPath, (255,0,0))
+        if multi:
+            colorPic = drawSeveralLines(colorPic, self.finalPath, (255, 0, 0))
         else:
             colorPic = drawLines(colorPic, self.finalPath, (255, 0, 0))
         colorPic = cv2.cvtColor(colorPic, cv2.COLOR_BGR2RGB)
