@@ -19,6 +19,7 @@ from Bison.Pathfinding.rrt_star import RRTStar, multiRRTStar
 from Bison.logger import Logger
 from Bison.ImageProcessing.Dead import Dead
 from Bison.Movement.goToTarget import GoToTarget
+from Bison.Movement.seekAndDestroy import SeekAndDestroy
 
 
 class Controller(threading.Thread):
@@ -53,29 +54,25 @@ class Controller(threading.Thread):
         self.finalPath = None
         ###################################
 
-        # Snake variables ###########################
-        self.snakeController = SnakeController()
+        # Snake Objects
         self.snakeCollision = SnakeCollision(None, -105, -45, 45, 105, -75, -105, 75, 105, 0, 0, 0, 0)
         self.collisionSectors = [[[15 + 180, -15 + 180], [-165 + 180, -195 + 180]],
                                  [[15 + 180, -45 + 180], [45, 135], [-135 + 180, -195 + 180]]]
+        self.snake = Snake("http://192.168.137.87", "192.168.137.252")
+        self.goToTarget = GoToTarget(None, self.snake, self.snakeCollision, 10, 45, 20, 80)
+        self.seekAndDestroy = SeekAndDestroy(None, self.snake, self.snakeCollision, 10, 45, 20, 80)
+        self.cam = Camera()
+
+        # Snake variables
         self.overrideMoving = True
-        self.targetAccuaierd = False
         self.cmdDoneTimer = 5
         self.lastCmdSent = 0
         self.seekDistance = 200
         self.deadBand = 80
         self.deadBandAngle = 50
         self.collisionDistance = 75
-        self.moving = False
-        self.firstLoop = True
-        self.i = 0
-        self.j = 0
         self.traveledPath = []
-        self.cam = Camera()
-        self.snake = Snake("http://192.168.137.87", "192.168.137.252")
         # self.snake.setFrameSize(7)
-        self.snakeObstacle = cheakPathForObs()
-        self.goToTarget = GoToTarget(None, self.snake, self.snakeCollision, 10, 45, 20, 80)
         time.sleep(1)
         with b.lock:
             print(self.snake.setAmplitude(b.params[0]))
@@ -190,6 +187,8 @@ class Controller(threading.Thread):
 
         if self.finalPath is not None:
             self.notifyGui("UpdateTextEvent", "Path found!")
+            self.seekAndDestroy.totalPath = self.finalPath
+            self.seekAndDestroy.path = self.finalPath[0]
         else:
             self.notifyGui("UpdateTextEvent", "Could not find path")
             return
@@ -207,6 +206,9 @@ class Controller(threading.Thread):
             self.notifyGui("UpdateTextEvent", "Could not find snake")
             return
 
+        self.seekAndDestroy.totalPath = self.finalPath
+        self.seekAndDestroy.path = self.finalPath[0]
+
         self.notifyGui("UpdateImageEventL", cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
         self.notifyGui("UpdateImageEventR", bilde)
 
@@ -214,6 +216,73 @@ class Controller(threading.Thread):
         # pickle.dump(self.finalPath, f)
 
         soplebil.collect()
+
+    def runSingleTarget(self):
+        """
+        Gets the snake to move towards a target.
+        :return: Nothing
+        """
+        colorPic = self.cam.takePicture()
+
+        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
+        if snakeCoordinates:
+            # Movement
+            # returns false if the snake is not ready to receive a command
+            cmdDone = self.goToTarget.isCommandDone()
+
+            # Resets the moving flag if there is no acc inside a given time
+            if self.goToTarget.moving and self.lastCmdSent + self.cmdDoneTimer < time.time():
+                self.overrideMoving = True
+                Logger.logg(f"No done message received in {self.cmdDoneTimer} sec, Overriding movement", Logger.info)
+
+
+            if cmdDone or self.overrideMoving:
+                # Reset override moving flag if active
+                self.overrideMoving = False
+
+                # Run go to target to make the movements
+                self.goToTarget.run(snakeCoordinates, self.collisionDistance)
+
+                # Set new timer
+                self.lastCmdSent = time.time()
+
+                # Appends the new position of the snake to its traveled path
+                self.traveledPath.append(snakeCoordinates[1])
+            else:
+                pass
+
+        self.drawGUIElements(snakeCoordinates, colorPic, maskPic)
+
+    def runMultiTarget(self):
+        colorPic = self.cam.takePicture()
+
+        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
+        if snakeCoordinates:
+            # Movement
+            # returns false if the snake is not ready to receive a command
+            cmdDone = self.seekAndDestroy.isCommandDone()
+
+            # Resets the moving flag if there is no acc inside a given time
+            if self.seekAndDestroy.moving and self.lastCmdSent + self.cmdDoneTimer < time.time():
+                self.overrideMoving = True
+                Logger.logg(f"No done message received in {self.cmdDoneTimer} sec, Overriding movement", Logger.info)
+
+            if cmdDone or self.overrideMoving:
+                # Reset override moving flag if active
+                self.overrideMoving = False
+
+                # Run go to target to make the movements
+                self.seekAndDestroy.run(snakeCoordinates, self.collisionDistance)
+
+                # Set new timer
+                self.lastCmdSent = time.time()
+
+                # Appends the new position of the snake to its traveled path
+                self.traveledPath.append(snakeCoordinates[1])
+            else:
+                pass
+
+        self.drawGUIElements(snakeCoordinates, colorPic, maskPic)
 
     def moveSnakeManually(self):
         """
@@ -244,45 +313,6 @@ class Controller(threading.Thread):
                     self.snake.reset()
                 b.moveCmd = ""
 
-    def autoMode(self):
-        pass
-
-    def runSingleTarget(self):
-        """
-        Gets the snake to move towards a target.
-        :return: Nothing
-        """
-        colorPic = self.cam.takePicture()
-
-        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
-        if snakeCoordinates:
-            # Movement
-            # returns false if the snake is not ready to receive a command
-            cmdDone = self.goToTarget.isCommandDone()
-
-            # Resets the moving flag if there is no acc inside a given time
-            if self.goToTarget.moving and self.lastCmdSent + self.cmdDoneTimer < time.time():
-                self.overrideMoving = True
-                Logger.logg(f"No done message received in {self.cmdDoneTimer} sec, Overriding movement", Logger.info)
-
-
-            if cmdDone or self.overrideMoving:
-                # Reset override moving flag if active
-                self.overrideMoving = False
-
-                # Run go to target to make the movements
-                self.goToTarget.goToTarget(snakeCoordinates, self.collisionDistance)
-
-                # Set new timer
-                self.lastCmdSent = time.time()
-
-                # Appends the new position of the snake to its traveled path
-                self.traveledPath.append(snakeCoordinates[1])
-            else:
-                pass
-
-        self.drawGUIElements(snakeCoordinates, colorPic, maskPic)
-
     def drawGUIElements(self, snakeCoordinates, colorPic, maskPic):
         if snakeCoordinates:
             # Update GUI #############################
@@ -296,238 +326,16 @@ class Controller(threading.Thread):
                                             offset,
                                             self.collisionDistance)
 
-        colorPic = drawLines(colorPic, self.finalPath, (255, 0, 0))
+        if len(self.finalPath) > 1:
+            colorPic = drawSeveralLines(colorPic, self.finalPath, (255,0,0))
+        else:
+            colorPic = drawLines(colorPic, self.finalPath, (255, 0, 0))
         colorPic = cv2.cvtColor(colorPic, cv2.COLOR_BGR2RGB)
         self.notifyGui("UpdateImageEventR", colorPic)
 
         if len(self.traveledPath) > 1:
             maskPic = drawLines(maskPic, self.traveledPath, (0, 255, 0))
         self.notifyGui("UpdateImageEventL", maskPic)
-
-    def seekAndDestroy(self):
-        """
-        Gets the snake to move towards a target.
-        :return: Nothing
-        """
-        colorPic = self.cam.takePicture()
-
-        snakeCoordinates, maskPic = self.findSnake.LocateSnakeAverage(1, 1, picture=colorPic)
-        if snakeCoordinates:
-            xVector = [1, 0]
-            snakeVector = [snakeCoordinates[1][0] - snakeCoordinates[0][0],
-                           snakeCoordinates[1][1] - snakeCoordinates[0][1]]
-            xVxsV = xVector[0] * snakeVector[1] - xVector[1] * snakeVector[0]
-            offset = self.snakeController.calculateTheta(xVector, snakeVector, xVxsV)
-            self.snakeCollision.updateCollisions(snakeCoordinates, self.collisionDistance, offset)
-
-            # Update GUI #############################
-            colorPic = drawSeveralLines(colorPic, self.finalPath, (255, 0, 0))
-            pizzaSlicesCollision = [[self.snakeCollision.midRightCollision, self.snakeCollision.midLeftCollision],
-                                    [self.snakeCollision.frontRightCollision,
-                                     self.snakeCollision.frontFrontCollision,
-                                     self.snakeCollision.frontLeftCollision]]
-            if offset < 0:
-                offset += 360
-            for pos, piece, coll in zip(snakeCoordinates, self.pizzaSlices, pizzaSlicesCollision):
-                i = 0
-                for startAngle, endAngle in piece:
-                    if coll[i]:
-                        color = (0, 0, 255)
-                    else:
-                        color = (0, 255, 0)
-                    colorPic = drawSection(colorPic, tuple(pos), startAngle + offset - 90, endAngle + offset - 90,
-                                           color, radius=self.collisionDistance)
-                    i += 1
-        colorPic = cv2.cvtColor(colorPic, cv2.COLOR_BGR2RGB)
-        self.notifyGui("UpdateImageEventR", colorPic)
-        ##########################################
-
-        # returns if the snake is not ready to receive a command ####
-        cmdDone = self.snake.isCommandDone()
-        if self.moving and self.lastCmdSent + self.cmdDoneTimer < time.time():
-            self.overrideMoving = True
-            Logger.logg(f"No done message received in {self.cmdDoneTimer} sec, overriding movement", Logger.info)
-
-        """
-        If the snake returns that the last command is done, sets moving flag to false again.
-        On the first loop this will pass because of OverrideMoving-flag to set moving to false.
-        """
-        if cmdDone or self.overrideMoving:
-            self.moving = False
-            self.overrideMoving = False
-            self.lastCmdSent = time.time()
-
-        if snakeCoordinates:
-            endPoint = self.finalPath[self.j][len(self.finalPath[self.j]) - 1]
-            angleToEnd = self.snakeCollision.calculateAngleToNearestPointV2(snakeCoordinates, snakeCoordinates[1],
-                                                                            endPoint)
-            restOfPath = [self.finalPath[self.j][self.i + 1:len(self.finalPath[self.j]) - 1]]
-            lenSnakeToEnd = self.calculateDistanceToGoal(snakeCoordinates[1], restOfPath)
-
-            """
-            Checks if the snake is in movement, if not in movement, checks if it is ready to move.
-            If ready to move, sends command to snake to move forward one cycle.
-            """
-            if self.moving:
-                pass
-            elif self.readyToMoveForward:
-                if self.ampChanged:
-                    amp = None
-                    with b.lock:
-                        amp = b.params[0]
-                    acc = self.snake.setAmplitude(amp)
-                    self.ampChanged = False
-                    Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
-                if snakeCoordinates:
-                    if not self.snakeCollision.frontFrontCollision:
-                        self.moving = self.snake.moveForward()
-                        self.readyToMoveForward = False
-                    else:
-                        self.collisionHandling()
-            elif self.readyToMoveBackward:
-                if self.ampChanged:
-                    amp = None
-                    with b.lock:
-                        amp = b.params[0]
-                    acc = self.snake.setAmplitude(amp)
-                    Logger.logg(f"ampetude set back to {amp}, acc: {acc}", Logger.cmd)
-                    self.ampChanged = False
-                if snakeCoordinates:
-                    if not self.snakeCollision.backBackCollision:
-                        self.moving = self.snake.moveBackward()
-                        self.readyToMoveBackward = False
-                    else:
-                        self.collisionHandling()
-            elif self.targetAccuaierd:
-                pass
-            # Checks if the snake has reached the a dead end
-            elif lenSnakeToEnd < self.seekDistance:
-                if abs(angleToEnd) < 10:
-                    self.targetAccuaierd = self.tagetAccu()
-                    self.j += 1
-                    self.i = 1
-                elif abs(angleToEnd) > 45:
-                    if angleToEnd > 0:
-                        self.snake.rotateCW()
-                    else:
-                        self.snake.rotateCCW()
-                else:
-                    self.snake.turn(self.snakeController.currentAngle + angleToEnd)
-            else:
-                lineStart = self.finalPath[self.j][self.i]
-                lineEnd = self.finalPath[self.j][self.i + 1]
-
-                """
-                Runs only on the first loop of the run.
-                Adjusts the start angle before movement starts
-                """
-                if self.firstLoop:
-                    if snakeCoordinates:
-                        self.firstLoop = False
-                        snakePointF = snakeCoordinates[1]
-                        snakePointB = snakeCoordinates[0]
-
-                        lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
-                                                                                  snakePointF)
-                        snakeAngle = self.snakeController.calculateFirstTurnAngle(lV, sV, lVxsV)
-                        self.moving = self.snake.turn(snakeAngle)
-
-                        # Update GUI
-                        self.notifyGui("UpdateImageEventL", maskPic)
-
-                ############################################################################
-                # Gets the location of the snake, and calculates vectors for path to follow
-                # as well as vector for snake. Draws path on the masked picture.
-                # Makes the snake turn or ready to move depending on its angle.
-                ############################################################################
-                else:
-                    # Check that the snake is found
-                    if snakeCoordinates:
-                        snakePointF = snakeCoordinates[1]
-                        snakePointB = snakeCoordinates[0]
-                        lV, sV, lVxsV = self.snakeController.calculateLineVectors(lineStart, lineEnd, snakePointB,
-                                                                                  snakePointF)
-
-                        # Update GUI with path on the masked picture
-                        if len(self.traveledPath) > 1:
-                            maskPic = drawLines(maskPic, self.traveledPath, (0, 255, 0))
-                        self.notifyGui("UpdateImageEventL", maskPic)
-
-                        # Checks if the snake has reached a new node
-                        snakeLine, finishLine = self.snakeController.calculateLines(lV, sV, lineEnd, snakePointF)
-                        if self.snakeController.intersect(finishLine[0], finishLine[1], snakeLine[0], snakeLine[1]):
-                            self.i += 1
-
-                        """ Moving logic"""
-                        theta = self.snakeController.calculateTheta(lV, sV, lVxsV)
-                        distanceToLine = self.snakeController.calculatDistanceToLine(lV, snakePointF, lineStart)
-
-                        if self.snakeCollision.noCollisions():
-                            # alt er fint
-                            if abs(theta) < self.deadBandAngle and abs(distanceToLine) < self.deadBand:
-                                turnAngle = self.snakeController.turn(lV, sV, lVxsV, snakePointF, lineStart, 0.5,
-                                                                      20)
-                                self.moving = self.snake.turn(turnAngle)
-                                self.readyToMoveForward = True
-                            # vinker fin distance fuckt
-                            elif abs(theta) < self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
-                                # Lateral shift
-                                if distanceToLine < 0:
-                                    # Lateral right
-                                    self.moving = self.snake.moveRight()
-                                elif distanceToLine > 0:
-                                    # Lateral left
-                                    self.moving = self.snake.moveLeft()
-                            # vinkel fuckt distance fin
-                            elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) < self.deadBand:
-                                # Rotate
-                                if theta > 0:
-                                    # Rotate CCW, left
-                                    self.moving = self.snake.rotateCCW()
-                                elif theta < 0:
-                                    # Rotate CW, right
-                                    self.moving = self.snake.rotateCW()
-                            # alt er fuckt
-                            elif abs(theta) >= self.deadBandAngle and abs(distanceToLine) >= self.deadBand:
-                                # Rotate
-                                if theta > 0:
-                                    # Rotate CCW, left
-                                    self.moving = self.snake.rotateCCW()
-                                elif theta < 0:
-                                    # Rotate CW, right
-                                    self.moving = self.snake.rotateCW()
-                        else:
-                            self.collisionHandling()
-
-                        """ Moving logic END!!!!!!"""
-
-                        # Appends the new position of the snake to its traveled path
-                        self.traveledPath.append(snakePointF)
-
-
-    def tagetAccu(self) -> bool:
-        pic = self.snake.takePicture()
-        temp = self.finTarget.getTarget(pic)
-        if temp:
-            return True
-        else:
-            return False
-
-
-    def calculateDistanceToGoal(self, snakeFrontCoordinates, restOfPath):
-        sum = 0
-        restOfPath = restOfPath[0]
-
-        firstVector = [restOfPath[0][0] - snakeFrontCoordinates[0], restOfPath[0][1] - snakeFrontCoordinates[1]]
-        sum += math.sqrt(firstVector[0] ** 2 + firstVector[1] ** 2)
-
-        for i in range(len(restOfPath) - 1):
-            vector = [restOfPath[i + 1][0] - restOfPath[i][0], restOfPath[i + 1][1] - restOfPath[i][1]]
-
-            sum += math.sqrt(vector[0] ** 2 + vector[1] ** 2)
-
-        return sum
-
 
     def run(self) -> None:
         """
@@ -572,7 +380,7 @@ class Controller(threading.Thread):
             b.lock.acquire()
             if b.seekAndDestroyFlag:
                 b.lock.release()
-                self.seekAndDestroy()
+                self.runMultiTarget()
             else:
                 b.lock.release()
 
