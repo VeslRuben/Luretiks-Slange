@@ -1,7 +1,7 @@
 import math
 import random
 from shapely.geometry import LineString
-from Bison.ImageProcessing.maze_recogn import mazeRecognizer
+from Python.ImageProcessing.mazeRecognizer import mazeRecognizer
 
 import matplotlib.pyplot as plt
 
@@ -55,25 +55,25 @@ class RRT:
         """
         self.node_list = [self.start]
         for i in range(self.max_iter):
-            rnd_node = self.get_random_node()
-            nearest_ind = self.get_nearest_node_index(self.node_list, rnd_node)
+            rnd_node = self.getRandomNode()
+            nearest_ind = self.getNearestNodeIndex(self.node_list, rnd_node)
             nearest_node = self.node_list[nearest_ind]
 
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
-            if self.checkObstaclev2(new_node, self.lineList, self.edge_dist):
+            if self.checkObstacle(new_node, self.lineList, self.edge_dist):
                 self.node_list.append(new_node)
 
             if animation and i % 5 == 0:
-                self.draw_graph(rnd_node)
+                self.drawGraph(rnd_node)
 
-            if self.calc_dist_to_goal(self.node_list[-1].x, self.node_list[-1].y) <= self.expand_dis:
+            if self.calculateDistanceToGoal(self.node_list[-1].x, self.node_list[-1].y) <= self.expand_dis:
                 final_node = self.steer(self.node_list[-1], self.end, self.expand_dis)
-                if self.checkObstaclev2(final_node, self.lineList, self.edge_dist):
-                    return self.generate_final_course(len(self.node_list) - 1)
+                if self.checkObstacle(final_node, self.lineList, self.edge_dist):
+                    return self.generateFinalCourse(len(self.node_list) - 1)
 
             if animation and i % 5:
-                self.draw_graph(rnd_node)
+                self.drawGraph(rnd_node)
 
         return None
 
@@ -87,7 +87,7 @@ class RRT:
         :return: new node with run coordinates
         """
         new_node = self.Node(from_node.x, from_node.y)
-        d, theta = self.calc_distance_and_angle(new_node, to_node)
+        d, theta = self.calculateDistanceAndAngle(new_node, to_node)
 
         new_node.path_x = [new_node.x]
         new_node.path_y = [new_node.y]
@@ -103,7 +103,7 @@ class RRT:
             new_node.path_x.append(new_node.x)
             new_node.path_y.append(new_node.y)
 
-        d, _ = self.calc_distance_and_angle(new_node, to_node)
+        d, _ = self.calculateDistanceAndAngle(new_node, to_node)
         if d <= self.path_resolution:
             new_node.path_x.append(to_node.x)
             new_node.path_y.append(to_node.y)
@@ -112,7 +112,7 @@ class RRT:
 
         return new_node
 
-    def draw_graph(self, rnd=None):
+    def drawGraph(self, rnd=None):
         """
         Plots everything, if there is a node sent in, \n
         it will plot this nodes placement.
@@ -132,7 +132,7 @@ class RRT:
             y1 = data[0][1]
             x2 = data[0][2]
             y2 = data[0][3]
-            self.plotObstaclev2(x1, y1, x2, y2)
+            self.plotObstacle(x1, y1, x2, y2)
 
         plt.plot(self.start.x, self.start.y, "xr")
         plt.plot(self.end.x, self.end.y, "xr")
@@ -141,7 +141,7 @@ class RRT:
         plt.grid(False)
         plt.pause(0.01)
 
-    def generate_final_course(self, goal_ind):
+    def generateFinalCourse(self, goal_ind):
         """
         Generates the final course if the goal is found.
 
@@ -157,7 +157,7 @@ class RRT:
 
         return path
 
-    def calc_dist_to_goal(self, x ,y):
+    def calculateDistanceToGoal(self, x, y):
         """
 
         :param x: coordinate
@@ -168,7 +168,7 @@ class RRT:
         dy = y - self.end.y
         return math.sqrt(dx ** 2 + dy ** 2)
 
-    def get_random_node(self):
+    def getRandomNode(self):
         """
 
         :return: new randomly placed node
@@ -181,7 +181,7 @@ class RRT:
         return rnd
 
     @staticmethod
-    def plotObstaclev2(x1, y1, x2, y2):
+    def plotObstacle(x1, y1, x2, y2):
         """
         Plots the lines for the obstacles.
 
@@ -194,7 +194,7 @@ class RRT:
         plt.plot([x1, x2], [y1, y2], color='k', linestyle='-', linewidth=1)
 
     @staticmethod
-    def checkObstaclev2(node, lineList, edgeDistance):
+    def checkObstacle(node, lineList, edgeDistance):
         """
         Checks if the nodes path collides with obstacle. \n
         Also checks how close to the obstacle the line \n
@@ -222,7 +222,7 @@ class RRT:
         return True
 
     @staticmethod
-    def get_nearest_node_index(node_list, rnd_node):
+    def getNearestNodeIndex(node_list, rnd_node):
         """
         Gets the index for the nearest node.
 
@@ -237,7 +237,7 @@ class RRT:
         return minind
 
     @staticmethod
-    def calc_distance_and_angle(from_node, to_node):
+    def calculateDistanceAndAngle(from_node, to_node):
         """
         Calculates distance and angle between two nodes.
 
@@ -265,13 +265,13 @@ def main():
     if path is None:
         fig = plt.figure()
         fig.add_subplot(111)
-        rrt.draw_graph()
+        rrt.drawGraph()
     else:
         print("found path!!")
 
         # Draw final path
         if showFinalAnimation:
-            rrt.draw_graph()
+            rrt.drawGraph()
             fig = plt.figure()
             fig.add_subplot(111)
             plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
@@ -280,7 +280,7 @@ def main():
                 y1 = data[0][1]
                 x2 = data[0][2]
                 y2 = data[0][3]
-                rrt.plotObstaclev2(x1, y1, x2, y2)
+                rrt.plotObstacle(x1, y1, x2, y2)
             plt.grid(True)
             plt.pause(0.01)  # Need for Mac
             plt.show()

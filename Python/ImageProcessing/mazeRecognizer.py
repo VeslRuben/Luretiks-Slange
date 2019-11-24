@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import cv2
-from Bison.ImageProcessing.camera import Camera
+from Python.ImageProcessing.camera import Camera
 
 realtime = False
 stillPic = False

@@ -1,7 +1,7 @@
 import math
 from shapely.geometry import LineString, Point
-from Bison.logger import Logger
-from Bison.ImageProcessing.cheakPathForObs import cheakPathForObs
+from Python.logger import Logger
+from Python.ImageProcessing.checkPathForObst import CheckPathForObst
 
 
 class SnakeController:
@@ -190,7 +190,7 @@ class SnakeCollision:
         self.backLeftCollision = False
 
         # For the front facing camera
-        self.snakeObstacle = cheakPathForObs()
+        self.snakeObstacle = CheckPathForObst()
         self.colliding = False
 
     def updateCollisions(self, snakeCoordList, distThreshold, offset, snakePic):

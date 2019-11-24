@@ -1,14 +1,14 @@
 import cv2
 import numpy as np
-from Bison.Movement.Snake import Snake
+from Python.Movement.snake import Snake
 
 
-class cheakPathForObs:
+class CheckPathForObst:
 
     def __init__(self):
         pass
 
-    def FindObsInPath(self, bilde):
+    def findObsInPath(self, bilde):
         try:
             threshold = (bilde.shape[0] * bilde.shape[1] * 255) / 2
             bilde = cv2.cvtColor(bilde, cv2.COLOR_RGB2BGR)
@@ -31,9 +31,9 @@ class cheakPathForObs:
 
 
 if __name__ == "__main__":
-    f = cheakPathForObs()
+    f = CheckPathForObst()
     s = Snake("http://192.168.137.102", "192.168.137.167")
     s.setFrameSize(7)
     bilde = s.takePicture()
-    smart = f.FindObsInPath(bilde)
+    smart = f.findObsInPath(bilde)
     print(smart)

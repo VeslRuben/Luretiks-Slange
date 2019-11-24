@@ -1,9 +1,9 @@
-from Bison.ImageProcessing.camera import Camera
-from Bison.Movement.Snake import Snake
-from Bison.Movement.snakeController import SnakeCollision, SnakeController
-from Bison.logger import Logger
-from Bison.Broker import Broker as b
-from Bison.ImageProcessing.cheakPathForObs import cheakPathForObs
+from Python.ImageProcessing.camera import Camera
+from Python.Movement.snake import Snake
+from Python.Movement.snakeController import SnakeCollision, SnakeController
+from Python.logger import Logger
+from Python.broker import Broker as b
+from Python.ImageProcessing.checkPathForObst import CheckPathForObst
 
 
 class GoToTarget:
@@ -34,7 +34,7 @@ class GoToTarget:
         self.snake = snake
         self.snakeCollision = snakeCollision
         self.snakeController = SnakeController()
-        self.snakeObstacle = cheakPathForObs()
+        self.snakeObstacle = CheckPathForObst()
 
         # Flags
         self.moving = False

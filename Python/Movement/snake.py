@@ -1,8 +1,8 @@
 import time
-from Bison.Com.videoStream import VideoStream
-from Bison.Com.udpCom import UdpConnection
+from Python.Com.videoStream import VideoStream
+from Python.Com.udpCom import UdpConnection
 import numpy as np
-from Bison.logger import Logger
+from Python.logger import Logger
 
 
 class Snake:
