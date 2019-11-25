@@ -87,7 +87,7 @@ class Controller(threading.Thread):
         :return: Nothing
         """
         updateEvent = CustomEvent(self.guiEvents[event], self.guiId())
-        updateEvent.SetMyVal(arg)
+        updateEvent.setArgument(arg)
         self.guiEventhandler(updateEvent)
 
     def prepMazeSingle(self):
@@ -161,7 +161,7 @@ class Controller(threading.Thread):
         self.lines, self.lineImageArray = self.maze.findMaze()
         self.snakeCollision.mazeLines = self.lines
 
-        self.listOfDeadEnds, picDeadEnd = self.deadEnds.getDeadEnds2(self.cam.takePicture())
+        self.listOfDeadEnds, picDeadEnd = self.deadEnds.getDeadEnds(self.cam.takePicture())
         self.multiRrtStar.lineList = self.lines
         self.multiRrtStar.listOfDeadEnds = self.listOfDeadEnds
 

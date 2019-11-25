@@ -18,13 +18,13 @@ EVT_YES_NO = wx.PyEventBinder(YesNoEvent, 1)
 class CustomEvent(wx.PyCommandEvent):
     def __init__(self, evtType, id):
         wx.PyCommandEvent.__init__(self, evtType, id)
-        self.myVal = None
+        self.argument = None
 
-    def SetMyVal(self, val):
-        self.myVal = val
+    def setArgument(self, argument):
+        self.argument = argument
 
-    def GetMyVal(self):
-        return self.myVal
+    def getArgument(self):
+        return self.argument
 
 
 class ImagePanel(wx.Panel):
@@ -128,10 +128,10 @@ class StartFrame(wx.Frame):
         topGrid = wx.FlexGridSizer(0, 2, 10, 10)
 
         # Top  Buttons #############################
-        bntHBox = wx.BoxSizer(wx.HORIZONTAL)
+        btnHBox = wx.BoxSizer(wx.HORIZONTAL)
 
         # left butons
-        bntVBoxLeft = wx.BoxSizer(wx.VERTICAL)
+        btnVBoxLeft = wx.BoxSizer(wx.VERTICAL)
 
         self.manualControl = wx.Button(panel, label="Manual Override", size=(130, 40))
         self.manualControl.Bind(wx.EVT_BUTTON, self.onManualBtn)
@@ -146,10 +146,10 @@ class StartFrame(wx.Frame):
         self.stopBtn.SetBackgroundColour("gray")
         self.stopBtn.Bind(wx.EVT_BUTTON, self.onStopBtn)
 
-        bntVBoxLeft.AddMany([(self.manualControl, 1), (self.startBtn, 1), (self.stopBtn, 1)])
+        btnVBoxLeft.AddMany([(self.manualControl, 1), (self.startBtn, 1), (self.stopBtn, 1)])
 
         # middel butons
-        bntVBoxMidle = wx.BoxSizer(wx.VERTICAL)
+        btnVBoxMidle = wx.BoxSizer(wx.VERTICAL)
 
         self.prepareMaze = wx.Button(panel, label="Prepare Maze", size=(130, 40))
         self.prepareMaze.Bind(wx.EVT_BUTTON, self.onPrepareMazeSingle)
@@ -165,7 +165,7 @@ class StartFrame(wx.Frame):
         self.runBtn.Bind(wx.EVT_BUTTON, self.onRun)
         self.runBtn.Disable()
 
-        bntVBoxMidle.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
+        btnVBoxMidle.AddMany([(self.prepareMaze, 1), (self.findPath, 1), (self.runBtn, 1)])
 
         # Right buttons
         btnVBoxRight = wx.BoxSizer(wx.VERTICAL)
@@ -186,9 +186,9 @@ class StartFrame(wx.Frame):
 
         btnVBoxRight.AddMany([(self.prepareMaze2, 1), (self.findPath2, 1), (self.seekAndDestroy, 1)])
 
-        bntHBox.AddMany([(bntVBoxLeft, 1, wx.TOP, 50), (bntVBoxMidle, 1, wx.TOP, 50), (btnVBoxRight, 1, wx.TOP, 50)])
+        btnHBox.AddMany([(btnVBoxLeft, 1, wx.TOP, 50), (btnVBoxMidle, 1, wx.TOP, 50), (btnVBoxRight, 1, wx.TOP, 50)])
         #################################################
-        topGrid.Add(bntHBox, 1, wx.EXPAND | wx.LEFT, 50)
+        topGrid.Add(btnHBox, 1, wx.EXPAND | wx.LEFT, 50)
 
         # Text feeld ####################################
         self.logTextField = wx.TextCtrl(panel, value="", size=(800, 390), style=wx.TE_MULTILINE)
@@ -221,15 +221,15 @@ class StartFrame(wx.Frame):
         panel.SetSizer(outerGrid)
 
     def onYesNo(self, evnet=None):
-        dlg = wx.MessageBox('Is the target in front of the snake?', 'Target?', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        dialog = wx.MessageBox('Is the target in front of the snake?', 'Target?', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
         with b.lock:
-            if dlg == 2:
+            if dialog == 2:
                 b.answer = True
-            elif dlg == 8:
+            elif dialog == 8:
                 b.answer = False
 
     def onNewImageR(self, event=None):
-        array = event.GetMyVal()
+        array = event.getArgument()
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
@@ -239,7 +239,7 @@ class StartFrame(wx.Frame):
         # Logger.logg("GUI right image updated", Logger.info)
 
     def onNewImageL(self, event=None):
-        array = event.GetMyVal()
+        array = event.getArgument()
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
         w = array.shape[1]
@@ -249,15 +249,15 @@ class StartFrame(wx.Frame):
         # Logger.logg("GUI left image updated", Logger.info)
 
     def onNewText(self, event=None):
-        text = event.GetMyVal()
+        text = event.getArgument()
         self.logTextField.AppendText(text + "\n")
         self.logTextField.Refresh()
         # Logger.logg("GUI text box updated", Logger.info)
 
     def onUpdateParametersBtn(self, event=None):
-        dlg = ParameterDialog(self)
-        dlg.ShowModal()
-        result = dlg.result
+        dialog = ParameterDialog(self)
+        dialog.ShowModal()
+        result = dialog.result
         if result:
             with b.lock:
                 b.params = result

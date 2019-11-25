@@ -62,18 +62,6 @@ class SnakeController:
             theta = 180
         return theta
 
-    def calculateFirstTurnAngle(self, lV, sV, lVxsV):
-        """
-        Calculates the first turn angle for the snake.
-        :param lV: path vector
-        :param sV: snake vector
-        :param lVxsV: cross product between them
-        :return: the angle to turn
-        """
-        theta = self.calculateTheta(lV, sV, lVxsV)
-        self.currentAngle = self.currentAngle + int(theta * 0.3)
-        return self.currentAngle
-
     def calculatDistanceToLine(self, lV, snakeEndPoint, lineStartPoint):
         """
         Calculates distance between the front of the snake and the path line
@@ -345,20 +333,6 @@ class SnakeCollision:
         XxY = vectorX[0] * vectorY[1] - vectorX[1] * vectorY[0]
         angle = angle * (XxY / abs(XxY))
         return math.degrees(angle)
-
-    def calculateAngleToNearestPoint(self, snakeCoord, pointCoord):
-        """
-        Calculates the angle from a point to another point in degrees
-        :param snakeCoord: (x,y) for From-coordinate
-        :param pointCoord: (x,y) for To-coordinate
-        :return: angle between points in degrees
-        """
-        vectorX = pointCoord[0] - snakeCoord[0]
-        vectorY = pointCoord[1] - snakeCoord[1]
-
-        angle = math.atan2(vectorY, vectorX)
-        angle = math.degrees(angle)
-        return angle
 
     def getClosestPoint(self, mazeLineStart, mazeLineStop, point):
         """

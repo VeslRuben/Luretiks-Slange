@@ -8,7 +8,7 @@ import os
 
 class DeadEndDetector:
 
-    def getDeadEnds2(self, bilde):
+    def getDeadEnds(self, bilde):
         """
         Takes in a picture of the maze
         Cheeks the image for dead ends, by using templating
@@ -30,7 +30,7 @@ class DeadEndDetector:
 
         # loop over the scales of the image
         loc = []
-        WH = []
+        whList = []
         for temp in templateList:
 
             res = cv2.matchTemplate(img_gray, temp, cv2.TM_CCOEFF_NORMED)
@@ -38,25 +38,25 @@ class DeadEndDetector:
             if res:
                 loc.append(res)
                 w, h = temp.shape[::-1]
-                WH.append([w, h])
+                whList.append([w, h])
 
         deadEnds = []
-        for point, WH in zip(loc, WH):
-            w, h = WH
+        for point, whList in zip(loc, whList):
+            w, h = whList
             for pt in zip(*point[::-1]):
                 deadEnds.append([pt[0] + w / 2, pt[1] + h / 2])
 
         tempDeadEnds = []
         for i in range(len(deadEnds)):
-            apApend = True
+            append = True
             if i == len(deadEnds):
                 break
             else:
                 for j in range(i + 1, len(deadEnds)):
                     if (abs(deadEnds[i][0] - deadEnds[j][0]) <= 100 and abs(deadEnds[i][1] - deadEnds[j][1]) <= 100):
-                        apApend = False
+                        append = False
                         break
-            if apApend:
+            if append:
                 tempDeadEnds.append(deadEnds[i])
         deadEnds = tempDeadEnds
 
@@ -74,4 +74,4 @@ if __name__ == "__main__":
     bilde = c.takePicture()
     # bilde = cv2.imread(os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds\\perf2.jpg")
     c = DeadEndDetector()
-    c.getDeadEnds2(bilde)
+    c.getDeadEnds(bilde)

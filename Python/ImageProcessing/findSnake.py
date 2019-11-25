@@ -59,13 +59,13 @@ class FindSnake:
 
     def average(self, values: list, filterExtream=False) -> float:
         if filterExtream and len(values) > 2:
-            minimul = min(values)
-            values.remove(minimul)
-            maximimum = max(values)
-            values.remove(maximimum)
+            minimum = min(values)
+            values.remove(minimum)
+            maximum = max(values)
+            values.remove(maximum)
         return sum(values) / len(values)
 
-    def locateSnakeAverage(self, iterations: int, average: int = 1, filterExtream=False, picture=None):
+    def locateSnakeAverage(self, iterations: int, average: int = 1, filterExtreme=False, picture=None):
 
         cam = Camera()
 
@@ -75,8 +75,8 @@ class FindSnake:
         redLower = np.array([100, 170, 20], dtype=np.uint8)
         redUpper = np.array([140, 255, 240], dtype=np.uint8)
 
-        burpleLower = np.array([145, 70, 30])
-        burpleHiger = np.array([170, 255, 190])
+        purpleLower = np.array([145, 70, 30])
+        purpleHigher = np.array([170, 255, 190])
 
         if average < 1:
             average = 1
@@ -86,9 +86,9 @@ class FindSnake:
 
         for laps in range(average):
 
-            greenFrams = []
-            readFrames = []
-            burpleFrames = []
+            greenFrames = []
+            redFrames = []
+            purpleFrames = []
 
             for i in range(iterations):
                 if picture is not None and iterations == 1 and average == 1:
@@ -99,54 +99,54 @@ class FindSnake:
                 blurred = cv2.GaussianBlur(frame, (7, 7), 0)
                 hsvFrame = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)  # From RGB
                 maskG = cv2.inRange(hsvFrame, greenLower, greenUpper)
-                greenFrams.append(maskG)
+                greenFrames.append(maskG)
 
                 hsvFrame2 = cv2.cvtColor(blurred, cv2.COLOR_RGB2HSV)  # From BGR
                 maskR = cv2.inRange(hsvFrame2, redLower, redUpper)
-                readFrames.append(maskR)
+                redFrames.append(maskR)
 
-                maskBP = cv2.inRange(hsvFrame, burpleLower, burpleHiger)
-                burpleFrames.append(maskBP)
+                maskBP = cv2.inRange(hsvFrame, purpleLower, purpleHigher)
+                purpleFrames.append(maskBP)
 
-            greenSum = greenFrams.pop(0)
-            if greenFrams:
-                for greenFrame in greenFrams:
+            greenSum = greenFrames.pop(0)
+            if greenFrames:
+                for greenFrame in greenFrames:
                     greenSum = greenSum + greenFrame
 
-            readSum = readFrames.pop(0)
-            if readFrames:
-                for readFram in readFrames:
-                    readSum = readSum + readFram
+            redSum = redFrames.pop(0)
+            if redFrames:
+                for readFram in redFrames:
+                    redSum = redSum + readFram
 
-            burpleSum = burpleFrames.pop(0)
-            if burpleFrames:
-                for burpleFrame in burpleFrames:
-                    burpleSum = burpleSum + burpleFrame
+            purpleSum = purpleFrames.pop(0)
+            if purpleFrames:
+                for purpleFrame in purpleFrames:
+                    purpleSum = purpleSum + purpleFrame
 
-            readMask = cv2.erode(readSum, None, iterations=2)
-            readMask = cv2.dilate(readMask, None, iterations=3)
+            redMask = cv2.erode(redSum, None, iterations=2)
+            redMask = cv2.dilate(redMask, None, iterations=3)
 
-            greanMask = cv2.erode(greenSum, None, iterations=4)
-            greanMask = cv2.dilate(greanMask, None, iterations=4)
+            greenMask = cv2.erode(greenSum, None, iterations=4)
+            greenMask = cv2.dilate(greenMask, None, iterations=4)
 
-            burpleMask = cv2.erode(burpleSum, None, iterations=2)
-            burpleMask = cv2.dilate(burpleMask, None, iterations=5)
+            purpleMask = cv2.erode(purpleSum, None, iterations=2)
+            purpleMask = cv2.dilate(purpleMask, None, iterations=5)
 
-            mask = greanMask + readMask
+            mask = greenMask + redMask
 
-            greenCnts = cv2.findContours(greanMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            greenCnts = cv2.findContours(greenMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             greenCnts = imutils.grab_contours(greenCnts)
 
-            readCnts = cv2.findContours(readMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            readCnts = imutils.grab_contours(readCnts)
+            redCnts = cv2.findContours(redMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            redCnts = imutils.grab_contours(redCnts)
 
-            burpleCnts = cv2.findContours(burpleMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            burpleCnts = imutils.grab_contours(burpleCnts)
+            purpleCnts = cv2.findContours(purpleMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            purpleCnts = imutils.grab_contours(purpleCnts)
 
             x0 = x1 = y0 = y1 = x3 = y3 = None
 
-            if readCnts:
-                M = cv2.moments(readCnts[0])
+            if redCnts:
+                M = cv2.moments(redCnts[0])
                 x1 = int(M["m10"] / M["m00"])
                 y1 = int(M["m01"] / M["m00"])
 
@@ -155,8 +155,8 @@ class FindSnake:
                 x0 = int(M1["m10"] / M1["m00"])
                 y0 = int(M1["m01"] / M1["m00"])
 
-            if burpleCnts:
-                M2 = cv2.moments(burpleCnts[0])
+            if purpleCnts:
+                M2 = cv2.moments(purpleCnts[0])
                 x3 = int(M2["m10"] / M2["m00"])
                 y3 = int(M2["m01"] / M2["m00"])
 
@@ -169,13 +169,13 @@ class FindSnake:
                 # cordList[5].append(y3)
 
         if len(cordList[0]) < 3:
-            filterExtream = False
+            filterExtreme = False
 
         if cordList[0]:
-            x0 = self.average(cordList[0], filterExtream)
-            y0 = self.average(cordList[1], filterExtream)
-            x1 = self.average(cordList[2], filterExtream)
-            y1 = self.average(cordList[3], filterExtream)
+            x0 = self.average(cordList[0], filterExtreme)
+            y0 = self.average(cordList[1], filterExtreme)
+            x1 = self.average(cordList[2], filterExtreme)
+            y1 = self.average(cordList[3], filterExtreme)
             # x3 = self.average(cordList[4], filterExtream)
             # y3 = self.average(cordList[5], filterExtream)
             return [[x0, y0], [x1, y1]], cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)

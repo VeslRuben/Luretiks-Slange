@@ -37,8 +37,8 @@ class VideoStream:
             size = 10
         elif size < 3:
             size = 0
-        obj = {"var": "framesize", "val": size}
-        requests.get(self.url + "/control", params=obj, timeout=3)
+        dataObject = {"var": "framesize", "val": size}
+        requests.get(self.url + "/control", params=dataObject, timeout=3)
         Logger.logg("framesize set to: " + str(size), Logger.info)
         time.sleep(0.3)
 
@@ -54,7 +54,7 @@ class VideoStream:
             imgArray = np.rot90(imgArray, 3)
             return imgArray
         except Exception:
-            Logger.logg("Unable to get image form camera", Logger.warning)
+            Logger.logg("Unable to get image from camera", Logger.warning)
             return None
 
 

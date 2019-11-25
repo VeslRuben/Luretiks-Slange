@@ -281,7 +281,7 @@ class multiRRTStar:
         self.start_point = start_point
         self.listOfDeadEnds = listOfDeadEnds
 
-    def tempName(self, startpoint, pointList: list):
+    def findAllPaths(self, startpoint, pointList: list):
         """
         Iterates from a start point to the different points. Saves all paths in a list
         :param startpoint: (x,y) for start point
@@ -333,7 +333,7 @@ class multiRRTStar:
         newStartPoint = self.start_point
 
         while len(deadEndList) > 0:
-            pathList = self.tempName(newStartPoint, deadEndList)
+            pathList = self.findAllPaths(newStartPoint, deadEndList)
 
             pathSumList = self.sumPaths(pathList)
 
@@ -408,7 +408,7 @@ if __name__ == "__main__":
         lines, _ = m.findMaze()
         d = DeadEndDetector()
         bilde = cv2.imread(os.getcwd() + "\\" + "..\\..\\Pictures\\DeadEnds\\perf2.jpg")
-        listOfDeadEnds, _ = d.getDeadEnds2(bilde)
+        listOfDeadEnds, _ = d.getDeadEnds(bilde)
 
         startPoint = [1280, 300]
 

@@ -15,9 +15,9 @@ class UdpConnection:
         self.url = url
         udp_ip = "192.168.137.1"
         udp_port = 6969
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
-        self.sock.bind((udp_ip, udp_port))
-        self.sock.settimeout(0.01)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
+        self.socket.bind((udp_ip, udp_port))
+        self.socket.settimeout(0.01)
 
     def send(self, data: str) -> None:
         """
@@ -25,7 +25,7 @@ class UdpConnection:
         :param data: data to send
         :return: None
         """
-        self.sock.sendto(data.encode(), (self.url, 9696))
+        self.socket.sendto(data.encode(), (self.url, 9696))
 
     def receive(self):
         """
@@ -34,7 +34,7 @@ class UdpConnection:
         """
         data = None
         try:
-            data, addr = self.sock.recvfrom(10024)  # buffer size is 10024 bytes
+            data, addr = self.socket.recvfrom(10024)  # buffer size is 10024 bytes
             data = data.decode()
 
         except socket.timeout:

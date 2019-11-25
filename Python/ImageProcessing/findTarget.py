@@ -9,7 +9,7 @@ class FindTarget:
     def __init__(self):
         pass
 
-    def getTarget(self, bilde):
+    def getTarget(self, picture):
         try:
             center = None
             d = None
@@ -23,7 +23,7 @@ class FindTarget:
 
             yelowLower = (20, 100, 100)
             yellowHiger = (30, 255, 255)
-            frame = bilde
+            frame = picture
 
             # Filtering of the pictures
             # 1 We blur the picture with Gaussian blur

@@ -22,4 +22,3 @@ finally:
 
 # Notes fra Houxiang:
 # TODO: Physical Limitations are OK, specify them
-# TODO: Ta mer hensyn ved start til hvilke bevegelser som må gjøres
