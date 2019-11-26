@@ -280,6 +280,7 @@ class multiRRTStar:
         self.connect_circle_dist = connect_circle_dist
         self.start_point = start_point
         self.listOfDeadEnds = listOfDeadEnds
+        self.i = 1
 
     def findAllPaths(self, startpoint, pointList: list):
         """
@@ -299,6 +300,8 @@ class multiRRTStar:
             _, path = rrtStar.run(finishLoops=False)
             paths.append(path[::-1])
 
+        print(f"Done with round {self.i} of {len(self.listOfDeadEnds)}")
+        self.i += 1
         return paths
 
     def sumPaths(self, pathList):
