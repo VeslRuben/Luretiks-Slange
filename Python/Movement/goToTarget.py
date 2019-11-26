@@ -73,9 +73,9 @@ class GoToTarget:
         moving = False
         # Checking for front
         Logger.logg(f"Executing collision command", Logger.info)
-        #if self.snakeCollision.colliding:
-        #    moving = True
-        if self.snakeCollision.frontFrontCollision:
+        if self.snakeCollision.colliding:
+            moving = True
+        elif self.snakeCollision.frontFrontCollision:
             # Checking both sectors at once
             if self.snakeCollision.bothSectorCollision():
                 # Double backwards
@@ -282,8 +282,8 @@ class GoToTarget:
         """
         offset = self.calculateOffset(snakeCoordinates)
 
-        #snakePic = self.snake.takePicture()
-        self.snakeCollision.updateCollisions(snakeCoordinates, collisionThreshold, offset, None)
+        snakePic = self.snake.takePicture()
+        self.snakeCollision.updateCollisions(snakeCoordinates, collisionThreshold, offset, snakePic)
 
         # Establishing start and end of the path
         lineStart = self.path[self.i]
