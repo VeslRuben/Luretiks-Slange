@@ -174,13 +174,13 @@ class Controller(threading.Thread):
         Finds the snakes location and runs the multiRRT-method to find the most effective path between the dead ends.
         :return: None
         """
-        """self.notifyGui("UpdateTextEvent", "Finding path multi-target. This can take some time")
+        self.notifyGui("UpdateTextEvent", "Finding path multi-target. This can take some time")
         temp = None
         startX = None
         startY = None
 
         try:
-            cords, temp = self.findSnake.LocateSnake(self.cam.takePicture())
+            cords, temp = self.findSnake.locateSnake(self.cam.takePicture())
             startX = cords[0][0]
             startY = cords[0][1]
         except TypeError:
@@ -194,28 +194,28 @@ class Controller(threading.Thread):
             self.notifyGui("UpdateTextEvent", "Could not find path")
             return
 
+
         if self.finalPath is not None:
             self.notifyGui("UpdateTextEvent", "Path found!")
-            self.seekAndDestroy.totalPath = self.finalPath
+            self.seekAndDestroy = SeekAndDestroy(self.finalPath, self.snake, self.snakeCollision, 10, 45, 20, 80,
+                                                 self.eventData)
             self.seekAndDestroy.path = self.finalPath[0]
         else:
             self.notifyGui("UpdateTextEvent", "Could not find path")
             return
 
         self.traveledPath = []
-        bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0, 0, 255))"""
-
-        with open('parrot.pkl', 'rb') as f:
-            self.finalPath = pickle.load(f)
         bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0, 0, 255))
 
-        try:
-            cords, temp = self.findSnake.locateSnake(self.cam.takePicture())
-        except TypeError:
-            self.notifyGui("UpdateTextEvent", "Could not find snake")
-            return
-
-        self.seekAndDestroy = SeekAndDestroy(self.finalPath, self.snake, self.snakeCollision, 10, 45, 20, 80, self.eventData)
+        # with open('parrot.pkl', 'rb') as f:
+        #     self.finalPath = pickle.load(f)
+        # bilde = drawSeveralLines(self.cam.takePicture(), self.finalPath, (0, 0, 255))
+        #
+        # try:
+        #     cords, temp = self.findSnake.locateSnake(self.cam.takePicture())
+        # except TypeError:
+        #     self.notifyGui("UpdateTextEvent", "Could not find snake")
+        #     return
 
         self.notifyGui("UpdateImageEventL", cv2.cvtColor(temp, cv2.COLOR_BGR2RGB))
         self.notifyGui("UpdateImageEventR", bilde)

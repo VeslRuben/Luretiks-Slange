@@ -61,6 +61,8 @@ class GoToTarget:
             if args:
                 return wantedMovement(args)
             else:
+                if wantedMovement == self.snake.rotateCW or wantedMovement == self.snake.rotateCCW:
+                    self.snakeController.currentAngle = 0
                 return wantedMovement()
         else:
             return self.collisionHandling()
