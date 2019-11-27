@@ -6,6 +6,8 @@ author: Atsushi Sakai(@Atsushi_twi)
 import math
 import os
 import sys
+import time
+
 from Python.logger import Logger
 import matplotlib.pyplot as plt
 import numpy as np
@@ -74,7 +76,7 @@ class RRTStar(RRT):
 
         self.node_list = [self.start]
         for i in range(self.max_iter):
-            # print("Iter:", i, ", number of nodes:", len(self.node_list))
+            print("Iter:", i, ", number of nodes:", len(self.node_list))
             rnd = self.getRandomNode()
             nearest_ind = self.getNearestNodeIndex(self.node_list, rnd)
             new_node = self.steer(self.node_list[nearest_ind], rnd, self.expand_dis)
@@ -114,7 +116,7 @@ class RRTStar(RRT):
             near_node = self.node_list[i]
             t_node = self.steer(near_node, new_node)
             if t_node and self.checkObstacle(t_node, self.lineList, self.edge_dist):
-                costs.append(self.calculateNewCost(near_node, new_node))
+                costs.append(round(self.calculateNewCost(near_node, new_node)))
             else:
                 costs.append(float("inf"))  # the cost of collision node
         min_cost = min(costs)
@@ -159,9 +161,14 @@ class RRTStar(RRT):
         """
         nnode = len(self.node_list) + 1
         r = self.connect_circle_dist * math.sqrt((math.log(nnode) / nnode))
+        #r = 100
 
-        dist_list = [(node.x - new_node.x) ** 2 +
-                     (node.y - new_node.y) ** 2 for node in self.node_list]
+        dist_list = []
+        for node in self.node_list:
+            dist = (node.x - new_node.x) ** 2 + (node.y - new_node.y) ** 2
+            dist_list.append(dist)
+        #dist_list = [(node.x - new_node.x) ** 2 + (node.y - new_node.y) ** 2 for node in self.node_list]
+
         near_inds = [dist_list.index(i) for i in dist_list if i <= r ** 2]
         return near_inds
 
@@ -197,6 +204,8 @@ class RRTStar(RRT):
         :return: new node cost for the from-node
         """
         d, _ = self.calculateDistanceAndAngle(from_node, to_node)
+        if from_node == self.start:
+            d += 5
         return from_node.cost + d
 
     def propagateCostToLeaves(self, parent_node):
@@ -329,6 +338,8 @@ class multiRRTStar:
         dead ends.
         :return: The final most efficient path
         """
+        print("start")
+        startTime = time.time()
         finalPath = []
 
         deadEndList = self.listOfDeadEnds.copy()
@@ -345,6 +356,11 @@ class multiRRTStar:
             finalPath.append(pathList[indexNewStartPoint])
 
             newStartPoint = deadEndList.pop(indexNewStartPoint)
+
+        print(f"time: {time.time()- startTime}")
+        pathLenght = self.sumPaths(finalPath)
+        sumPath = sum(pathLenght)
+        print(f"lenght: {sumPath}")
 
         return finalPath
 

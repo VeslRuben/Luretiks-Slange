@@ -43,9 +43,9 @@ class Controller(threading.Thread):
 
         # RRT* Variabels ##################
         self.rrtStar = None
-        self.multiRrtStar = multiRRTStar(rand_area_x=[500, 1600], rand_area_y=[0, 1100],
-                                         lineList=None, expand_dis=100.0, path_resolution=10.0, max_iter=2000,
-                                         goal_sample_rate=30,
+        self.multiRrtStar = multiRRTStar(rand_area_x=[300, 1700], rand_area_y=[0, 1200],
+                                         lineList=None, expand_dis=50.0, path_resolution=25.0, max_iter=2000,
+                                         goal_sample_rate=10,
                                          edge_dist=30, connect_circle_dist=800, start_point=None, listOfDeadEnds=None)
         self.rrtPathImage = None
         self.findSnake = FindSnake()

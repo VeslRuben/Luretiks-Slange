@@ -10,7 +10,6 @@ show_final_animation = True
 
 
 class RRT:
-
     class Node:
         def __init__(self, x, y):
             self.x = x
@@ -95,7 +94,7 @@ class RRT:
         if extend_length > d:
             extend_length = d
 
-        n_expand = math.floor(extend_length / self.path_resolution)
+        """n_expand = math.floor(extend_length / self.path_resolution)
 
         for _ in range(n_expand):
             new_node.x += self.path_resolution * math.cos(theta)
@@ -106,7 +105,13 @@ class RRT:
         d, _ = self.calculateDistanceAndAngle(new_node, to_node)
         if d <= self.path_resolution:
             new_node.path_x.append(to_node.x)
-            new_node.path_y.append(to_node.y)
+            new_node.path_y.append(to_node.y)"""
+
+        new_node.x += extend_length* math.cos(theta)
+        new_node.y += extend_length * math.sin(theta)
+        new_node.path_x.append(new_node.x)
+        new_node.path_y.append(new_node.y)
+
 
         new_node.parent = from_node
 
@@ -173,7 +178,7 @@ class RRT:
 
         :return: new randomly placed node
         """
-        if random.randint(0,100) > self.goal_sample_rate:
+        if random.randint(0, 100) > self.goal_sample_rate:
             rnd = self.Node(random.uniform(self.min_rand_x, self.max_rand_x),
                             random.uniform(self.min_rand_y, self.max_rand_y))
         else:
@@ -208,7 +213,7 @@ class RRT:
         """
         dx_list = [x for x in node.path_x]
         dy_list = [y for y in node.path_y]
-        node_line = LineString([(x, y) for (x,y) in zip(dx_list, dy_list)])
+        node_line = LineString([(x, y) for (x, y) in zip(dx_list, dy_list)])
         for data in lineList:
             x1 = data[0][0]
             y1 = data[0][1]
@@ -230,8 +235,8 @@ class RRT:
         :param rnd_node: node to check against
         :return: the index of the nearest node
         """
-        dlist=[(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
-               ** 2 for node in node_list]
+        dlist = [(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
+                 ** 2 for node in node_list]
         minind = dlist.index(min(dlist))
 
         return minind
@@ -250,6 +255,7 @@ class RRT:
         d = math.sqrt(dx ** 2 + dy ** 2)
         theta = math.atan2(dy, dx)
         return d, theta
+
 
 def main():
     m = mazeRecognizer()
