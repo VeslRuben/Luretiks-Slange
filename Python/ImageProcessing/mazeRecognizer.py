@@ -1,3 +1,9 @@
+"""
+Algorithm to detect the walls of the maze
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import os
 import numpy as np
 import cv2
@@ -19,9 +25,8 @@ class mazeRecognizer:
 
     def filtering(self, picture):
         """
-        Filters a given picture. Changes to grayscale, \n
-        then blurs, edge detects, dilates/erodes, uses \n
-        morphological closing then returns the picture.
+        Filters a given picture, by blurring,
+        edge detecting then trying to remove noise.
 
         :param picture: Picture to filter \n
         :return: The picture filtered \n
@@ -39,12 +44,8 @@ class mazeRecognizer:
 
     def findMaze(self):
         """
-        At the moment; reads a picture from the project, \n
-        sends it to the filtering-function, runs HoughLinesP \n
-        on the picture, then draws these lines on the picture. \n
+        Finds the walls of the maze using picture taken from the overhead camera
 
-        Then returns the list of coordinates (x1y1, x2y2) for the \n
-        lines, as well as the picture with the lines drawn.
         :return: List of lines (in x1y1, x2y2 coordinates) and picture
         """
         if testing:
@@ -66,6 +67,7 @@ class mazeRecognizer:
             cv2.line(pic2, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
         return lines2, cv2.cvtColor(pic2, cv2.COLOR_BGR2RGB)
+
 
 if __name__ == "__main__":
     m = mazeRecognizer()

@@ -1,8 +1,13 @@
+"""
+RRT-algorithm built by Atsushi Sakai. Modified by us to incorporate what we need.
+
+author: Atsushi Sakai(@Atsushi_twi)
+"""
+
 import math
 import random
 from shapely.geometry import LineString
 from Python.ImageProcessing.mazeRecognizer import mazeRecognizer
-
 import matplotlib.pyplot as plt
 
 show_animation = False
@@ -49,7 +54,7 @@ class RRT:
 
     def planning(self, animation=False):
         """
-        rrt path planning
+        Finds a path through a maze.
         :param animation: flag for animation on or off
         """
         self.node_list = [self.start]
@@ -164,6 +169,7 @@ class RRT:
 
     def calculateDistanceToGoal(self, x, y):
         """
+        Calculates the distance to goal from a set of coordinates
 
         :param x: coordinate
         :param y: coordinate
@@ -175,6 +181,7 @@ class RRT:
 
     def getRandomNode(self):
         """
+        Creates a node in a random place
 
         :return: new randomly placed node
         """
@@ -203,8 +210,7 @@ class RRT:
         """
         Checks if the nodes path collides with obstacle. \n
         Also checks how close to the obstacle the line \n
-        will go. If to close, it will return false as if \n
-        there is a collision.
+        will go.
 
         :param node: Node to check collision for
         :param lineList: List of lines for obstacles
@@ -261,7 +267,7 @@ def main():
     m = mazeRecognizer()
     lines, _ = m.findMaze()
     rrt = RRT(start=[810, 385], goal=[1250, 150], rand_area_x=[250, 1500], rand_area_y=[0, 1100],
-              lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=1000, goal_sample_rate=20,
+              lineList=lines, expand_dis=50.0, path_resolution=25.0, max_iter=1000, goal_sample_rate=20,
               edge_dist=30)
 
     path = rrt.planning()

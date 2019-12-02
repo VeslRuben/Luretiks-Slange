@@ -1,10 +1,16 @@
+"""
+Expansion of GoToTarget. Now takes in a list of goals to reach via a list of paths.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import math
 import time
 
 from Python.GUI import CustomEvent
 from Python.Movement.goToTarget import GoToTarget
 from Python.Movement.snake import Snake
-from Python.Movement.snakeController import SnakeCollision
+from Python.Movement.snakeMethods import SnakeCollision
 from Python.logger import Logger
 from Python.ImageProcessing.findTarget import FindTarget
 from Python.broker import Broker as b
@@ -15,18 +21,20 @@ class SeekAndDestroy(GoToTarget):
     def __init__(self, path: list, snake: Snake, snakeCollision: SnakeCollision, deadBandAngleSmall: int,
                  deadBandAngleBig: int, deadBandDistSmall: int, deadBandDistBig: int, eventData):
         """
-                Inherits from the GoToTarget-class.
+        Inherits from the GoToTarget-class.
 
-                :param path: the complete path for multi-target
-                :param snake: snake-object for applying commands
-                :param snakeCollision: snakeCollision-object for checking for collisions
-                :param deadBandAngleSmall: the lower deadband for angle used in movement
-                :param deadBandAngleBig: the higher deadband for angle used in movement
-                :param deadBandDistSmall: the lower deadband for distance used in movement
-                :param deadBandDistBig: the higher deadband for distance used in movement
-                """
+        :param path: the complete path for multi-target
+        :param snake: snake-object for applying commands
+        :param snakeCollision: snakeCollision-object for checking for collisions
+        :param deadBandAngleSmall: the lower deadband for angle used in movement
+        :param deadBandAngleBig: the higher deadband for angle used in movement
+        :param deadBandDistSmall: the lower deadband for distance used in movement
+        :param deadBandDistBig: the higher deadband for distance used in movement
+        """
         super().__init__(path[0], snake, snakeCollision, deadBandAngleSmall, deadBandAngleBig, deadBandDistSmall,
                          deadBandDistBig)
+
+        # Information to update GUI
         self.eventData = eventData
         self.guiEvents = eventData["events"]
         self.guiId = eventData["id"]
@@ -73,9 +81,9 @@ class SeekAndDestroy(GoToTarget):
 
     def targetAcquired(self) -> bool:
         """
-                Checks if the target is within the frame
-                :return: True if target is there, False if else
-                """
+        Checks if the target is within the frame of the front-facing camera
+        :return: True if target is there, False if else
+        """
         updateEvent = CustomEvent(self.guiEvents["YesNoEvent"], self.guiId())
         self.guiEventhandler(updateEvent)
         while True:

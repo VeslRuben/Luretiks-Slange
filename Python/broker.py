@@ -1,3 +1,8 @@
+"""
+A class used to communicate between threads through flags and variables.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
 from threading import Lock
 
 class Broker:

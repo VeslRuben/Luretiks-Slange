@@ -1,17 +1,23 @@
+"""
+Classes for detecting collisions and doing vector math related to the snake.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import math
 from shapely.geometry import LineString, Point
 from Python.logger import Logger
 from Python.ImageProcessing.checkPathForObst import CheckPathForObst
 
 
-class SnakeController:
+class SnakeCalculations:
 
     def __init__(self):
         self.currentAngle = 0
 
     def ccw(self, A, B, C):
         """
-        I have noe idea
+        Used for calculating intersections
         :param A:
         :param B:
         :param C:
@@ -118,6 +124,11 @@ class SnakeController:
         return self.currentAngle
 
     def turnTheta(self, theta):
+        """
+        Takes in angle theta, used mostly to store what angle has been turned
+        :param theta: angle
+        :return: currentAngle+Theta
+        """
         self.currentAngle += theta
 
         if self.currentAngle > 90:
@@ -132,25 +143,21 @@ class SnakeCollision:
     def __init__(self, mazeLineList, frontLeftLim, frontFrontLeftLim, frontRightFrontLim, frontRightLim, midLeftMin,
                  midLeftMax, midRightMin, midRightMax, backRightLim, backRightBackLim, backBackLeftLim, backLeftLim):
         """
-        Because of how atan2 works, all angles in the positive y-axis, are given as positive angles, while the angles
-        for the negative y-axis are given as negative angles. This makes the creation of sectors for the collision
-        detection a bit tricky. As such, if you want to have the sector on the left of the front to be from
-        135 degrees to 195 degrees, you have to set frontFrontLeftLim to 135 degrees,
-        and the frontLeftLim to -165 degrees.
+        As a note: 0 degrees is straight forward.
 
         :param mazeLineList: List of lines in maze
-        :param frontRightLim: Minimum angle right, i.e. -15 deg
-        :param frontRightFrontLim: Split between right and front, i.e. 45deg
-        :param frontFrontLeftLim: Split between front and left, i.e. 135deg
-        :param frontLeftLim: Max angle left, i.e. 195 deg
-        :param midRightMin: Min angle right, i.e. -15 deg
-        :param midRightMax: Max angle right, i.e. 15 deg
-        :param midLeftMin: Min angle left, i.e. 165 deg
-        :param midLeftMax: Max angle left, i.e. 195 deg
-        :param backRightLim: Max Angle right, i.e. 15 deg
-        :param backRightBackLim: Split between right and back, i.e. -45deg
-        :param backBackLeftLim: Split between back and left, i.e. -135deg
-        :param backLeftLim: Max angle left, i.e. 165deg
+        :param frontLeftLim: Angle for leftmost line of collision sector.
+        :param frontFrontLeftLim: Angle for split between left and front collision sector
+        :param frontRightFrontLim: Angle for split between right and front collision sector
+        :param frontRightLim: Angle for rightmost line of collision sector
+        :param midLeftMin: Angle for lowest angle on left collision sector
+        :param midLeftMax: Angle for highest angle on left collision sector
+        :param midRightMin: Angle for lowest angle on right collision sector
+        :param midRightMax: Angle for highest angle on right collision sector
+        :param backRightLim: Not in use
+        :param backRightBackLim: Not in use
+        :param backBackLeftLim: Not in use
+        :param backLeftLim: Not in use
         """
         self.mazeLines = mazeLineList
         self.frontLeftLim = frontLeftLim
@@ -214,8 +221,8 @@ class SnakeCollision:
 
             if dist < distThreshold:
                 closestPoint = self.getClosestPoint([x1, y1], [x2, y2], [snakeFront.x, snakeFront.y])
-                angleToPoint = self.calculateAngleToNearestPointV2(snakeCoordList, [snakeFront.x, snakeFront.y],
-                                                                   closestPoint)
+                angleToPoint = self.calculateAngleToNearestPoint(snakeCoordList, [snakeFront.x, snakeFront.y],
+                                                                 closestPoint)
 
                 # From -15deg to 45deg
                 if self.frontFrontLeftLim > angleToPoint >= self.frontLeftLim or obst.intersects(snakeFrontLeftLine):
@@ -240,8 +247,8 @@ class SnakeCollision:
             dist2 = obst.distance(snakeMid)
             if dist2 < distThreshold:
                 closestPoint2 = self.getClosestPoint([x1, y1], [x2, y2], [snakeMid.x, snakeMid.y])
-                angleToPoint2 = self.calculateAngleToNearestPointV2(snakeCoordList, [snakeMid.x, snakeMid.y],
-                                                                    closestPoint2)
+                angleToPoint2 = self.calculateAngleToNearestPoint(snakeCoordList, [snakeMid.x, snakeMid.y],
+                                                                  closestPoint2)
 
                 # Checks from -75deg to -105deg
                 if self.midLeftMin >= angleToPoint2 >= self.midLeftMax:
@@ -316,9 +323,10 @@ class SnakeCollision:
         else:
             return False
 
-    def calculateAngleToNearestPointV2(self, snakeCoordList, fromPoint, toPoint):
+    def calculateAngleToNearestPoint(self, snakeCoordList, fromPoint, toPoint):
         """
         Calculates angle to nearest point from the snake
+
         :param snakeCoordList: List of coordinates for the snakes parts
         :param fromPoint: Point from which the angle should be calculated
         :param toPoint: Point to which the angle should be calculated
@@ -337,6 +345,7 @@ class SnakeCollision:
     def getClosestPoint(self, mazeLineStart, mazeLineStop, point):
         """
         Gets closest point between a coordinate and a line given by two set of coordinates
+
         :param mazeLineStart: (x,y) for start of the line
         :param mazeLineStop: (x,y) for end of the line
         :param point: (x,y) for the point to check against

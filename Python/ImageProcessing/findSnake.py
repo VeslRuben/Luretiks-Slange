@@ -1,3 +1,9 @@
+"""
+Algorithm to detect the different parts of the snake through color thresholding
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import cv2
 import numpy as np
 from Python.ImageProcessing.camera import Camera
@@ -9,7 +15,12 @@ class FindSnake:
     def __init__(self):
         pass
 
-    def locateSnake(self, frame):
+    def locateSnake(self, picture):
+        """
+        Locates center point of different parts of the snake through color thresholding
+        :param picture: Image to threshold on
+        :return: coordinates of parts, masked picture, None if no parts found
+        """
 
         greenLower = np.array([42, 0, 0], dtype=np.uint8)
         greenUpper = np.array([83, 255, 255], dtype=np.uint8)
@@ -23,7 +34,7 @@ class FindSnake:
         lowerWhite = np.array([0, 0, 180], dtype=np.uint8)
         upperWhite = np.array([145, 60, 255], dtype=np.uint8)
 
-        blurred = cv2.GaussianBlur(frame, (7, 7), 0)
+        blurred = cv2.GaussianBlur(picture, (7, 7), 0)
         color1 = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         maskB = cv2.inRange(color1, blueLower, blueUpper)
         maskG = cv2.inRange(color1, greenLower, greenUpper)
@@ -57,8 +68,14 @@ class FindSnake:
         except IndexError as e:
             return None, cv2.cvtColor(maskG + maskR, cv2.COLOR_GRAY2RGB)
 
-    def average(self, values: list, filterExtream=False) -> float:
-        if filterExtream and len(values) > 2:
+    def average(self, values: list, filterExtreme=False) -> float:
+        """
+        Takes an average of values in a list and removes extreme values if specified
+        :param values: list of values
+        :param filterExtreme: flag if extreme values should be removed
+        :return: average of the list
+        """
+        if filterExtreme and len(values) > 2:
             minimum = min(values)
             values.remove(minimum)
             maximum = max(values)
@@ -66,7 +83,14 @@ class FindSnake:
         return sum(values) / len(values)
 
     def locateSnakeAverage(self, iterations: int, average: int = 1, filterExtreme=False, picture=None):
-
+        """
+        Locates the average of the position of the snake if specified
+        :param iterations: amount of pictures to use to create the mask
+        :param average: how many values to take average of
+        :param filterExtreme: flag if extreme values should be removed
+        :param picture: picture to use if no average is wanted
+        :return: coordinates of snake parts, masked picture, None if no coordinates are found
+        """
         cam = Camera()
 
         greenLower = np.array([42, 0, 0], dtype=np.uint8)

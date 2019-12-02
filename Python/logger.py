@@ -1,3 +1,9 @@
+"""
+A simple logger that creates a file and writes to it
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 from datetime import datetime
 import os
 
@@ -25,15 +31,31 @@ class Logger:
 
     @staticmethod
     def stopLogging():
+        """
+        Stops the logging and saves the file
+
+        :return: None
+        """
         Logger.logFile.close()
 
     @staticmethod
     def timeStamp() -> str:
+        """
+        Gets the current time and formats it in a string
+
+        :return: Time formated in a string
+        """
         dt = datetime.now()
         return str(dt) + ": "
 
     @staticmethod
     def getType(type: int):
+        """
+        Gets what kind of info it logs
+
+        :param type: Number corresponding to type
+        :return: What type of info it is
+        """
         if type == 4:
             return "[Error] "
         elif type == 3:
@@ -47,6 +69,13 @@ class Logger:
 
     @staticmethod
     def logg(message: str, type: int):
+        """
+        Writes the log to the file
+
+        :param message: Message to log
+        :param type: What kind of info it is
+        :return: None
+        """
         timeStamp = Logger.timeStamp()
         messageType = Logger.getType(type)
         Logger.logFile.write(timeStamp + messageType + message + "\n")

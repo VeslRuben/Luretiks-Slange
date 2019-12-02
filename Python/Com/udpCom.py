@@ -1,3 +1,9 @@
+"""
+Simple protocol for communication via UDP.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import socket
 import time
 
@@ -29,7 +35,7 @@ class UdpConnection:
 
     def receive(self):
         """
-        Recevs data and decodes it based on the header \n
+        Receives data
         :return: The body of the data
         """
         data = None
@@ -41,6 +47,7 @@ class UdpConnection:
             pass
 
         return data
+
 
 if __name__ == '__main__':
     s = UdpConnection("192.168.137.252")

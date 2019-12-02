@@ -1,6 +1,12 @@
+"""
+Algorithm used for making decisions regarding movement for how to reach the target in a maze using a path.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 from Python.ImageProcessing.camera import Camera
 from Python.Movement.snake import Snake
-from Python.Movement.snakeController import SnakeCollision, SnakeController
+from Python.Movement.snakeMethods import SnakeCollision, SnakeCalculations
 from Python.logger import Logger
 from Python.broker import Broker as b
 from Python.ImageProcessing.checkPathForObst import CheckPathForObst
@@ -33,7 +39,7 @@ class GoToTarget:
         self.cam = Camera()
         self.snake = snake
         self.snakeCollision = snakeCollision
-        self.snakeController = SnakeController()
+        self.snakeController = SnakeCalculations()
         self.snakeObstacle = CheckPathForObst()
 
         # Flags

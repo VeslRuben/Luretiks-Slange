@@ -1,5 +1,10 @@
-import glob
+"""
+Algorithm for finding dead ends via templating
 
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
+import glob
 import cv2
 import numpy as np
 from Python.ImageProcessing.camera import Camera
@@ -8,15 +13,15 @@ import os
 
 class DeadEndDetector:
 
-    def getDeadEnds(self, bilde):
+    def getDeadEnds(self, picture):
         """
         Takes in a picture of the maze
-        Cheeks the image for dead ends, by using templating
-        :param bilde:
-        :return:
+        checks the image for dead ends by using templating
+        :param picture: picture from overhead camera
+        :return: List of dead ends, picture with points representing dead ends
         """
         # img_rgb = cv2.imread(r"C:\Users\marcu\PycharmProjects\Luretriks-Slange\Pictures\DeadEnds\perf2.jpg")
-        img_rgb = bilde
+        img_rgb = picture
         img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         path = os.getcwd() + "\\" + "..\\Pictures\\DeadEnds2/*.PNG"
         filenames = [img for img in glob.glob(path)]

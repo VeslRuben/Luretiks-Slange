@@ -1,10 +1,14 @@
+"""
+Simple communication protocol to access picture from ESP32-CAM.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import time
 from io import BytesIO
 import numpy as np
 from PIL import Image
 import requests
-from requests import ConnectTimeout
-from urllib3.exceptions import ConnectTimeoutError
 
 from Python.logger import Logger
 
@@ -44,7 +48,7 @@ class VideoStream:
 
     def getPicture(self) -> np.array:
         """
-        Gets on picture form the cameras stream. \n
+        Gets a picture from the cameras stream. \n
         :return: Image as an numpy array
         """
         try:

@@ -1,3 +1,9 @@
+"""
+Algorithm to find the target in the maze
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import cv2
 import imutils
 from scipy.spatial import distance as dist
@@ -10,6 +16,12 @@ class FindTarget:
         pass
 
     def getTarget(self, picture):
+        """
+        Checks the picture for a yellow target
+
+        :param picture: image to check
+        :return: diameter, image with target marked, radius, center coordinates
+        """
         try:
             center = None
             d = None

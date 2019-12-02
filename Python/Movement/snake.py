@@ -1,3 +1,9 @@
+"""
+This class represents the snake and all its functionality. Used to communicate directly with the snake.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import time
 from Python.Com.videoStream import VideoStream
 from Python.Com.udpCom import UdpConnection
@@ -46,9 +52,9 @@ class Snake:
 
     def takePicture(self) -> np.array:
         """
-        Takes a picrure fom the front facing camera on the snake. \n
-        The picture has the size set form the setFrame() metode. \n
-        :return: returns a picrure as a numpy array
+        Takes a picture from the front facing camera on the snake. \n
+        The picture has the size set from the setFrame() method. \n
+        :return: returns a picture as a numpy array
         """
         picture = self.camera.getPicture()
         Logger.logg("Picture taken by snake", Logger.cmd)
@@ -141,11 +147,19 @@ class Snake:
         return self.timeOut()
 
     def rotateCCW(self):
+        """
+        Sends command to snake to rotate counter-clockwise
+        :return: True if acknowledged
+        """
         self.controller.send("n")
         Logger.logg("Sent: n", Logger.cmd)
         return self.timeOut()
 
     def rotateCW(self):
+        """
+        Sends command to snake to rotate clockwise
+        :return: True if acknowledged
+        """
         self.controller.send("m")
         Logger.logg("Sent: m", Logger.cmd)
         return self.timeOut()

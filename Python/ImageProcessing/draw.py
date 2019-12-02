@@ -1,8 +1,22 @@
+"""
+Functions for drawing on images
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import cv2
 import math
 
 
 def drawLines(image, lines, color=(0, 0, 0)):
+    """
+    Draws lines on picture from list of lines
+
+    :param image: picture to draw on
+    :param lines: list of lines
+    :param color: color the line should be
+    :return: image with lines drawn
+    """
     for x in range(0, len(lines) - 1):
         x0 = int(lines[x][0])
         y0 = int(lines[x][1])
@@ -37,7 +51,7 @@ def drawSection(image, center, startangle, endAngle, color, radius=50):
     :param startangle: Start angle of the sector
     :param endAngle: End angle of the sector
     :param color: Color to draw the sector in
-    :param radius: Radius of the semi-cirlce
+    :param radius: Radius of the semi-circle
     :return: Image with section drawn
     """
     center = (int(center[0]), int(center[1]))
@@ -80,7 +94,6 @@ def drawCollisionSectors(image, snakeCoordinates, angleList, collisions, offset,
             i += 1
 
     return image
-
 
 
 if __name__ == "__main__":

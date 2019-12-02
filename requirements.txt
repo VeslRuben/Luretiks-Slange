@@ -1,3 +1,4 @@
+PIL
 scipy
 shapely
 matplotlib

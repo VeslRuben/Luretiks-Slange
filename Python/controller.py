@@ -1,4 +1,10 @@
-import gc as soplebil
+"""
+The class that has the main responsibility for all other functions of the program.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
+import gc as garbageCollector
 import threading
 import time
 import pickle
@@ -12,7 +18,7 @@ from Python.ImageProcessing.findSnake import FindSnake
 from Python.ImageProcessing.findTarget import FindTarget
 from Python.ImageProcessing.mazeRecognizer import mazeRecognizer
 from Python.Movement.snake import Snake
-from Python.Movement.snakeController import SnakeCollision
+from Python.Movement.snakeMethods import SnakeCollision
 from Python.Pathfinding.rrt_star import RRTStar, multiRRTStar
 from Python.logger import Logger
 from Python.ImageProcessing.deadEndDetector import DeadEndDetector
@@ -82,6 +88,7 @@ class Controller(threading.Thread):
         """
         Function for updating the GUI. Takes in an event, as well as an argument.
         depending on what event is to be updated.
+
         :param event: What to update
         :param arg: With what to update
         :return: Nothing
@@ -94,6 +101,7 @@ class Controller(threading.Thread):
         """
         Prepares maze by taking picture and running it through maze recognizer.
         Updates events in GUI to show the picture with the lines drawn on.
+
         :return: Nothing
         """
         self.notifyGui("UpdateTextEvent", "Preparing Maze")
@@ -108,7 +116,8 @@ class Controller(threading.Thread):
         Gets the location of the snake as well as the location of a goal, then
         starts the RRT*-algorithm to find the path through the maze from start to goal.
         Updates events in GUI to show a picture with the maze and found path.
-        :return:
+
+        :return: None
         """
         self.notifyGui("UpdateTextEvent", "Finding path single-target")
         temp = None
@@ -148,13 +157,14 @@ class Controller(threading.Thread):
         self.notifyGui("UpdateImageEventL", temp)
         self.notifyGui("UpdateImageEventR", self.rrtPathImage)
 
-        soplebil.collect()
+        garbageCollector.collect()
 
     def prepMazeMulti(self):
         """
         Prepares the maze for multi-target. Finds dead ends and saves these in a list. Then gives the multiRRT the lines
         of the maze as well as the list of dead ends. Updates GUI with pictures of the maze with the lines and the
         dead ends.
+
         :return: None
         """
         self.notifyGui("UpdateTextEvent", "Preparing Maze")
@@ -223,11 +233,12 @@ class Controller(threading.Thread):
         # with open('parrot.pkl', 'wb') as f:
         # pickle.dump(self.finalPath, f)
 
-        soplebil.collect()
+        garbageCollector.collect()
 
     def runSingleTarget(self):
         """
         Gets the snake to move towards a target.
+
         :return: Nothing
         """
         colorPic = self.cam.takePicture()
@@ -328,6 +339,7 @@ class Controller(threading.Thread):
         """
         Updates the GUI with the pictures of the mask with the path ventured as well as the colored picture with the
         path to go.
+
         :param snakeCoordinates: List of coordinates of the snakes parts
         :param colorPic: Live picture of the maze
         :param maskPic: Picture of the result of the color thresholding of the snake
@@ -364,7 +376,8 @@ class Controller(threading.Thread):
     def run(self) -> None:
         """
         Main function of the controller. This runs continuously.
-        :return:
+
+        :return: None
         """
         Logger.logg("Controller thread started successfully", Logger.info)
 
@@ -444,9 +457,6 @@ class Controller(threading.Thread):
             if b.manualControlFlag:
                 b.lock.release()
                 self.moveSnakeManually()
-            elif b.autoFlag:
-                b.lock.release()
-                self.autoMode()  # auto move code hear
             else:
                 b.lock.release()
 
@@ -454,7 +464,7 @@ class Controller(threading.Thread):
                 if b.quitFlag:
                     self.running = False
 
-            soplebil.collect()
+            garbageCollector.collect()
 
         Camera.releaseCam()
         Logger.logg("Controller thread shutting down", Logger.info)

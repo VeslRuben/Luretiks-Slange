@@ -1,3 +1,9 @@
+"""
+Graphical User Interface of the program built using wxPython.
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import time
 import cv2
 import wx
@@ -16,14 +22,28 @@ EVT_YES_NO = wx.PyEventBinder(YesNoEvent, 1)
 
 
 class CustomEvent(wx.PyCommandEvent):
+    """
+    Class used for sending information to the GUI
+    """
     def __init__(self, evtType, id):
         wx.PyCommandEvent.__init__(self, evtType, id)
         self.argument = None
 
     def setArgument(self, argument):
+        """
+        Data that is to be sent with the event
+
+        :param argument: data
+        :return: None
+        """
         self.argument = argument
 
     def getArgument(self):
+        """
+        Gets data from the event
+
+        :return: Data from the event
+        """
         return self.argument
 
 
@@ -39,11 +59,20 @@ class ImagePanel(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.onPaint)
 
     def onPaint(self, event):
+        """
+        Gets called everytime an image is updated
+
+        :param event: Not in use
+        :return: None
+        """
         dc = wx.PaintDC(self)
         dc.DrawBitmap(wx.BitmapFromImage(self.image), 0, 0)
 
 
 class ParameterDialog(wx.Dialog):
+    """
+    Simple dialog box used for updating parameters of the snake
+    """
     def __init__(self, parent, id=-1, title="Enter new parameters!"):
         wx.Dialog.__init__(self, parent, id, title, size=(-1, -1))
         self.Bind(wx.EVT_CLOSE, self.onClose)
@@ -83,11 +112,23 @@ class ParameterDialog(wx.Dialog):
         self.result = None
 
     def onOK(self, event):
+        """
+        Called when OK-button is pressed
+
+        :param event: Not in use
+        :return: None
+        """
         result = [self.ampField.GetValue(), self.speedField.GetValue()]
         self.result = result
         self.Destroy()
 
     def onChar(self, event):
+        """
+        Called every time a character is typed, makes sure there are only numbers in the dialog-box.
+
+        :param event: the key pressed
+        :return:
+        """
         key = event.GetKeyCode()
         acceptable_characters = "1234567890."
         # 13 = enter, 314 & 316 = arrows, 8 = backspace, 127 = del:
@@ -103,7 +144,9 @@ class ParameterDialog(wx.Dialog):
 
 
 class StartFrame(wx.Frame):
-
+    """
+    The main GUI window
+    """
     def __init__(self, *args, **kw):
         # ensure the parent's __init__ is called
         super(StartFrame, self).__init__(*args, **kw)
@@ -220,7 +263,12 @@ class StartFrame(wx.Frame):
 
         panel.SetSizer(outerGrid)
 
-    def onYesNo(self, evnet=None):
+    def onYesNo(self, event=None):
+        """
+        Creates a dialog box pop-up with a question, updates the Broker with answer
+        :param event: Not in use
+        :return: None
+        """
         dialog = wx.MessageBox('Is the target in front of the snake?', 'Target?', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
         with b.lock:
             if dialog == 2:
@@ -229,6 +277,12 @@ class StartFrame(wx.Frame):
                 b.answer = False
 
     def onNewImageR(self, event=None):
+        """
+        Updates every time a new picture on the right is received
+
+        :param event: The picture
+        :return: None
+        """
         array = event.getArgument()
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
@@ -239,6 +293,12 @@ class StartFrame(wx.Frame):
         # Logger.logg("GUI right image updated", Logger.info)
 
     def onNewImageL(self, event=None):
+        """
+        Updates every time a new picture on the left is received
+
+        :param event: The picture
+        :return: None
+        """
         array = event.getArgument()
         array = cv2.resize(array, (800, 600))
         h = array.shape[0]
@@ -249,12 +309,24 @@ class StartFrame(wx.Frame):
         # Logger.logg("GUI left image updated", Logger.info)
 
     def onNewText(self, event=None):
+        """
+        Updates the text box of the GUI
+
+        :param event: Text to update with
+        :return: None
+        """
         text = event.getArgument()
         self.logTextField.AppendText(text + "\n")
         self.logTextField.Refresh()
         # Logger.logg("GUI text box updated", Logger.info)
 
     def onUpdateParametersBtn(self, event=None):
+        """
+        Called every time you press the Update Parameters-button. Updates the Broker with the information
+
+        :param event: Not in use
+        :return: None
+        """
         dialog = ParameterDialog(self)
         dialog.ShowModal()
         result = dialog.result
@@ -264,18 +336,43 @@ class StartFrame(wx.Frame):
                 b.updateParamFlag = True
 
     def onStopBtn(self, event=None):
+        """
+        Called every time the stop-button is pressed. Updates the flag in the Broker
+
+        :param event: Not in use
+        :return: None
+        """
         with b.lock:
             b.stopFlag = True
 
     def onRun(self, event=None):
+        """
+        Called every time the run-button is pressed. Updates the flag in the Broker
+
+        :param event: Not in use
+        :return: None
+        """
         with b.lock:
             b.runFlag = not b.runFlag
 
     def onSeekAndDestroy(self, event=None):
+        """
+        Called every time the Seek And Destroy-button is pressed. Updates the flag in the Broker
+
+        :param event: Not in use
+        :return: None
+        """
         with b.lock:
             b.seekAndDestroyFlag = not b.seekAndDestroyFlag
 
     def onManualBtn(self, event=None):
+        """
+        Called every time the manual-button is pressed. Updates the flag in the Broker, then listens to key-presses \n
+        and sends this to the broker.
+
+        :param event: Not in use
+        :return: None
+        """
         # warning dialog
         if not self.controlledManually:
             wx.MessageBox('Use "w, s, a, d, r" to control the snake manually', 'Info', wx.OK | wx.ICON_INFORMATION)
@@ -286,6 +383,12 @@ class StartFrame(wx.Frame):
         Logger.logg(f"GUI manual control: {self.controlledManually}", Logger.info)
 
     def onPrepareMazeSingle(self, event=None):
+        """
+        Called every time the Prepare Maze Single-button is pressed. Updates the flag in the Broker
+
+        :param event: Not in use
+        :return: None
+        """
         # warning dialog
         wx.MessageBox('Make sure the maze is empty', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -294,6 +397,12 @@ class StartFrame(wx.Frame):
         Logger.logg("GUI prepare maze btn pressed", Logger.info)
 
     def onPrepareMazeMulti(self, event=None):
+        """
+        Called every time the Prepare Maze Multi-button is pressed. Updates the flag in the Broker
+
+        :param event: Not in use
+        :return: None
+        """
         # Warning dialog
         wx.MessageBox('Make sure the maze is empty', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -302,6 +411,12 @@ class StartFrame(wx.Frame):
         Logger.logg("Gui prepare maze btn pressed", Logger.info)
 
     def onFindPathSingle(self, event=None):
+        """
+        Called every time the Find Path Single-button is pressed. Updates the flag in the Broker
+
+        :param event: Not in use
+        :return: None
+        """
         # warning dialog
         wx.MessageBox('Put the snake and the target in the maze', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -310,6 +425,12 @@ class StartFrame(wx.Frame):
         Logger.logg("GUI find path btn preset", Logger.info)
 
     def onFindPathMulti(self, event=None):
+        """
+        Called every time the Find Path Multi-button is pressed. Updates the flag in the Broker
+
+        :param event: Not in use
+        :return: None
+        """
         # Warning Dialog
         wx.MessageBox('Put the snake and the target in the maze', 'Info', wx.OK | wx.ICON_INFORMATION)
         with b.lock:
@@ -319,7 +440,7 @@ class StartFrame(wx.Frame):
 
     def onClose(self, event=None):
         """
-        quits the gui and sets a flagg for other threds \n
+        Quits the gui and sets a flag for other threads \n
         :param event: the event
         :return: None
         """
@@ -330,6 +451,12 @@ class StartFrame(wx.Frame):
         self.Destroy()
 
     def onKeyDown(self, event=None):
+        """
+        Used to capture key events for manual control.
+
+        :param event: Key pressed
+        :return: None
+        """
         keycode = event.GetKeyCode()
         print(keycode)
         if self.controlledManually:
@@ -353,13 +480,20 @@ class StartFrame(wx.Frame):
 
 
 class GUI:
-
+    """
+    Responsible for launching the GUI
+    """
     def __init__(self):
         self.app = wx.App()
         self.startFrame = StartFrame(None, title='Snake Control', size=wx.Size(1920, 1080))
         Logger.logg("GUI init", Logger.info)
 
     def getEventInfo(self):
+        """
+        Information for updating the GUI
+
+        :return: info for updating the GUI
+        """
         events = {"UpdateImageEventR": UpdateImageEventR,
                   "UpdateImageEventL": UpdateImageEventL,
                   "UpdateTextEvent": UpdateTextEvent,
@@ -371,6 +505,11 @@ class GUI:
         return info
 
     def run(self):
+        """
+        Launches the GUI
+
+        :return: None
+        """
         Logger.logg("GUI running", Logger.info)
         self.startFrame.Show()
         self.app.MainLoop()

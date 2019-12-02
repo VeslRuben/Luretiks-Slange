@@ -1,5 +1,7 @@
 """
-Path planning Sample Code with RRT*
+RRT*-algorithm which is an expansion of the RRT-algorithm. Built by Atsushi Sakai, modified by us to incorporate \n
+what we need.
+
 author: Atsushi Sakai(@Atsushi_twi)
 """
 
@@ -69,9 +71,10 @@ class RRTStar(RRT):
 
     def planning(self, animation=False, search_until_max_iter=False):
         """
-        rrt star path planning
-        animation: flag for animation on or off
-        search_until_max_iter: search until max iteration for path improving or not
+        Finds a path through a maze
+
+        :param animation: flag for animation on or off
+        :param search_until_max_iter: search until max iteration for path improving or not
         """
 
         self.node_list = [self.start]
@@ -107,6 +110,13 @@ class RRTStar(RRT):
         return None
 
     def chooseParent(self, new_node, near_inds):
+        """
+        Checks close indexes to see if it can choose another parent so its more cost efficient.
+
+        :param new_node: node to check with
+        :param near_inds: list of near node indexes
+        :return: new_node with updated parent
+        """
         if not near_inds:
             return None
 
@@ -133,6 +143,11 @@ class RRTStar(RRT):
         return new_node
 
     def searchBestGoalNode(self):
+        """
+        Searches for the best node to go to goal with.
+
+        :return: index for best node
+        """
         dist_to_goal_list = [self.calculateDistanceToGoal(n.x, n.y) for n in self.node_list]
         goal_inds = [dist_to_goal_list.index(i) for i in dist_to_goal_list if i <= self.expand_dis]
 
@@ -209,7 +224,12 @@ class RRTStar(RRT):
         return from_node.cost + d
 
     def propagateCostToLeaves(self, parent_node):
+        """
+        Updates the cost of the path for the nodes parents recursively
 
+        :param parent_node: the node to check against
+        :return: None
+        """
         for node in self.node_list:
             if node.parent == parent_node:
                 node.cost = self.calculateNewCost(parent_node, node)
@@ -257,6 +277,9 @@ class RRTStar(RRT):
 
 
 class multiRRTStar:
+    """
+    Implements the RRT* for a list of several goals to reach.
+    """
 
     def __init__(self, rand_area_x=None, rand_area_y=None, lineList=None, expand_dis=100.0,
                  path_resolution=10.0, max_iter=2000, goal_sample_rate=30, edge_dist=30, connect_circle_dist=450,
@@ -276,8 +299,6 @@ class multiRRTStar:
         :param listOfDeadEnds: List of coordinates for dead ends
         """
 
-        if rand_area_y is None:
-            rand_area_y = [0, 1100]
         self.rand_area_x = rand_area_x
         self.rand_area_y = rand_area_y
         self.lineList = lineList
@@ -294,6 +315,7 @@ class multiRRTStar:
     def findAllPaths(self, startpoint, pointList: list):
         """
         Iterates from a start point to the different points. Saves all paths in a list
+
         :param startpoint: (x,y) for start point
         :param pointList: List of points to iterate to
         :return: List of paths
@@ -316,6 +338,7 @@ class multiRRTStar:
     def sumPaths(self, pathList):
         """
         Finds the lengths of paths in a given list
+
         :param pathList: List of paths
         :return: List of lengths of paths
         """
@@ -336,6 +359,7 @@ class multiRRTStar:
         """
         Runs RRT* a multitude of times to try to find the best path from the snakes start through all the different
         dead ends.
+
         :return: The final most efficient path
         """
         print("start")
@@ -363,10 +387,6 @@ class multiRRTStar:
         print(f"lenght: {sumPath}")
 
         return finalPath
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -432,7 +452,7 @@ if __name__ == "__main__":
         startPoint = [1280, 300]
 
         r = multiRRTStar(rand_area_x=[500, 1600], rand_area_y=[0, 1100],
-                               lineList=lines, expand_dis=100.0, path_resolution=10.0, max_iter=2000, goal_sample_rate=30,
+                               lineList=lines, expand_dis=50.0, path_resolution=25.0, max_iter=2000, goal_sample_rate=30,
                                edge_dist=30, connect_circle_dist=800, start_point=startPoint, listOfDeadEnds=listOfDeadEnds)
 
         fPath = r.run()

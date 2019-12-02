@@ -1,3 +1,9 @@
+"""
+Checks for obstacles in the view of the front-facing camera
+
+author: Håkon Bjerkgaard Waldum, Ruben Svedal Jørundland, Marcus Olai Grindvik
+"""
+
 import cv2
 import numpy as np
 from Python.Movement.snake import Snake
@@ -10,15 +16,9 @@ class CheckPathForObst:
 
     def findObsInPath(self, picture):
         """
-        Trashold find a int that represents if half the image is white
-        Then the image gets blurred with gaussianblur
-        Then the image gets changed to Hsv
-        Then color thrasholds out every thing that is white.
-        then som filtering
-        cheks if half the image is coverd
-        returs if the image have a object infront of it or not
-        :param picture:
-        :return:
+        Requests a picture from the front-facing camera, and checks if a given amount of the pixels are non-white.
+        :param picture: picture from the front-facing camera
+        :return:True if obstacle in path, False if not
         """
         try:
             threshold = (picture.shape[0] * picture.shape[1] * 255) / 2
