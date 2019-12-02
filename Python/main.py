@@ -20,11 +20,3 @@ try:
     controller.join()
 finally:
     Logger.stopLogging()
-
-# Generell to do:
-# TODO: Jobb videre på Seek 'n Destroy
-# TODO: GUI-greiene
-
-
-# Notes fra Houxiang:
-# TODO: Physical Limitations are OK, specify them
