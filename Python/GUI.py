@@ -247,7 +247,9 @@ class StartFrame(wx.Frame):
         videoVBox = wx.BoxSizer(wx.HORIZONTAL)
         w = 800
         h = 600
-        array = np.random.randint(0, 255, (3, w, h)).astype('uint8')
+        array = cv2.imread("../Pictures/testImg.jpg").astype('uint8')
+        array = cv2.resize(array, (800, 600))
+        #array = np.random.randint(0, 255, (3, w, h)).astype('uint8')
         image = wx.ImageFromBuffer(w, h, array)
         self.imgL = ImagePanel(image, panel, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT, size=(w, h))
         self.imgR = ImagePanel(image, panel, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT, size=(w, h))
