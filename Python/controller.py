@@ -30,7 +30,7 @@ class Controller(threading.Thread):
 
     def __init__(self, eventData):
         super().__init__()
-        Camera.initCam(0)
+        Camera.initCam(1)
         self.running = True
 
         self.guiEvents = eventData["events"]
@@ -250,7 +250,8 @@ class Controller(threading.Thread):
             cmdDone = self.goToTarget.isCommandDone()
 
             # Resets the moving flag if there is no acc inside a given time
-            if self.goToTarget.moving and self.lastCmdSent + self.cmdDoneTimer < time.time():
+            currentTime = time.time()
+            if self.lastCmdSent + self.cmdDoneTimer < currentTime and not self.goToTarget.goalReached:
                 self.overrideMoving = True
                 Logger.logg(f"No done message received in {self.cmdDoneTimer} sec, Overriding movement", Logger.info)
 

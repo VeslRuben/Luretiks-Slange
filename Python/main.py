@@ -20,3 +20,4 @@ try:
     controller.join()
 finally:
     Logger.stopLogging()
+    print("File saved")

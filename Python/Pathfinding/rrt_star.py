@@ -254,7 +254,6 @@ class RRTStar(RRT):
             self.drawGraph()
         else:
             print("found path!!")
-
             # Draw final path
             if self.showFinalAnimation:
                 self.drawGraph()
