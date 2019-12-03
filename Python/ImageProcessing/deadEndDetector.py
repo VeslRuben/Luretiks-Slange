@@ -31,7 +31,7 @@ class DeadEndDetector:
             n = cv2.imread(img, 0)
             templateList.append(n)
 
-        threshold = 0.75
+        threshold = 0.71
 
         # loop over the scales of the image
         loc = []

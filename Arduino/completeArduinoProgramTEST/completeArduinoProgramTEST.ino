@@ -8,7 +8,7 @@
 /////////////////////////////////////////////
 // Information for connecting to WiFi
 const char* ssid = "MSI";
-const char* password =  "12345678";
+const char* password =  "123456789";
 
 // Information for sending information via UDP
 const uint16_t port = 6969;

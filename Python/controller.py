@@ -63,7 +63,7 @@ class Controller(threading.Thread):
         self.snakeCollision = SnakeCollision(None, -105, -45, 45, 105, -75, -105, 75, 105, 0, 0, 0, 0)
         self.collisionSectors = [[[15 + 180, -15 + 180], [-165 + 180, -195 + 180]],
                                  [[15 + 180, -45 + 180], [45, 135], [-135 + 180, -195 + 180]]]
-        self.snake = Snake("http://192.168.137.87", "192.168.137.252")
+        self.snake = Snake("http://192.168.137.87", "192.168.137.186")
         self.goToTarget = GoToTarget(None, self.snake, self.snakeCollision, 10, 45, 20, 80)
         self.seekAndDestroy = None
         self.cam = Camera()

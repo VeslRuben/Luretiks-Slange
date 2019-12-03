@@ -106,7 +106,7 @@ class SeekAndDestroy(GoToTarget):
         if not self.targetAcq:
             offset = self.calculateOffset(snakeCoordinates)
 
-            #snakePic = self.snake.takePicture()
+            # snakePic = self.snake.takePicture()
             self.snakeCollision.updateCollisions(snakeCoordinates, collisionThreshold, offset, None)
 
             lineStart = self.path[self.i]
@@ -133,8 +133,20 @@ class SeekAndDestroy(GoToTarget):
             if not self.goalReached:
                 self.moving = self.decideMovement(lV, sV, lVxsV, snakePointF, lineStart)
             else:
-                self.targetAcq = self.targetAcquired()
-                if self.j < len(self.totalPath) - 1:
-                    self.updatePath()
-                    self.moving = True
-
+                goal = self.path[len(self.path) - 1]
+                gV = [goal[0] - snakeCoordinates[1][0], goal[1] - snakeCoordinates[1][1]]
+                gVxsV = gV[0] * sV[1] - gV[1] * sV[0]
+                goalThetea = self.snakeController.calculateTheta(gV, sV, gVxsV)
+                if abs(goalThetea) < 10:
+                    self.targetAcq = self.targetAcquired()
+                    if self.j < len(self.totalPath) - 1:
+                        self.updatePath()
+                        self.moving = True
+                elif abs(goalThetea) < 30:
+                    turnAngle = self.snakeController.turnTheta(goalThetea)
+                    self.moving = self.checkMovement(self.snake.turn, turnAngle)
+                else:
+                    if goalThetea > 0:
+                        self.moving = self.checkMovement(self.snake.rotateCCW)
+                    else:
+                        self.moving = self.checkMovement(self.snake.rotateCW)
