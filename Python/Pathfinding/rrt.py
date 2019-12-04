@@ -34,7 +34,7 @@ class RRT:
         :param lineList: list of lines for obstacle-lines
         :param edge_dist: distance for rrt to keep from the obstacles
         :param expand_dis: expand distance
-        :param path_resolution: path resolution, steps it takes
+        :param path_resolution: not in use
         :param goal_sample_rate: chance for it to try to just go to goal
         :param max_iter: max iterations
         """
@@ -99,24 +99,10 @@ class RRT:
         if extend_length > d:
             extend_length = d
 
-        """n_expand = math.floor(extend_length / self.path_resolution)
-
-        for _ in range(n_expand):
-            new_node.x += self.path_resolution * math.cos(theta)
-            new_node.y += self.path_resolution * math.sin(theta)
-            new_node.path_x.append(new_node.x)
-            new_node.path_y.append(new_node.y)
-
-        d, _ = self.calculateDistanceAndAngle(new_node, to_node)
-        if d <= self.path_resolution:
-            new_node.path_x.append(to_node.x)
-            new_node.path_y.append(to_node.y)"""
-
-        new_node.x += extend_length* math.cos(theta)
+        new_node.x += extend_length * math.cos(theta)
         new_node.y += extend_length * math.sin(theta)
         new_node.path_x.append(new_node.x)
         new_node.path_y.append(new_node.y)
-
 
         new_node.parent = from_node
 
