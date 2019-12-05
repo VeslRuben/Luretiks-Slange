@@ -99,8 +99,8 @@ class FindSnake:
         redLower = np.array([100, 170, 20], dtype=np.uint8)
         redUpper = np.array([140, 255, 240], dtype=np.uint8)
 
-        purpleLower = np.array([145, 70, 30])
-        purpleHigher = np.array([170, 255, 190])
+        purpleLower = np.array([130, 50, 30])
+        purpleHigher = np.array([180, 255, 190])
 
         if average < 1:
             average = 1
@@ -153,7 +153,7 @@ class FindSnake:
             greenMask = cv2.erode(greenSum, None, iterations=4)
             greenMask = cv2.dilate(greenMask, None, iterations=4)
 
-            purpleMask = cv2.erode(purpleSum, None, iterations=2)
+            purpleMask = cv2.erode(purpleSum, None, iterations=0)
             purpleMask = cv2.dilate(purpleMask, None, iterations=5)
 
             mask = greenMask + redMask
@@ -216,7 +216,7 @@ if __name__ == "__main__":
         while True:
             cord, yolo = c.locateSnakeAverage(1, 1, False)
             cv2.imshow("swag", yolo)
-            cv2.waitKey(10)
+            cv2.waitKey()
 
     finally:
         cv2.destroyAllWindows()

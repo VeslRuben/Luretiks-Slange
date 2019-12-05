@@ -30,7 +30,7 @@ class Controller(threading.Thread):
 
     def __init__(self, eventData):
         super().__init__()
-        Camera.initCam(1)
+        Camera.initCam(0)
         self.running = True
 
         self.guiEvents = eventData["events"]
